@@ -1,0 +1,20 @@
+{
+  "name": "gameframe",
+  "version": "0.0.1",
+  "description": "game components for A-Frame",
+  "main": "index.js",
+  "scripts": {
+    "build": "browserify src/gameframe.js -o dist/gameframe.js"
+  },
+  "keywords": [
+    "aframe",
+    "webvr",
+    "webxr",
+    "gamedev"
+  ],
+  "author": "poeticAndroid",
+  "license": "MIT",
+  "devDependencies": {
+    "browserify": "^17.0.0"
+  }
+}
