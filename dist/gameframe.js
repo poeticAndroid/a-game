@@ -21,8 +21,27 @@ AFRAME.registerComponent("include", {
 
 },{}],2:[function(require,module,exports){
 require("./libs/pools")
+require("./libs/copyWorldPosRot")
 require("./components/include")
-},{"./components/include":1,"./libs/pools":3}],3:[function(require,module,exports){
+},{"./components/include":1,"./libs/copyWorldPosRot":3,"./libs/pools":4}],3:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
+  let quat = THREE.Quaternion.temp()
+  let src = srcEl.object3D
+  let dest = this.object3D
+  if (!src) return
+  if (!dest) return
+  if (!dest.parent) return
+  src.getWorldPosition(dest.position)
+  dest.parent.worldToLocal(dest.position)
+
+  dest.getWorldQuaternion(quat)
+  dest.quaternion.multiply(quat.conjugate().normalize())
+  src.getWorldQuaternion(quat)
+  dest.quaternion.multiply(quat.normalize())
+}
+},{}],4:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
