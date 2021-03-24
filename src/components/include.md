@@ -1,4 +1,4 @@
-# a-include.js
+# include
 
 Component for including external files into the scene.
 
