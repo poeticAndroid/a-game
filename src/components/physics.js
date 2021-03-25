@@ -1,7 +1,7 @@
 /* global AFRAME, THREE, OIMO */
 
-let scripts = document.getElementsByTagName("script")
-const workerUrl = scripts[scripts.length - 1].src
+// let scripts = document.getElementsByTagName("script")
+// const workerUrl = scripts[scripts.length - 1].src
 
 function stringify(val) {
   return JSON.stringify(val).replaceAll(" ", "\\u0020")
@@ -9,15 +9,15 @@ function stringify(val) {
 
 AFRAME.registerSystem("physics", {
   schema: {
-    enabled: { type: "boolean", default: false },
+    workerUrl: { type: "string" },
     gravity: { type: "vec3", default: { x: 0, y: -9.8, z: 0 } },
     debug: { type: "boolean", default: false }
   },
 
   update: function () {
-    if (this.data.enabled) {
+    if (this.data.workerUrl) {
       if (!this.worker) {
-        this.worker = new Worker(workerUrl)
+        this.worker = new Worker(this.data.workerUrl)
         this.worker.addEventListener("message", this.onMessage.bind(this))
       }
       this.bodies = this.bodies || []

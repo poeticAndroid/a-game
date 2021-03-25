@@ -7,12 +7,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>GameFrame</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="gameframe.js"></script>
+  <script src="./gameframe.js"></script>
   <script src="/live.js"></script>
 </head>
 
 <body>
-  <a-scene physics="enabled:true;">
+  <a-scene physics="workerUrl:./oimoWorker.js;">
     <a-entity id="world" include="./scenes/hello.html"> </a-entity>
   </a-scene>
 </body>

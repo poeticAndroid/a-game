@@ -7,6 +7,7 @@ global.movingBodies = []
 
 let vec = new OIMO.Vec3()
 let quat = new OIMO.Quat()
+let nextStep = 0
 
 function init() {
   addEventListener("message", onMessage)
@@ -23,7 +24,14 @@ function onMessage(e) {
   }
   else if (e.data instanceof Float64Array) {
     let buffer = e.data
-    world.step()
+    let now = Date.now()
+    if (now > nextStep) {
+      world.step()
+      nextStep += world.timerate
+    }
+    if (now > nextStep) {
+      nextStep = now
+    }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
       if (!body) continue

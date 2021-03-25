@@ -4,8 +4,8 @@
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
-    "build": "browserify src/gameframe.js -o dist/gameframe.js",
-    "watch": "watchify src/gameframe.js -d -o dist/gameframe.js"
+    "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\"",
+    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -o dist/#{name}.js\""
   },
   "keywords": [
     "aframe",
@@ -17,6 +17,7 @@
   "license": "MIT",
   "devDependencies": {
     "browserify": "^17.0.0",
+    "foreach-cli": "^1.8.1",
     "watchify": "^4.0.0"
   }
 }
