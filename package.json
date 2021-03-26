@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\"",
-    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -o dist/#{name}.js\""
+    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\""
   },
   "keywords": [
     "aframe",

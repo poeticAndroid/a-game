@@ -4,7 +4,7 @@
 // const workerUrl = scripts[scripts.length - 1].src
 
 function stringify(val) {
-  return JSON.stringify(val).replaceAll(" ", "\\u0020")
+  return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
 }
 
 AFRAME.registerSystem("physics", {
@@ -52,16 +52,18 @@ AFRAME.registerSystem("physics", {
       let quat = THREE.Quaternion.temp()
       b.set(buffer)
       for (let i = buffer.length / 8; i < bods.length; i++) {
+        let p = i * 8
         if (bods[i]) {
           bods[i].object3D.getWorldPosition(vec)
-          b[i * 8 + 0] = vec.x
-          b[i * 8 + 1] = vec.y
-          b[i * 8 + 2] = vec.z
+          b[p++] = vec.x
+          b[p++] = vec.y
+          b[p++] = vec.z
+          p++
           bods[i].object3D.getWorldQuaternion(quat)
-          b[i * 8 + 4] = quat.x
-          b[i * 8 + 5] = quat.y
-          b[i * 8 + 6] = quat.z
-          b[i * 8 + 7] = quat.w
+          b[p++] = quat.x
+          b[p++] = quat.y
+          b[p++] = quat.z
+          b[p++] = quat.w
         }
       }
       buffer = b
@@ -107,13 +109,15 @@ AFRAME.registerComponent("body", {
     body.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
     body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
     if (this.mid !== null) {
-      buffer[this.mid * 8 + 0] = body.position.x
-      buffer[this.mid * 8 + 1] = body.position.y
-      buffer[this.mid * 8 + 2] = body.position.z
-      buffer[this.mid * 8 + 4] = body.quaternion.x
-      buffer[this.mid * 8 + 5] = body.quaternion.y
-      buffer[this.mid * 8 + 6] = body.quaternion.z
-      buffer[this.mid * 8 + 7] = body.quaternion.w
+      let p = this.mid * 8
+      buffer[p++] = body.position.x
+      buffer[p++] = body.position.y
+      buffer[p++] = body.position.z
+      p++
+      buffer[p++] = body.quaternion.x
+      buffer[p++] = body.quaternion.y
+      buffer[p++] = body.quaternion.z
+      buffer[p++] = body.quaternion.w
     }
     worker.postMessage("world body " + this.id + " create " + stringify(body))
   },
@@ -151,30 +155,28 @@ AFRAME.registerComponent("body", {
     let buffer = this.el.sceneEl.systems.physics.buffers[0]
     if (!worker) return
     if (this.mid !== null) {
+      let p = this.mid * 8
       if (this.data.type === "kinematic") {
         let vec = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
-        buffer[this.mid * 8 + 0] = vec.x
-        buffer[this.mid * 8 + 1] = vec.y
-        buffer[this.mid * 8 + 2] = vec.z
+        buffer[p++] = vec.x
+        buffer[p++] = vec.y
+        buffer[p++] = vec.z
+        p++
         let quat = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
-        buffer[this.mid * 8 + 4] = quat.x
-        buffer[this.mid * 8 + 5] = quat.y
-        buffer[this.mid * 8 + 6] = quat.z
-        buffer[this.mid * 8 + 7] = quat.w
+        buffer[p++] = quat.x
+        buffer[p++] = quat.y
+        buffer[p++] = quat.z
+        buffer[p++] = quat.w
       } else {
         let quat = THREE.Quaternion.temp()
 
-        this.el.object3D.position.x = buffer[this.mid * 8 + 0]
-        this.el.object3D.position.y = buffer[this.mid * 8 + 1]
-        this.el.object3D.position.z = buffer[this.mid * 8 + 2]
+        this.el.object3D.position.set(buffer[p++], buffer[p++], buffer[p++])
         this.el.object3D.parent.worldToLocal(this.el.object3D.position)
+        p++
 
         this.el.object3D.getWorldQuaternion(quat)
         this.el.object3D.quaternion.multiply(quat.conjugate().normalize())
-        quat.x = buffer[this.mid * 8 + 4]
-        quat.y = buffer[this.mid * 8 + 5]
-        quat.z = buffer[this.mid * 8 + 6]
-        quat.w = buffer[this.mid * 8 + 7]
+        quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
         this.el.object3D.quaternion.multiply(quat.normalize())
       }
     }

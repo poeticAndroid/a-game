@@ -34,20 +34,23 @@ function onMessage(e) {
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
+      let p = mid * 8
       if (!body) continue
       if (body.isKinematic) {
-        vec.set(buffer[mid * 8 + 0], buffer[mid * 8 + 1], buffer[mid * 8 + 2])
+        vec.set(buffer[p++], buffer[p++], buffer[p++])
         body.setPosition(vec)
-        quat.set(buffer[mid * 8 + 4], buffer[mid * 8 + 5], buffer[mid * 8 + 6], buffer[mid * 8 + 7])
+        p++
+        quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
         body.setQuaternion(quat)
       } else {
-        buffer[mid * 8 + 0] = body.position.x
-        buffer[mid * 8 + 1] = body.position.y
-        buffer[mid * 8 + 2] = body.position.z
-        buffer[mid * 8 + 4] = body.quaternion.x
-        buffer[mid * 8 + 5] = body.quaternion.y
-        buffer[mid * 8 + 6] = body.quaternion.z
-        buffer[mid * 8 + 7] = body.quaternion.w
+        buffer[p++] = body.pos.x
+        buffer[p++] = body.pos.y
+        buffer[p++] = body.pos.z
+        p++
+        buffer[p++] = body.quaternion.x
+        buffer[p++] = body.quaternion.y
+        buffer[p++] = body.quaternion.z
+        buffer[p++] = body.quaternion.w
       }
     }
     postMessage(buffer, [buffer.buffer])
@@ -73,7 +76,13 @@ function bodyCommand(params) {
   let body = bodies[id]
   switch (params.shift()) {
     case "create":
-      bodies[id] = body = world.add(params[0])
+      console.log(params)
+      bodies[id] = body = world.add({
+        move: params[0].type === "dynamic",
+        kinematic: params[0].type === "kinematic",
+      })
+      body.resetQuaternion(params[0].quaternion)
+      body.resetPosition(params[0].position.x, params[0].position.y, params[0].position.z)
       body._mid_ = params[0].mid
       if (body._mid_ !== null)
         movingBodies[body._mid_] = body
