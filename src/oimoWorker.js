@@ -28,9 +28,8 @@ function onMessage(e) {
     if (now > nextStep) {
       world.step()
       nextStep += world.timerate
-    }
-    if (now > nextStep) {
-      nextStep = now
+      if (now > nextStep)
+        nextStep = now
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
@@ -75,17 +74,25 @@ function bodyCommand(params) {
   let id = params.shift()
   let body = bodies[id]
   switch (params.shift()) {
+    case "shape":
+      shapeCommand(body, params)
+      break
     case "create":
-      console.log(params)
+      if (body) {
+        world.removeRigidBody(body)
+        if (body._mid_ !== null)
+          movingBodies[body._mid_] = null
+      }
       bodies[id] = body = world.add({
         move: params[0].type === "dynamic",
         kinematic: params[0].type === "kinematic",
       })
-      body.resetQuaternion(params[0].quaternion)
       body.resetPosition(params[0].position.x, params[0].position.y, params[0].position.z)
+      body.resetQuaternion(params[0].quaternion)
       body._mid_ = params[0].mid
       if (body._mid_ !== null)
         movingBodies[body._mid_] = body
+      body._shapes_ = [body.shapes]
       break
     case "remove":
       world.removeRigidBody(body)
@@ -94,7 +101,33 @@ function bodyCommand(params) {
         movingBodies[body._mid_] = null
       break
     case "position":
-      body.position.copy(params[0])
+      body.resetPosition(params[0])
+      break
+  }
+}
+
+function shapeCommand(body, params) {
+  if (!body) return
+  let id = params.shift()
+  let shape = body._shapes_[id]
+  switch (params.shift()) {
+    case "create":
+      if (shape)
+        body.removeShape(shape)
+      let sc = new OIMO.ShapeConfig()
+      sc.relativePosition.copy(params[0].position)
+      sc.relativeRotation.setQuat(quat.copy(params[0].quaternion))
+      switch (params[0].type) {
+        case "sphere": shape = new OIMO.Sphere(sc, params[0].size.x / 2); break
+        case "cylinder": shape = new OIMO.Cylinder(sc, params[0].size.x / 2, params[0].size.y); break
+        // case "plane": shape = new OIMO.Plane(sc); break
+        default: shape = new OIMO.Box(sc, params[0].size.x, params[0].size.y, params[0].size.z)
+      }
+      body.addShape(body._shapes_[id] = shape)
+      break
+    case "remove":
+      body.removeShape(shape)
+      body._shapes_[id] = null
       break
   }
 }

@@ -100,7 +100,6 @@ AFRAME.registerComponent("body", {
       this.mid = movingBodies.indexOf(null)
       if (this.mid < 0) this.mid = movingBodies.length
       movingBodies[this.mid] = this.el
-
     } else {
       this.mid = null
     }
@@ -119,6 +118,7 @@ AFRAME.registerComponent("body", {
       buffer[p++] = body.quaternion.z
       buffer[p++] = body.quaternion.w
     }
+    this.shapes = []
     worker.postMessage("world body " + this.id + " create " + stringify(body))
   },
 
@@ -156,6 +156,7 @@ AFRAME.registerComponent("body", {
     if (!worker) return
     if (this.mid !== null) {
       let p = this.mid * 8
+      if (buffer.length <= p) return
       if (this.data.type === "kinematic") {
         let vec = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
         buffer[p++] = vec.x
@@ -178,6 +179,7 @@ AFRAME.registerComponent("body", {
         this.el.object3D.quaternion.multiply(quat.conjugate().normalize())
         quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
         this.el.object3D.quaternion.multiply(quat.normalize())
+        // console.log(this.el.tagName, "updated!", this.el.object3D.position)
       }
     }
   }
@@ -198,78 +200,58 @@ AFRAME.registerComponent("shape", {
     collidesWith: { type: "int", default: 0xffffffff },
   },
 
+  init: function () {
+    this.body = this.el
+    while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
+    this.bodyId = this.body.components.body.id
+
+    let worker = this.el.sceneEl.systems.physics.worker
+    let shapes = this.body.components.body.shapes
+    if (!worker) return
+    this.id = shapes.indexOf(null)
+    if (this.id < 0) this.id = shapes.length
+    shapes[this.id] = this.el
+
+    let shape = {}
+    shape.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+    this.body.object3D.worldToLocal(shape.position)
+    shape.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    let bodyquat = this.body.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    shape.quaternion.multiply(bodyquat.conjugate().normalize()).normalize()
+    shape.size = THREE.Vector3.temp().set(1, 1, 1)
+
+    switch (this.el.tagName.toLowerCase()) {
+      case "a-sphere":
+        shape.type = "sphere"
+        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
+        break
+      case "a-cylinder":
+        shape.type = "cylinder"
+        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
+        break
+      case "a-box":
+        shape.type = "box"
+        shape.size.set(
+          parseFloat(this.el.getAttribute("width") || 1),
+          parseFloat(this.el.getAttribute("height") || 1),
+          parseFloat(this.el.getAttribute("depth") || 1)
+        )
+        break
+      // case "a-plane":
+      //   shape.type = "plane"
+      //   break
+    }
+
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + stringify(shape))
+  },
+
   update: function () {
-    if (!this.el.body) return setTimeout(() => this.update(), 256)
-    if (!this.shape) {
-      let sc = new OIMO.ShapeConfig()
-      switch (this.data.type) {
-        case "box":
-          this.shape = new OIMO.Box(sc, 1, 1, 1)
-          break
-        case "cylinder":
-          this.shape = new OIMO.Cylinder(sc, 1, 1)
-          break
-        case "sphere":
-          this.shape = new OIMO.Sphere(sc, 1)
-          break
-        case "plane":
-          this.shape = new OIMO.Plane(sc)
-          break
-      }
-      this.el.body.addShape(this.shape)
-    }
-    this.shape.density = this.data.density
-    this.shape.friction = this.data.friction
-    this.shape.restitution = this.data.restitution
-    this.shape.belongsTo = this.data.belongsTo
-    this.shape.collidesWith = this.data.collidesWith
-    this.shape.relativePosition.copy(this.data.posOffset)
-    if (this.data.rotOffset.x || this.data.rotOffset.y || this.data.rotOffset.z) console.warn("rotOffset property not yet impemented!")
-    // this.shape.relativeRotation.copy(this.data.rotOffset)
-
-    let scale = THREE.Vector3.reuse()
-    let size = THREE.Vector3.reuse().copy(this.data.size)
-    if (size.x < 0) {
-      size.set(1, 1, 1)
-      let mesh = this.el.getObject3D("mesh")
-      if (mesh && mesh.geometry) {
-        mesh.geometry.computeBoundingBox()
-        let box = mesh.geometry.boundingBox
-        size.copy(box.max).sub(box.min)
-      } else {
-        this.el.addEventListener("model-loaded", this.update.bind(this))
-      }
-    }
-    size.multiply(this.el.object3D.getWorldScale(scale))
-    switch (this.data.type) {
-      case "box":
-        this.shape.width = size.x
-        this.shape.height = size.y
-        this.shape.depth = size.z
-        this.shape.halfWidth = size.x / 2
-        this.shape.halfHeight = size.y / 2
-        this.shape.halfDepth = size.z / 2
-        break
-      case "cylinder":
-        size.x = (size.x + size.z) / 4
-        this.shape.radius = size.x
-        this.shape.height = size.y
-        this.shape.halfHeight = size.y / 2
-        break
-      case "sphere":
-        size.x = (size.x + size.y + size.z) / 6
-        this.shape.radius = size.x
-        break
-    }
-    this.el.body.setupMass(this.el.body.type)
-
-    size.recycle()
-    scale.recycle()
   },
 
   remove: function () {
-    if (this.shape) this.el.body.removeShape(this.shape)
-    this.shape = null
+    let shapes = this.body.components.body.shapes
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
+    shapes[this.id] = null
   }
 })
 
