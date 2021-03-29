@@ -120,6 +120,18 @@ AFRAME.registerComponent("body", {
     }
     this.shapes = []
     worker.postMessage("world body " + this.id + " create " + stringify(body))
+
+    if (!this.el.getAttribute("shape")) {
+      if (this.el.firstElementChild) {
+        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
+        if (els)
+          els.forEach(el => {
+            if (!el.getAttribute("shape")) el.setAttribute("shape", true)
+          })
+      } else {
+        this.el.setAttribute("shape", true)
+      }
+    }
   },
 
   update: function () {
@@ -249,6 +261,7 @@ AFRAME.registerComponent("shape", {
   },
 
   remove: function () {
+    let worker = this.el.sceneEl.systems.physics.worker
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null

@@ -26,6 +26,18 @@ function onMessage(e) {
     let buffer = e.data
     let now = Date.now()
     if (now > nextStep) {
+      for (let mid = 0; mid < movingBodies.length; mid++) {
+        let body = movingBodies[mid]
+        let p = mid * 8
+        if (!body) continue
+        if (body.isKinematic) {
+          vec.set(buffer[p++], buffer[p++], buffer[p++])
+          body.setPosition(vec)
+          p++
+          quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
+          body.setQuaternion(quat)
+        }
+      }
       world.step()
       nextStep += world.timerate
       if (now > nextStep)
@@ -35,13 +47,7 @@ function onMessage(e) {
       let body = movingBodies[mid]
       let p = mid * 8
       if (!body) continue
-      if (body.isKinematic) {
-        vec.set(buffer[p++], buffer[p++], buffer[p++])
-        body.setPosition(vec)
-        p++
-        quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
-        body.setQuaternion(quat)
-      } else {
+      if (!body.isKinematic) {
         buffer[p++] = body.pos.x
         buffer[p++] = body.pos.y
         buffer[p++] = body.pos.z
@@ -84,7 +90,7 @@ function bodyCommand(params) {
           movingBodies[body._mid_] = null
       }
       bodies[id] = body = world.add({
-        move: params[0].type === "dynamic",
+        move: params[0].type !== "static",
         kinematic: params[0].type === "kinematic",
       })
       body.resetPosition(params[0].position.x, params[0].position.y, params[0].position.z)
