@@ -1,11 +1,6 @@
 /* global AFRAME, THREE, OIMO */
 
-// let scripts = document.getElementsByTagName("script")
-// const workerUrl = scripts[scripts.length - 1].src
-
-function stringify(val) {
-  return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
-}
+const cmd = require("../libs/cmdCodec")
 
 AFRAME.registerSystem("physics", {
   schema: {
@@ -23,7 +18,7 @@ AFRAME.registerSystem("physics", {
       this.bodies = this.bodies || []
       this.movingBodies = this.movingBodies || []
       this.buffers = [new Float64Array(8), new Float64Array(8)]
-      this.worker.postMessage("world gravity = " + stringify(this.data.gravity))
+      this.worker.postMessage("world gravity = " + cmd.stringifyParam(this.data.gravity))
       this._debug = this.data.debug
     } else {
       this.remove()
@@ -71,10 +66,31 @@ AFRAME.registerSystem("physics", {
   },
 
   onMessage: function (e) {
-    if (e.data instanceof Float64Array) {
+    if (typeof e.data === "string") {
+      let command = cmd.parse(e.data)
+      switch (command.shift()) {
+        case "world":
+          this.command(command)
+          break
+      }
+    }
+    else if (e.data instanceof Float64Array) {
       this.buffers.push(e.data)
       while (this.buffers.length > 2)
         this.buffers.shift()
+    }
+  },
+
+  command: function (params) {
+    if (typeof params[0] === "number") {
+      params.shift()
+    }
+    switch (params.shift()) {
+      case "body":
+        let id = params.shift()
+        let body = this.bodies[id]
+        body.components.body.command(params)
+        break
     }
   }
 })
@@ -83,7 +99,10 @@ AFRAME.registerComponent("body", {
   dependencies: ["position", "rotation", "scale"],
 
   schema: {
-    type: { type: "string", default: "static" }
+    type: { type: "string", default: "static" },
+    belongsTo: { type: "number", default: 1 },
+    collidesWith: { type: "number", default: 0xffffffff },
+    emitsWith: { type: "number", default: 0 },
   },
 
   init: function () {
@@ -118,7 +137,7 @@ AFRAME.registerComponent("body", {
       buffer[p++] = body.quaternion.w
     }
     this.shapes = []
-    worker.postMessage("world body " + this.id + " create " + stringify(body))
+    worker.postMessage("world body " + this.id + " create " + cmd.stringifyParam(body))
 
     if (!this.el.getAttribute("shape")) {
       if (this.el.firstElementChild) {
@@ -133,10 +152,17 @@ AFRAME.registerComponent("body", {
     }
   },
 
-  update: function () {
+  update: function (oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
-    worker.postMessage("world body " + this.id + " type = " + stringify(this.data.type))
+    if (this.data.type !== oldData.type)
+      worker.postMessage("world body " + this.id + " type = " + cmd.stringifyParam(this.data.type))
+    if (this.data.belongsTo !== oldData.belongsTo)
+      worker.postMessage("world body " + this.id + " belongsTo = " + cmd.stringifyParam(this.data.belongsTo))
+    if (this.data.collidesWith !== oldData.collidesWith)
+      worker.postMessage("world body " + this.id + " collidesWith = " + cmd.stringifyParam(this.data.collidesWith))
+    if (this.data.emitsWith !== oldData.emitsWith)
+      worker.postMessage("world body " + this.id + " emitsWith = " + cmd.stringifyParam(this.data.emitsWith))
   },
 
   play: function () {
@@ -179,7 +205,7 @@ AFRAME.registerComponent("body", {
         buffer[p++] = quat.y
         buffer[p++] = quat.z
         buffer[p++] = quat.w
-      } else if (!isNaN(buffer[p])) {
+      } else if (buffer[p + 1]) {
         let quat = THREE.Quaternion.temp()
 
         this.el.object3D.position.set(buffer[p++], buffer[p++], buffer[p++])
@@ -190,8 +216,25 @@ AFRAME.registerComponent("body", {
         this.el.object3D.quaternion.multiply(quat.conjugate().normalize())
         quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
         this.el.object3D.quaternion.multiply(quat.normalize())
-        // console.log(this.el.tagName, "updated!", this.el.object3D.position)
       }
+    }
+  },
+
+  command: function (params) {
+    switch (params.shift()) {
+      case "emits":
+        let e = params.shift()
+        switch (e.event) {
+          case "collision":
+            let bodies = this.el.sceneEl.systems.physics.bodies
+            e.body1 = bodies[e.body1]
+            e.body2 = bodies[e.body2]
+            e.shape1 = e.body1.components.body.shapes[e.shape1]
+            e.shape2 = e.body2.components.body.shapes[e.shape2]
+            break
+        }
+        this.el.emit(e.event, e)
+        break
     }
   }
 })
@@ -253,7 +296,7 @@ AFRAME.registerComponent("shape", {
       //   break
     }
 
-    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + stringify(shape))
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
   update: function () {

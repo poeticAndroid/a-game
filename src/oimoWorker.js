@@ -1,5 +1,7 @@
 /* global AFRAME, THREE, OIMO */
 
+const cmd = require("./libs/cmdCodec")
+
 global.OIMO = require("./libs/oimo")
 global.world = new OIMO.World()
 global.bodies = []
@@ -15,7 +17,7 @@ function init() {
 
 function onMessage(e) {
   if (typeof e.data === "string") {
-    let command = parseCommand(e.data)
+    let command = cmd.parse(e.data)
     switch (command.shift()) {
       case "world":
         worldCommand(command)
@@ -57,6 +59,7 @@ function onMessage(e) {
         buffer[p++] = body.quaternion.z
         buffer[p++] = body.quaternion.w
       }
+      emitCollisions(body)
     }
     postMessage(buffer, [buffer.buffer])
   }
@@ -95,6 +98,7 @@ function bodyCommand(params) {
       })
       body.resetPosition(params[0].position.x, params[0].position.y, params[0].position.z)
       body.resetQuaternion(params[0].quaternion)
+      body._id_ = id
       body._mid_ = params[0].mid
       if (body._mid_ !== null)
         movingBodies[body._mid_] = body
@@ -106,8 +110,37 @@ function bodyCommand(params) {
       if (body._mid_ !== null)
         movingBodies[body._mid_] = null
       break
-    case "position":
-      body.resetPosition(params[0])
+    case "type":
+      body.move = params[0] !== "static"
+      body.isKinematic = params[0] === "kinematic"
+
+      // body can sleep or not
+      if (body.isKinematic) body.allowSleep = false
+      else body.allowSleep = true
+
+      // body static or dynamic
+      if (body.move) {
+        body.setupMass(OIMO.BODY_DYNAMIC)
+      } else {
+        body.setupMass(OIMO.BODY_STATIC)
+      }
+
+      // force sleep on not
+      if (body.move) {
+        body.awake()
+      }
+      break
+    case "belongsTo":
+      body._belongsTo_ = params[0]
+      body._shapes_.forEach(shape => { shape.belongsTo = params[0] })
+      break
+    case "collidesWith":
+      body._collidesWith_ = params[0]
+      body._shapes_.forEach(shape => { shape.collidesWith = params[0] })
+      break
+    case "emitsWith":
+      body._emitsWith_ = params[0]
+      // body._shapes_.forEach(shape => { shape._emitsWith_ = params[0] })
       break
   }
 }
@@ -129,6 +162,10 @@ function shapeCommand(body, params) {
         // case "plane": shape = new OIMO.Plane(sc); break
         default: shape = new OIMO.Box(sc, params[0].size.x, params[0].size.y, params[0].size.z)
       }
+      shape._id_ = id
+      shape.belongsTo = body._belongsTo_
+      shape.collidesWith = body._collidesWith_
+      // shape._emitsWith_ = body._emitsWith_
       body.addShape(body._shapes_[id] = shape)
       break
     case "remove":
@@ -138,20 +175,30 @@ function shapeCommand(body, params) {
   }
 }
 
-function parseCommand(cmd) {
-  let words = cmd.split(" ")
-  let args = []
-  for (let word of words) {
-    if (word) {
-      try {
-        args.push(JSON.parse(word))
-      } catch (error) {
-        if (word !== "=")
-          args.push(word)
+
+function emitCollisions(body) {
+  let b1, b2
+  let contact = world.contacts
+  while (contact !== null) {
+    b1 = contact.body1
+    b2 = contact.body2
+    if ((b1 === body && (b2._belongsTo_ & b1._emitsWith_)) || (b2 === body && (b1._belongsTo_ & b2._emitsWith_))) {
+      if (contact.touching && !contact.close) {
+        let other = b1 === body ? b2 : b1
+        let shape1 = b1 === body ? contact.shape1 : contact.shape2
+        let shape2 = b1 === body ? contact.shape2 : contact.shape1
+        let event = {
+          event: "collision",
+          body1: body._id_,
+          body2: other._id_,
+          shape1: shape1._id_,
+          shape2: shape2._id_
+        }
+        postMessage("world body " + body._id_ + " emits " + cmd.stringifyParam(event))
       }
     }
+    contact = contact.next
   }
-  return args
 }
 
 init()
