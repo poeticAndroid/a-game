@@ -8,31 +8,18 @@
   <title>GameFrame</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
   <script src="./gameframe.js"></script>
+
+  <script src="./scenes/ballmachine.js"></script>
 </head>
 
 <body>
   <a-scene physics="workerUrl:./oimoWorker.js;">
-    <a-camera look-controls="pointerLockEnabled:true;"></a-camera>
+    <a-camera look-controls="pointerLockEnabled:true;" wasd-controls="fly:true;"></a-camera>
     <a-entity id="world" include="./scenes/ballmachine.html"></a-entity>
   </a-scene>
 
   <script src="./oimoWorker.js"></script>
   <script src="/live.js"></script>
-  <script>
-    let int = setInterval(() => {
-      let div = document.createElement("div")
-      div.innerHTML = '<a-sphere body="type:dynamic;" color="green" position="0 8 -8" radius="0.25"></a-sphere>'
-      let ball = div.firstElementChild
-      ball.setAttribute("position", "" + (0.5 - Math.random()) + " 4 " + (-7.5 - Math.random()))
-      ball.setAttribute("color", "#" + ("0000" + (4096 * Math.random()).toString(16)).substr(-3))
-      let scene = document.querySelector("#world")
-      scene.appendChild(ball)
-    }, 64)
-    setTimeout(() => {
-      clearInterval(int)
-    }, 8196)
-  </script>
-
 </body>
 
 </html>

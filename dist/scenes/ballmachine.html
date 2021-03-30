@@ -1,26 +1,22 @@
 <a-entity id="world">
   <a-sky color="lightblue"></a-sky>
-  <a-box body="type:static;" color="lightgray" position="0 0 -4" width="8" height="2" depth=".125"></a-box>
-  <a-box body="type:static;" color="lightgray" position="0 0 -12" width="8" height="2" depth=".125"></a-box>
-  <a-box body="type:static;" color="lightgray" position="-4 0 -8" rotation="0 90 0" width="8" height="2" depth=".125">
+  <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="0 0 -4" width="8"
+    height="2" depth=".125">
   </a-box>
-  <a-box body="type:static;" color="lightgray" position="4 0 -8" rotation="0 90 0" width="8" height="2" depth=".125">
+  <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="0 0 -12" width="8"
+    height="2" depth=".125"></a-box>
+  <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="-4 0 -8"
+    rotation="0 90 0" width="8" height="2" depth=".125">
   </a-box>
-  <a-box body="type:static;" color="lightgray" position="0 -1 -8" rotation="90 0 0" width="8" height="8" depth=".125">
+  <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="4 0 -8"
+    rotation="0 90 0" width="8" height="2" depth=".125">
+  </a-box>
+  <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="0 -1 -8"
+    rotation="90 0 0" width="8" height="8" depth=".125">
   </a-box>
 
   <a-box body="type:kinematic;" color="gray" position="0 -0.5 -8" width="8" height="1" depth="1"
-    animation="property:rotation; to:0 360 0; loop:true; easing:linear; dur:5000"></a-box>
+    animation="property:rotation; to:0 -360 0; loop:true; easing:linear; dur:50000"></a-box>
 
-  <a-sphere body="type:dynamic;" color="red" position="0 8 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 16 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 32 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 64 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 128 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 256 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 512 -8" radius="0.25"></a-sphere>
-  <a-sphere body="type:dynamic;" color="red" position="0 1024 -8" radius="0.25"></a-sphere>
-  <script>
-    console.log("this wont run")
-  </script>
+  <a-sphere position="0 8 -8" ball-spewer></a-sphere>
 </a-entity>

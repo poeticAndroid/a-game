@@ -47,26 +47,25 @@ AFRAME.registerSystem("physics", {
         len *= 2
       }
       let bods = this.movingBodies
-      let b = new Float64Array(len)
+      buffer = new Float64Array(len)
+      buffer.fill(NaN)
       let vec = THREE.Vector3.temp()
       let quat = THREE.Quaternion.temp()
-      b.set(buffer)
-      for (let i = buffer.length / 8; i < bods.length; i++) {
+      for (let i = 0; i < bods.length; i++) {
         let p = i * 8
         if (bods[i]) {
           bods[i].object3D.getWorldPosition(vec)
-          b[p++] = vec.x
-          b[p++] = vec.y
-          b[p++] = vec.z
+          buffer[p++] = vec.x
+          buffer[p++] = vec.y
+          buffer[p++] = vec.z
           p++
           bods[i].object3D.getWorldQuaternion(quat)
-          b[p++] = quat.x
-          b[p++] = quat.y
-          b[p++] = quat.z
-          b[p++] = quat.w
+          buffer[p++] = quat.x
+          buffer[p++] = quat.y
+          buffer[p++] = quat.z
+          buffer[p++] = quat.w
         }
       }
-      buffer = b
     }
     this.worker.postMessage(buffer, [buffer.buffer])
   },
@@ -180,7 +179,7 @@ AFRAME.registerComponent("body", {
         buffer[p++] = quat.y
         buffer[p++] = quat.z
         buffer[p++] = quat.w
-      } else {
+      } else if (!isNaN(buffer[p])) {
         let quat = THREE.Quaternion.temp()
 
         this.el.object3D.position.set(buffer[p++], buffer[p++], buffer[p++])

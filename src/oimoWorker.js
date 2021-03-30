@@ -41,7 +41,7 @@ function onMessage(e) {
       world.step()
       nextStep += world.timerate
       if (now > nextStep)
-        nextStep = now
+        nextStep = now + world.timerate / 2
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
