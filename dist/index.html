@@ -14,6 +14,7 @@
 
 <body>
   <a-scene physics="workerUrl:./oimoWorker.js;">
+    <a-entity include="./scenes/_assets.html"></a-entity>
     <a-camera look-controls="pointerLockEnabled:true;" wasd-controls="fly:true;"></a-camera>
     <a-entity id="world" include="./scenes/ballmachine.html"></a-entity>
   </a-scene>
