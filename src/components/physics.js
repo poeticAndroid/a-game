@@ -89,7 +89,8 @@ AFRAME.registerSystem("physics", {
       case "body":
         let id = params.shift()
         let body = this.bodies[id]
-        body.components.body.command(params)
+        if (body)
+          body.components.body.command(params)
         break
     }
   }
@@ -100,9 +101,10 @@ AFRAME.registerComponent("body", {
 
   schema: {
     type: { type: "string", default: "static" },
-    belongsTo: { type: "number", default: 1 },
-    collidesWith: { type: "number", default: 0xffffffff },
-    emitsWith: { type: "number", default: 0 },
+    belongsTo: { type: "int", default: 1 },
+    collidesWith: { type: "int", default: 0xffffffff },
+    emitsWith: { type: "int", default: 0 },
+    sleeping: { type: "boolean", default: false },
   },
 
   init: function () {
@@ -130,13 +132,14 @@ AFRAME.registerComponent("body", {
       buffer[p++] = body.position.x
       buffer[p++] = body.position.y
       buffer[p++] = body.position.z
-      p++
+      buffer[p++] = this.data.sleeping
       buffer[p++] = body.quaternion.x
       buffer[p++] = body.quaternion.y
       buffer[p++] = body.quaternion.z
       buffer[p++] = body.quaternion.w
     }
     this.shapes = []
+    this.sleeping = true
     worker.postMessage("world body " + this.id + " create " + cmd.stringifyParam(body))
 
     if (!this.el.getAttribute("shape")) {
@@ -163,17 +166,15 @@ AFRAME.registerComponent("body", {
       worker.postMessage("world body " + this.id + " collidesWith = " + cmd.stringifyParam(this.data.collidesWith))
     if (this.data.emitsWith !== oldData.emitsWith)
       worker.postMessage("world body " + this.id + " emitsWith = " + cmd.stringifyParam(this.data.emitsWith))
+    // if (this.data.sleeping !== oldData.sleeping)
+    worker.postMessage("world body " + this.id + " sleeping = " + !!(this.data.sleeping))
   },
 
-  play: function () {
-    let worker = this.el.sceneEl.systems.physics.worker
-    if (!worker) return
-    worker.postMessage("world body " + this.id + " sleeping = false")
-  },
   pause: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     worker.postMessage("world body " + this.id + " sleeping = true")
+    this.sleeping = true
   },
 
   remove: function () {
@@ -199,7 +200,7 @@ AFRAME.registerComponent("body", {
         buffer[p++] = vec.x
         buffer[p++] = vec.y
         buffer[p++] = vec.z
-        p++
+        this.sleeping = !!(buffer[p++])
         let quat = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
         buffer[p++] = quat.x
         buffer[p++] = quat.y
@@ -210,7 +211,7 @@ AFRAME.registerComponent("body", {
 
         this.el.object3D.position.set(buffer[p++], buffer[p++], buffer[p++])
         this.el.object3D.parent.worldToLocal(this.el.object3D.position)
-        p++
+        this.sleeping = !!(buffer[p++])
 
         this.el.object3D.getWorldQuaternion(quat)
         this.el.object3D.quaternion.multiply(quat.conjugate().normalize())
@@ -229,8 +230,8 @@ AFRAME.registerComponent("body", {
             let bodies = this.el.sceneEl.systems.physics.bodies
             e.body1 = bodies[e.body1]
             e.body2 = bodies[e.body2]
-            e.shape1 = e.body1.components.body.shapes[e.shape1]
-            e.shape2 = e.body2.components.body.shapes[e.shape2]
+            e.shape1 = e.body1 ? e.body1.components.body.shapes[e.shape1] : null
+            e.shape2 = e.body2 ? e.body2.components.body.shapes[e.shape2] : null
             break
         }
         this.el.emit(e.event, e)
@@ -244,9 +245,6 @@ AFRAME.registerComponent("shape", {
   multiple: true,
   schema: {
     type: { type: "string", default: "box" },
-    size: { type: "vec3", default: { x: -1, y: -1, z: -1 } },
-    posOffset: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
-    rotOffset: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
     density: { type: "number", default: 1 },
     friction: { type: "number", default: 0.2 },
     restitution: { type: "number", default: 0.2 },

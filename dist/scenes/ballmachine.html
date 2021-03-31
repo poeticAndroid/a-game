@@ -11,12 +11,17 @@
   <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="4 0 -8"
     rotation="0 90 0" width="8" height="2" depth=".125">
   </a-box>
-  <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="0 -1 -8"
+  <a-box body="type:static;belongsTo:2;" color="lightgray" material="transparent:false; opacity:0.5;" position="0 -1 -8"
     rotation="90 0 0" width="8" height="8" depth=".125">
   </a-box>
 
-  <a-box body="type:kinematic;belongsTo:2" color="gray" position="0 -0.5 -8" width="8" height="1" depth="1"
+  <a-box body="type:kinematic;" color="gray" position="0 -0.5 -8" width="8" height="1" depth="1"
     animation="property:rotation; to:0 -360 0; loop:true; easing:linear; dur:50000"></a-box>
 
   <a-sphere position="0 8 -8" ball-spewer></a-sphere>
+  <!-- <a-sphere body="type:dynamic;" position="-3 256 -5" radius="0.25" color="red"></a-sphere>
+  <a-sphere body="type:dynamic;" position="3 256 -11" radius="0.25" color="green"></a-sphere>
+  <a-sphere body="type:dynamic;" position="3 256 -5" radius="0.25" color="blue"></a-sphere> -->
+  <!-- <a-sphere body="type:dynamic;" position="-3 256 -11" radius="0.25" color="yellow"></a-sphere> -->
+  <a-sphere body="type:dynamic;sleeping:true;" position="0 4 -8" radius="0.25" color="black"></a-sphere>
 </a-entity>

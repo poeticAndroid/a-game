@@ -9,7 +9,8 @@ global.movingBodies = []
 
 let vec = new OIMO.Vec3()
 let quat = new OIMO.Quat()
-let nextStep = 0
+let lastStep = 0
+let nextStep = Date.now()
 
 function init() {
   addEventListener("message", onMessage)
@@ -27,23 +28,28 @@ function onMessage(e) {
   else if (e.data instanceof Float64Array) {
     let buffer = e.data
     let now = Date.now()
-    if (now > nextStep) {
+    for (let mid = 0; mid < movingBodies.length; mid++) {
+      let body = movingBodies[mid]
+      let p = mid * 8
+      if (!body) continue
+      if (body.isKinematic) {
+        vec.set(buffer[p++], buffer[p++], buffer[p++])
+        body.setPosition(vec)
+        buffer[p++] = body.sleeping
+        quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
+        body.setQuaternion(quat)
+      }
+    }
+    if (now - lastStep > 1024) nextStep = now
+    let deadline = Date.now() + 100
+    while (now > nextStep && Date.now() < deadline) {
+      world.step()
       for (let mid = 0; mid < movingBodies.length; mid++) {
         let body = movingBodies[mid]
-        let p = mid * 8
         if (!body) continue
-        if (body.isKinematic) {
-          vec.set(buffer[p++], buffer[p++], buffer[p++])
-          body.setPosition(vec)
-          p++
-          quat.set(buffer[p++], buffer[p++], buffer[p++], buffer[p++])
-          body.setQuaternion(quat)
-        }
+        emitCollisions(body)
       }
-      world.step()
       nextStep += world.timerate
-      if (now > nextStep)
-        nextStep = now + world.timerate / 2
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
@@ -53,15 +59,15 @@ function onMessage(e) {
         buffer[p++] = body.pos.x
         buffer[p++] = body.pos.y
         buffer[p++] = body.pos.z
-        p++
+        buffer[p++] = body.sleeping
         buffer[p++] = body.quaternion.x
         buffer[p++] = body.quaternion.y
         buffer[p++] = body.quaternion.z
         buffer[p++] = body.quaternion.w
       }
-      emitCollisions(body)
     }
     postMessage(buffer, [buffer.buffer])
+    lastStep = now
   }
 }
 
@@ -140,7 +146,10 @@ function bodyCommand(params) {
       break
     case "emitsWith":
       body._emitsWith_ = params[0]
-      // body._shapes_.forEach(shape => { shape._emitsWith_ = params[0] })
+      break
+    case "sleeping":
+      if (params[0]) body.sleep()
+      else body.awake()
       break
   }
 }
@@ -177,6 +186,7 @@ function shapeCommand(body, params) {
 
 
 function emitCollisions(body) {
+  if (!body._emitsWith_) return
   let b1, b2
   let contact = world.contacts
   while (contact !== null) {
