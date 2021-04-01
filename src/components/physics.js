@@ -230,8 +230,9 @@ AFRAME.registerComponent("body", {
             let bodies = this.el.sceneEl.systems.physics.bodies
             e.body1 = bodies[e.body1]
             e.body2 = bodies[e.body2]
-            e.shape1 = e.body1 ? e.body1.components.body.shapes[e.shape1] : null
-            e.shape2 = e.body2 ? e.body2.components.body.shapes[e.shape2] : null
+            if (!e.body1 || !e.body2) return
+            e.shape1 = e.body1.components.body.shapes[e.shape1]
+            e.shape2 = e.body2.components.body.shapes[e.shape2]
             break
         }
         this.el.emit(e.event, e)
