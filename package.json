@@ -1,11 +1,13 @@
 {
   "name": "gameframe",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
-    "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\"",
-    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\""
+    "prepare": "npm run build && cp pre-commit .git/hooks/",
+    "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
+    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
+    "minify": "rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\""
   },
   "keywords": [
     "aframe",
@@ -18,6 +20,7 @@
   "devDependencies": {
     "browserify": "^17.0.0",
     "foreach-cli": "^1.8.1",
+    "minify": "^7.0.1",
     "watchify": "^4.0.0"
   }
 }
