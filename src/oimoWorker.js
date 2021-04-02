@@ -6,6 +6,7 @@ global.OIMO = require("./libs/oimo")
 global.world = new OIMO.World()
 global.bodies = []
 global.movingBodies = []
+global.joints = []
 
 let vec = new OIMO.Vec3()
 let quat = new OIMO.Quat()
@@ -41,7 +42,7 @@ function onMessage(e) {
       }
     }
     if (now - lastStep > 1024) nextStep = now
-    let deadline = Date.now() + 100
+    let deadline = Date.now() + 256
     while (now > nextStep && Date.now() < deadline) {
       world.step()
       for (let mid = 0; mid < movingBodies.length; mid++) {
@@ -78,6 +79,9 @@ function worldCommand(params) {
   switch (params.shift()) {
     case "body":
       bodyCommand(params)
+      break
+    case "joint":
+      jointCommand(params)
       break
     case "gravity":
       world.gravity.copy(params[0])
@@ -116,6 +120,12 @@ function bodyCommand(params) {
       if (body._mid_ !== null)
         movingBodies[body._mid_] = null
       break
+    case "position":
+      body.resetPosition(params[0].x, params[0].y, params[0].z)
+      break
+    case "quaternion":
+      body.resetQuaternion(params[0])
+      break
     case "type":
       body.move = params[0] !== "static"
       body.isKinematic = params[0] === "kinematic"
@@ -150,6 +160,29 @@ function bodyCommand(params) {
     case "sleeping":
       if (params[0]) body.sleep()
       else body.awake()
+      break
+  }
+}
+
+function jointCommand(params) {
+  let id = params.shift()
+  let joint = joints[id]
+  switch (params.shift()) {
+    case "create":
+      if (joint) {
+        world.removeJoint(joint)
+      }
+      joints[id] = joint = world.add({
+        move: params[0].type !== "static",
+        kinematic: params[0].type === "kinematic",
+      })
+      joint.resetPosition(params[0].position.x, params[0].position.y, params[0].position.z)
+      joint.resetQuaternion(params[0].quaternion)
+      joint._id_ = id
+      break
+    case "remove":
+      world.removeJoint(joint)
+      joints[id] = null
       break
   }
 }

@@ -1,4 +1,4 @@
-<a-entity id="world">
+<a-entity class="world" position="0 -1 0">
   <a-sky color="lightblue"></a-sky>
   <a-box body="type:static;" color="lightgray" material="transparent:false; opacity:0.5;" position="0 0 -4" width="8"
     height="2" depth=".125">
@@ -15,7 +15,7 @@
     rotation="90 0 0" width="8" height="8" depth=".125">
   </a-box>
 
-  <a-box body="type:kinematic;" color="gray" position="0 -0.5 -8" width="8" height="1" depth="1"
+  <a-box body="type:kinematic;" color="#def" position="0 -0.5 -8" width="8" height="1" depth="1"
     animation="property:rotation; to:0 -360 0; loop:true; easing:linear; dur:50000"></a-box>
 
   <a-sphere position="0 8 -8" ball-spewer></a-sphere>

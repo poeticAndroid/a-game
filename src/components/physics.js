@@ -17,6 +17,7 @@ AFRAME.registerSystem("physics", {
       }
       this.bodies = this.bodies || []
       this.movingBodies = this.movingBodies || []
+      this.joints = this.joints || []
       this.buffers = [new Float64Array(8), new Float64Array(8)]
       this.worker.postMessage("world gravity = " + cmd.stringifyParam(this.data.gravity))
       this._debug = this.data.debug
@@ -141,14 +142,20 @@ AFRAME.registerComponent("body", {
     this.shapes = []
     this.sleeping = true
     worker.postMessage("world body " + this.id + " create " + cmd.stringifyParam(body))
+    // if (body.type === "static") 
+    setTimeout(() => {
+      body.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+      body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+      worker.postMessage("world body " + this.id + " position = " + cmd.stringifyParam(body.position))
+      worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
+    })
 
     if (!this.el.getAttribute("shape")) {
       if (this.el.firstElementChild) {
         let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
-        if (els)
-          els.forEach(el => {
-            if (!el.getAttribute("shape")) el.setAttribute("shape", true)
-          })
+        if (els) els.forEach(el => {
+          if (!el.getAttribute("shape")) el.setAttribute("shape", true)
+        })
       } else {
         this.el.setAttribute("shape", true)
       }
@@ -311,6 +318,7 @@ AFRAME.registerComponent("shape", {
 
 AFRAME.registerComponent("joint", {
   dependencies: ["body", "shape"],
+  multiple: true,
 
   schema: {
     type: { type: "string", default: "prisme" },
@@ -327,7 +335,22 @@ AFRAME.registerComponent("joint", {
     spring: { type: "array" },
   },
 
-  update: function () {
+  init: function () {
+    let worker = this.el.sceneEl.systems.physics.worker
+    let joints = this.el.sceneEl.systems.physics.joints
+    if (!worker) return
+    this.id = joints.indexOf(null)
+    if (this.id < 0) this.id = joints.length
+    joints[this.id] = this.el
+
+    let joint = {}
+    joint.type = this.data.type
+    joint.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+    joint.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    worker.postMessage("world joint " + this.id + " create " + cmd.stringifyParam(joint))
+  },
+
+  update: function (oldData) {
     if (!this.el.body) return setTimeout(() => this.update(), 256)
     if (!this.data.with.body) return setTimeout(() => this.update(), 256)
     if (!this.joint) {
@@ -375,12 +398,11 @@ AFRAME.registerComponent("joint", {
   },
 
   remove: function () {
-    if (this.joint) {
-      this.joint.body1.awake()
-      this.joint.body2.awake()
-      this.joint.remove()
-    }
-    this.joint = null
+    let worker = this.el.sceneEl.systems.physics.worker
+    let joints = this.el.sceneEl.systems.physics.joints
+    if (!worker) return
+    joints[this.id] = null
+    worker.postMessage("world joint " + this.id + " remove")
   },
 
 })

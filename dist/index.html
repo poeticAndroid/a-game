@@ -16,12 +16,12 @@
   <a-scene physics="workerUrl:./oimoWorker.js;">
     <a-entity include="./scenes/_assets.html"></a-entity>
     <a-camera look-controls="pointerLockEnabled:true;" wasd-controls="fly:true;"></a-camera>
-    <a-entity id="world" include="./scenes/ballmachine.html"></a-entity>
+    <a-entity class="world" include="./scenes/ballmachine.html"></a-entity>
   </a-scene>
 
-  <!-- don't include these! -->
-  <script src="./oimoWorker.js"></script>
-  <script src="/live.js"></script>
+  <!-- don't include these tags! -->
+  <!-- <script src="./oimoWorker.js"></script> -->
+  <!-- <script src="/live.js"></script> -->
 </body>
 
 </html>
