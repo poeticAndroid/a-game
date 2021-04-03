@@ -45,12 +45,8 @@ function onMessage(e) {
     let deadline = Date.now() + 256
     while (now > nextStep && Date.now() < deadline) {
       world.step()
-      for (let mid = 0; mid < movingBodies.length; mid++) {
-        let body = movingBodies[mid]
-        if (!body) continue
-        emitCollisions(body)
-      }
       nextStep += world.timerate
+      emitCollisions()
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
@@ -218,29 +214,30 @@ function shapeCommand(body, params) {
 }
 
 
-function emitCollisions(body) {
-  if (!body._emitsWith_) return
-  let b1, b2
-  let contact = world.contacts
-  while (contact !== null) {
-    b1 = contact.body1
-    b2 = contact.body2
-    if ((b1 === body && (b2._belongsTo_ & b1._emitsWith_)) || (b2 === body && (b1._belongsTo_ & b2._emitsWith_))) {
-      if (contact.touching && !contact.close) {
-        let other = b1 === body ? b2 : b1
-        let shape1 = b1 === body ? contact.shape1 : contact.shape2
-        let shape2 = b1 === body ? contact.shape2 : contact.shape1
-        let event = {
+function emitCollisions() {
+  for (let contact = world.contacts; contact; contact = contact.next) {
+    if (contact.touching && !contact.close) {
+      let b1 = contact.body1
+      let b2 = contact.body2
+      if (b1._emitsWith_ & b2._belongsTo_) {
+        postMessage("world body " + b1._id_ + " emits " + cmd.stringifyParam({
           event: "collision",
-          body1: body._id_,
-          body2: other._id_,
-          shape1: shape1._id_,
-          shape2: shape2._id_
-        }
-        postMessage("world body " + body._id_ + " emits " + cmd.stringifyParam(event))
+          body1: b1._id_,
+          body2: b2._id_,
+          shape1: contact.shape1._id_,
+          shape2: contact.shape2._id_
+        }))
+      }
+      if (b2._emitsWith_ & b1._belongsTo_) {
+        postMessage("world body " + b2._id_ + " emits " + cmd.stringifyParam({
+          event: "collision",
+          body1: b2._id_,
+          body2: b1._id_,
+          shape1: contact.shape2._id_,
+          shape2: contact.shape1._id_
+        }))
       }
     }
-    contact = contact.next
   }
 }
 
