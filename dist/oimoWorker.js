@@ -12303,6 +12303,7 @@ let vec = new OIMO.Vec3()
 let quat = new OIMO.Quat()
 let lastStep = 0
 let nextStep = Date.now()
+let numEmittingBodies = 0
 
 function init() {
   addEventListener("message", onMessage)
@@ -12402,6 +12403,7 @@ function bodyCommand(params) {
       body._shapes_ = [body.shapes]
       break
     case "remove":
+      if (numEmittingBodies && body._emitsWith_) numEmittingBodies--
       world.removeRigidBody(body)
       bodies[id] = null
       if (body._mid_ !== null)
@@ -12442,6 +12444,8 @@ function bodyCommand(params) {
       body._shapes_.forEach(shape => { shape.collidesWith = params[0] })
       break
     case "emitsWith":
+      if (params[0] && !body._emitsWith_) numEmittingBodies++
+      if (numEmittingBodies && body._emitsWith_ && !params[0]) numEmittingBodies--
       body._emitsWith_ = params[0]
       break
     case "sleeping":
@@ -12506,6 +12510,7 @@ function shapeCommand(body, params) {
 
 
 function emitCollisions() {
+  if (!numEmittingBodies) return
   for (let contact = world.contacts; contact; contact = contact.next) {
     if (contact.touching && !contact.close) {
       let b1 = contact.body1

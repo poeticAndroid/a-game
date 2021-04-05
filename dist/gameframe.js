@@ -18,7 +18,7 @@ AFRAME.registerComponent("include", {
 })
 
 },{}],2:[function(require,module,exports){
-/* global AFRAME, THREE, OIMO */
+/* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
 
@@ -116,6 +116,14 @@ AFRAME.registerSystem("physics", {
     }
   }
 })
+
+require("./physics/body")
+require("./physics/shape")
+require("./physics/joint")
+},{"../libs/cmdCodec":7,"./physics/body":3,"./physics/joint":4,"./physics/shape":5}],3:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("body", {
   dependencies: ["position", "rotation", "scale"],
@@ -268,73 +276,11 @@ AFRAME.registerComponent("body", {
   }
 })
 
-AFRAME.registerComponent("shape", {
-  dependencies: ["body"],
-  multiple: true,
-  schema: {
-    type: { type: "string", default: "box" },
-    density: { type: "number", default: 1 },
-    friction: { type: "number", default: 0.2 },
-    restitution: { type: "number", default: 0.2 },
-    belongsTo: { type: "int", default: 1 },
-    collidesWith: { type: "int", default: 0xffffffff },
-  },
 
-  init: function () {
-    this.body = this.el
-    while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
-    this.bodyId = this.body.components.body.id
+},{"../../libs/cmdCodec":7}],4:[function(require,module,exports){
+/* global AFRAME, THREE */
 
-    let worker = this.el.sceneEl.systems.physics.worker
-    let shapes = this.body.components.body.shapes
-    if (!worker) return
-    this.id = shapes.indexOf(null)
-    if (this.id < 0) this.id = shapes.length
-    shapes[this.id] = this.el
-
-    let shape = {}
-    shape.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
-    this.body.object3D.worldToLocal(shape.position)
-    shape.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
-    let bodyquat = this.body.object3D.getWorldQuaternion(THREE.Quaternion.temp())
-    shape.quaternion.multiply(bodyquat.conjugate().normalize()).normalize()
-    shape.size = THREE.Vector3.temp().set(1, 1, 1)
-
-    switch (this.el.tagName.toLowerCase()) {
-      case "a-sphere":
-        shape.type = "sphere"
-        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
-        break
-      case "a-cylinder":
-        shape.type = "cylinder"
-        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
-        break
-      case "a-box":
-        shape.type = "box"
-        shape.size.set(
-          parseFloat(this.el.getAttribute("width") || 1),
-          parseFloat(this.el.getAttribute("height") || 1),
-          parseFloat(this.el.getAttribute("depth") || 1)
-        )
-        break
-      // case "a-plane":
-      //   shape.type = "plane"
-      //   break
-    }
-
-    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
-  },
-
-  update: function () {
-  },
-
-  remove: function () {
-    let worker = this.el.sceneEl.systems.physics.worker
-    let shapes = this.body.components.body.shapes
-    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
-    shapes[this.id] = null
-  }
-})
+const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("joint", {
   dependencies: ["body", "shape"],
@@ -428,14 +374,88 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../libs/cmdCodec":4}],3:[function(require,module,exports){
+},{"../../libs/cmdCodec":7}],5:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+const cmd = require("../../libs/cmdCodec")
+
+AFRAME.registerComponent("shape", {
+  dependencies: ["body"],
+  multiple: true,
+  schema: {
+    type: { type: "string", default: "box" },
+    density: { type: "number", default: 1 },
+    friction: { type: "number", default: 0.2 },
+    restitution: { type: "number", default: 0.2 },
+    belongsTo: { type: "int", default: 1 },
+    collidesWith: { type: "int", default: 0xffffffff },
+  },
+
+  init: function () {
+    this.body = this.el
+    while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
+    this.bodyId = this.body.components.body.id
+
+    let worker = this.el.sceneEl.systems.physics.worker
+    let shapes = this.body.components.body.shapes
+    if (!worker) return
+    this.id = shapes.indexOf(null)
+    if (this.id < 0) this.id = shapes.length
+    shapes[this.id] = this.el
+
+    let shape = {}
+    shape.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+    this.body.object3D.worldToLocal(shape.position)
+    shape.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    let bodyquat = this.body.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    shape.quaternion.multiply(bodyquat.conjugate().normalize()).normalize()
+    shape.size = THREE.Vector3.temp().set(1, 1, 1)
+
+    switch (this.el.tagName.toLowerCase()) {
+      case "a-sphere":
+        shape.type = "sphere"
+        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
+        break
+      case "a-cylinder":
+        shape.type = "cylinder"
+        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
+        break
+      case "a-box":
+        shape.type = "box"
+        shape.size.set(
+          parseFloat(this.el.getAttribute("width") || 1),
+          parseFloat(this.el.getAttribute("height") || 1),
+          parseFloat(this.el.getAttribute("depth") || 1)
+        )
+        break
+      // case "a-plane":
+      //   shape.type = "plane"
+      //   break
+    }
+
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
+  },
+
+  update: function () {
+  },
+
+  remove: function () {
+    let worker = this.el.sceneEl.systems.physics.worker
+    let shapes = this.body.components.body.shapes
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
+    shapes[this.id] = null
+  }
+})
+
+
+},{"../../libs/cmdCodec":7}],6:[function(require,module,exports){
 require("./libs/pools")
 require("./libs/copyWorldPosRot")
 
 require("./components/include")
 require("./components/physics")
 
-},{"./components/include":1,"./components/physics":2,"./libs/copyWorldPosRot":5,"./libs/pools":6}],4:[function(require,module,exports){
+},{"./components/include":1,"./components/physics":2,"./libs/copyWorldPosRot":8,"./libs/pools":9}],7:[function(require,module,exports){
 module.exports = {
   parse: function (cmd) {
     let words = cmd.split(" ")
@@ -456,7 +476,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],5:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -474,7 +494,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],6:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -500,4 +520,4 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}]},{},[3]);
+},{}]},{},[6]);
