@@ -12464,11 +12464,17 @@ function jointCommand(params) {
         world.removeJoint(joint)
       }
       joints[id] = joint = world.add({
-        move: params[0].type !== "static",
-        kinematic: params[0].type === "kinematic",
+        type: "joint" + params[0].type.charAt(0).toUpperCase() + params[0].type.substr(1),
+        body1: bodies[params[0].body1],
+        body2: bodies[params[0].body2],
+        pos1: [params[0].pivot1.x, params[0].pivot1.y, params[0].pivot1.z],
+        pos2: [params[0].pivot2.x, params[0].pivot2.y, params[0].pivot2.z],
+        axe1: [params[0].axis1.x, params[0].axis1.y, params[0].axis1.z],
+        axe2: [params[0].axis2.x, params[0].axis2.y, params[0].axis2.z],
+        min: params[0].min,
+        max: params[0].max,
+        collision: params[0].collision,
       })
-      joint.resetPosition(params[0].position.x, params[0].position.y, params[0].position.z)
-      joint.resetQuaternion(params[0].quaternion)
       joint._id_ = id
       break
     case "remove":
