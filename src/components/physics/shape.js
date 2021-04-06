@@ -3,15 +3,15 @@
 const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("shape", {
-  dependencies: ["body"],
+  // dependencies: ["body"],
   multiple: true,
   schema: {
-    type: { type: "string", default: "box" },
-    density: { type: "number", default: 1 },
-    friction: { type: "number", default: 0.2 },
-    restitution: { type: "number", default: 0.2 },
-    belongsTo: { type: "int", default: 1 },
-    collidesWith: { type: "int", default: 0xffffffff },
+    // type: { type: "string", default: "box" },
+    // density: { type: "number", default: 1 },
+    // friction: { type: "number", default: 0.2 },
+    // restitution: { type: "number", default: 0.2 },
+    // belongsTo: { type: "int", default: 1 },
+    // collidesWith: { type: "int", default: 0xffffffff },
   },
 
   init: function () {

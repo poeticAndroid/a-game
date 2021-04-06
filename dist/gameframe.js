@@ -134,6 +134,7 @@ AFRAME.registerComponent("body", {
     collidesWith: { type: "int", default: 0xffffffff },
     emitsWith: { type: "int", default: 0 },
     sleeping: { type: "boolean", default: false },
+    autoShape: { type: "boolean", default: true },
   },
 
   init: function () {
@@ -178,14 +179,16 @@ AFRAME.registerComponent("body", {
       worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
     })
 
-    if (!this.el.getAttribute("shape")) {
-      if (this.el.firstElementChild) {
-        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
-        if (els) els.forEach(el => {
-          if (!el.getAttribute("shape")) el.setAttribute("shape", true)
-        })
-      } else {
-        this.el.setAttribute("shape", true)
+    if (this.data.autoShape) {
+      if (!this.el.getAttribute("shape")) {
+        if (this.el.firstElementChild) {
+          let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
+          if (els) els.forEach(el => {
+            if (!el.getAttribute("shape")) el.setAttribute("shape", true)
+          })
+        } else {
+          this.el.setAttribute("shape", true)
+        }
       }
     }
   },
@@ -202,7 +205,9 @@ AFRAME.registerComponent("body", {
     if (this.data.emitsWith !== oldData.emitsWith)
       worker.postMessage("world body " + this.id + " emitsWith = " + cmd.stringifyParam(this.data.emitsWith))
     // if (this.data.sleeping !== oldData.sleeping)
-    worker.postMessage("world body " + this.id + " sleeping = " + !!(this.data.sleeping))
+    setTimeout(() => {
+      worker.postMessage("world body " + this.id + " sleeping = " + !!(this.data.sleeping))
+    })
   },
 
   pause: function () {
@@ -380,15 +385,15 @@ AFRAME.registerComponent("joint", {
 const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("shape", {
-  dependencies: ["body"],
+  // dependencies: ["body"],
   multiple: true,
   schema: {
-    type: { type: "string", default: "box" },
-    density: { type: "number", default: 1 },
-    friction: { type: "number", default: 0.2 },
-    restitution: { type: "number", default: 0.2 },
-    belongsTo: { type: "int", default: 1 },
-    collidesWith: { type: "int", default: 0xffffffff },
+    // type: { type: "string", default: "box" },
+    // density: { type: "number", default: 1 },
+    // friction: { type: "number", default: 0.2 },
+    // restitution: { type: "number", default: 0.2 },
+    // belongsTo: { type: "int", default: 1 },
+    // collidesWith: { type: "int", default: 0xffffffff },
   },
 
   init: function () {
