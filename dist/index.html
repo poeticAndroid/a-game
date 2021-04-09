@@ -16,11 +16,10 @@
   <a-scene physics="workerUrl:./cannonWorker.js;">
     <a-entity include="./scenes/_assets.html"></a-entity>
     <a-camera look-controls="pointerLockEnabled:true;" wasd-controls="fly:true;"></a-camera>
-    <a-entity class="world" include="./scenes/chairs.html"></a-entity>
+    <a-entity class="world" include="./scenes/chairs.html" id="world"></a-entity>
   </a-scene>
 
   <!-- don't include these tags! -->
-  <!-- <script src="./cannonWorker.js"></script> -->
   <script src="/live.js"></script>
 </body>
 
