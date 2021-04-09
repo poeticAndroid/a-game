@@ -20,7 +20,7 @@ A WebWorker based physics system..
 | workerUrl | URL of worker script |          |
 | gravity   | Gravity vector       | 0 -9.8 0 |
 
-## See also
+## Components
 
  - [body](./physics/body.md)
  - [shape](./physics/shape.md)

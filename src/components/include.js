@@ -3,7 +3,7 @@
 AFRAME.registerComponent("include", {
   schema: { type: "string" },
 
-  update: async function () {
+  init: async function () {
     if (this.data && !this.el.sceneEl._including_) {
       this.el.sceneEl._including_ = true
       let response = await fetch(this.data)
@@ -11,7 +11,7 @@ AFRAME.registerComponent("include", {
       else this.el.removeAttribute("include")
       this.el.sceneEl._including_ = false
       let next = this.el.sceneEl.querySelector("[include]")
-      if (next) next.components.include.update()
+      if (next) next.components.include.init()
     }
   }
 })
