@@ -7,7 +7,7 @@ AFRAME.registerComponent("include", {
     if (this.data && !this.el.sceneEl._including_) {
       this.el.sceneEl._including_ = true
       let baseUrl = ""
-      let baseEl = this.el
+      let baseEl = this.el.parentElement
       while (baseEl && !baseEl.dataset["includeBase"]) baseEl = baseEl.parentElement
       if (baseEl) baseUrl = baseEl.dataset["includeBase"]
       let url = this.data
