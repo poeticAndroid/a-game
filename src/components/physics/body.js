@@ -7,8 +7,9 @@ AFRAME.registerComponent("body", {
 
   schema: {
     type: { type: "string", default: "static" },
+    mass: { type: "number", default: 1 },
     belongsTo: { type: "int", default: 1 },
-    collidesWith: { type: "int", default: 0xffffffff },
+    collidesWith: { type: "int", default: 1 },
     emitsWith: { type: "int", default: 0 },
     sleeping: { type: "boolean", default: false },
     autoShape: { type: "boolean", default: true },
@@ -75,6 +76,8 @@ AFRAME.registerComponent("body", {
     if (!worker) return
     if (this.data.type !== oldData.type)
       worker.postMessage("world body " + this.id + " type = " + cmd.stringifyParam(this.data.type))
+    if (this.data.mass !== oldData.mass)
+      worker.postMessage("world body " + this.id + " mass = " + cmd.stringifyParam(this.data.mass))
     if (this.data.belongsTo !== oldData.belongsTo)
       worker.postMessage("world body " + this.id + " belongsTo = " + cmd.stringifyParam(this.data.belongsTo))
     if (this.data.collidesWith !== oldData.collidesWith)

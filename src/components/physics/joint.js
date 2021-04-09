@@ -3,11 +3,11 @@
 const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("joint", {
-  dependencies: ["body", "shape"],
+  // dependencies: ["body", "shape"],
   multiple: true,
 
   schema: {
-    type: { type: "string", default: "prisme" },
+    type: { type: "string", default: "ball" },
     body1: { type: "selector" },
     body2: { type: "selector" },
     pivot1: { type: "vec3", default: { x: 0, y: 0, z: 0 } },

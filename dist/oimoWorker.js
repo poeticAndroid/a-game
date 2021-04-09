@@ -12290,6 +12290,8 @@ module.exports = {
 },{}],3:[function(require,module,exports){
 (function (global){(function (){
 /* global AFRAME, THREE, OIMO */
+if (typeof window !== "undefined")
+  return
 
 const cmd = require("./libs/cmdCodec")
 
@@ -12464,7 +12466,7 @@ function jointCommand(params) {
         world.removeJoint(joint)
       }
       joints[id] = joint = world.add({
-        type: "joint" + params[0].type.charAt(0).toUpperCase() + params[0].type.substr(1),
+        type: "joint" + (params[0].type === "distance" ? "Distance" : params[0].type === "hinge" ? "Hinge" : "Ball"),
         body1: bodies[params[0].body1],
         body2: bodies[params[0].body2],
         pos1: [params[0].pivot1.x, params[0].pivot1.y, params[0].pivot1.z],
