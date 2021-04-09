@@ -25,8 +25,13 @@ AFRAME.registerComponent("include", {
       attrs += b4Content.substr(p1, p2 - p1)
 
       let response = await fetch(url)
-      if (response.status >= 200 && response.status < 300) this.el.outerHTML = await (await (response).text()).replace(">", " " + attrs + ">")
-      else this.el.removeAttribute("include")
+      if (response.status >= 200 && response.status < 300) {
+        this.el.outerHTML = await (await (response).text()).replace(">", " >").replace(" ", " " + attrs + " ")
+      }
+      else {
+        this.el.removeAttribute("include")
+        delete this.el.dataset["includeBase"]
+      }
       this.el.sceneEl._including_ = false
       let next = this.el.sceneEl.querySelector("[include]")
       if (next && next.components && next.components.include) next.components.include.init()
