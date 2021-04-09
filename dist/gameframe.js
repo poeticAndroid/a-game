@@ -7,14 +7,6 @@ AFRAME.registerComponent("include", {
   init: async function () {
     if (this.data && !this.el.sceneEl._including_) {
       this.el.sceneEl._including_ = true
-      let baseUrl = ""
-      let baseEl = this.el.parentElement
-      while (baseEl && !baseEl.dataset["includeBase"]) baseEl = baseEl.parentElement
-      if (baseEl) baseUrl = baseEl.dataset["includeBase"]
-      let url = this.data
-      if (url.substr(0, 1) !== "/" && url.substr(0, 4) !== "http") url = baseUrl + url
-      if (url.indexOf("/") >= 0) this.el.dataset["includeBase"] = url.substr(0, url.lastIndexOf("/") + 1)
-
       let b4Content = this.el.outerHTML
 
       let p1 = b4Content.indexOf(" ")
@@ -25,13 +17,12 @@ AFRAME.registerComponent("include", {
       p2 = b4Content.indexOf(">")
       attrs += b4Content.substr(p1, p2 - p1)
 
-      let response = await fetch(url)
+      let response = await fetch(this.data)
       if (response.status >= 200 && response.status < 300) {
         this.el.outerHTML = await (await (response).text()).replace(">", " >").replace(" ", " " + attrs + " ")
       }
       else {
         this.el.removeAttribute("include")
-        delete this.el.dataset["includeBase"]
       }
       this.el.sceneEl._including_ = false
       let next = this.el.sceneEl.querySelector("[include]")
