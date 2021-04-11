@@ -11,4 +11,9 @@ setTimeout(() => {
 
 require("./components/include")
 require("./components/physics")
+require("./components/injectplayer")
 require("./components/locomotion")
+
+require("./primitives/a-main")
+require("./primitives/a-player")
+require("./primitives/a-hand")

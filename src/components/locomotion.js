@@ -1,7 +1,7 @@
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
-  dependencies: ["position"],
+  dependencies: ["position", "injectplayer"],
   schema: {
     acceleration: { type: "number", default: 65 },
     rotationSpeed: { type: "number", default: 1 },
@@ -23,11 +23,10 @@ AFRAME.registerComponent("locomotion", {
     this.angle = 0
     this.floorOffset = 0
 
-    this._ensurePlayer()
     this._camera = this.el.querySelector("a-camera")
     this._cameraObj = this._camera.querySelector(".tracker")
-    this._leftHand = this.el.querySelector(".left-hand")
-    this._rightHand = this.el.querySelector(".right-hand")
+    this._leftHand = this.el.querySelector("a-hand[side=\"left\"]")
+    this._rightHand = this.el.querySelector("a-hand[side=\"right\"]")
     this._cursor = this._camera.ensure("a-cursor.locomotion", "a-cursor", {
       class: "locomotion",
       raycaster: { origin: { x: 0, y: 0, z: 0.5 } },
@@ -385,22 +384,6 @@ AFRAME.registerComponent("locomotion", {
     this._vehicle.object3D.position.y = 0.5 - this.floorOffset
   },
 
-  _ensurePlayer: function () {
-    let cam = this.el.ensure("a-camera", "a-camera", { "look-controls": { pointerLockEnabled: true, touchEnabled: false } })
-    cam.ensure(".tracker", "a-entity", { class: "tracker" })
-    let boxsize = 0.0625
-    let leftHand = this.el.ensure(".left-hand", "a-entity", { class: "left-hand" })
-    let leftHitbox = leftHand.ensure(".left-hitbox", "a-box", { class: "left-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-    let leftGlove = leftHitbox.ensure(".left-glove", "a-entity", { class: "left-glove", position: "0 0 -0.0625" })
-    let rightHand = this.el.ensure(".right-hand", "a-entity", { class: "right-hand" })
-    let rightHitbox = rightHand.ensure(".right-hitbox", "a-box", { class: "right-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-    let rightGlove = rightHitbox.ensure(".right-glove", "a-entity", { class: "right-glove", position: "0 0 -0.0625" })
-    setTimeout(() => {
-      leftHand.setAttribute("hand-controls", { hand: "left", handEntity: leftGlove })
-      rightHand.setAttribute("hand-controls", { hand: "right", handEntity: rightGlove })
-    }, 256)
-  },
-
   _axisMove: function (e) {
     this._axes = this._axes || []
     if (e.srcElement.getAttribute("hand-controls").hand === "left") {
@@ -496,7 +479,7 @@ AFRAME.registerComponent("wall", {
 })
 AFRAME.registerComponent("start", {
 
-  update: function () {
+  init: function () {
     // Do something when component's data is updated.
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
     let pos = this.el.object3D.position

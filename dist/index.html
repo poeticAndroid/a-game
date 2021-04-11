@@ -15,8 +15,8 @@
 <body>
   <a-scene physics="workerUrl:./cannonWorker.js;">
     <a-entity include="./scenes/_assets.html"></a-entity>
-    <a-entity id="player" locomotion></a-entity>
-    <a-entity include="./scenes/ballmachine.html" id="world"></a-entity>
+    <a-player locomotion></a-player>
+    <a-main include="./scenes/ballmachine.html"></a-main>
   </a-scene>
 
   <!-- don't include these tags! -->

@@ -29,7 +29,7 @@ AFRAME.registerComponent("ball-spewer", {
       //   ball.setAttribute("body", "emitsWith", 0)
       // }
     })
-    let scene = this.el.sceneEl.querySelector("#world")
+    let scene = this.el.sceneEl.querySelector("a-main")
     scene.appendChild(ball)
   }
 })

@@ -34,8 +34,26 @@ AFRAME.registerComponent("include", {
 },{}],2:[function(require,module,exports){
 /* global AFRAME, THREE */
 
+AFRAME.registerComponent("injectplayer", {
+
+  init: function () {
+    let cam = this.el.ensure("a-camera", "a-camera", { "look-controls": { pointerLockEnabled: true, touchEnabled: false } })
+    cam.ensure(".tracker", "a-entity", { class: "tracker" })
+    let boxsize = 0.0625
+    let leftHand = this.el.ensure("a-hand[side=\"left\"]", "a-hand", { side: "left" })
+    // let leftHitbox = leftHand.ensure(".left-hitbox", "a-box", { class: "left-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
+    // let leftGlove = leftHitbox.ensure(".left-glove", "a-entity", { class: "left-glove", position: "0 0 -0.0625" })
+    let rightHand = this.el.ensure("a-hand[side=\"right\"]", "a-hand", { side: "right" })
+    // let rightHitbox = rightHand.ensure(".right-hitbox", "a-box", { class: "right-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
+    // let rightGlove = rightHitbox.ensure(".right-glove", "a-entity", { class: "right-glove", position: "0 0 -0.0625" })
+  }
+})
+
+},{}],3:[function(require,module,exports){
+/* global AFRAME, THREE */
+
 AFRAME.registerComponent("locomotion", {
-  dependencies: ["position"],
+  dependencies: ["position", "injectplayer"],
   schema: {
     acceleration: { type: "number", default: 65 },
     rotationSpeed: { type: "number", default: 1 },
@@ -57,11 +75,10 @@ AFRAME.registerComponent("locomotion", {
     this.angle = 0
     this.floorOffset = 0
 
-    this._ensurePlayer()
     this._camera = this.el.querySelector("a-camera")
     this._cameraObj = this._camera.querySelector(".tracker")
-    this._leftHand = this.el.querySelector(".left-hand")
-    this._rightHand = this.el.querySelector(".right-hand")
+    this._leftHand = this.el.querySelector("a-hand[side=\"left\"]")
+    this._rightHand = this.el.querySelector("a-hand[side=\"right\"]")
     this._cursor = this._camera.ensure("a-cursor.locomotion", "a-cursor", {
       class: "locomotion",
       raycaster: { origin: { x: 0, y: 0, z: 0.5 } },
@@ -419,22 +436,6 @@ AFRAME.registerComponent("locomotion", {
     this._vehicle.object3D.position.y = 0.5 - this.floorOffset
   },
 
-  _ensurePlayer: function () {
-    let cam = this.el.ensure("a-camera", "a-camera", { "look-controls": { pointerLockEnabled: true, touchEnabled: false } })
-    cam.ensure(".tracker", "a-entity", { class: "tracker" })
-    let boxsize = 0.0625
-    let leftHand = this.el.ensure(".left-hand", "a-entity", { class: "left-hand" })
-    let leftHitbox = leftHand.ensure(".left-hitbox", "a-box", { class: "left-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-    let leftGlove = leftHitbox.ensure(".left-glove", "a-entity", { class: "left-glove", position: "0 0 -0.0625" })
-    let rightHand = this.el.ensure(".right-hand", "a-entity", { class: "right-hand" })
-    let rightHitbox = rightHand.ensure(".right-hitbox", "a-box", { class: "right-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-    let rightGlove = rightHitbox.ensure(".right-glove", "a-entity", { class: "right-glove", position: "0 0 -0.0625" })
-    setTimeout(() => {
-      leftHand.setAttribute("hand-controls", { hand: "left", handEntity: leftGlove })
-      rightHand.setAttribute("hand-controls", { hand: "right", handEntity: rightGlove })
-    }, 256)
-  },
-
   _axisMove: function (e) {
     this._axes = this._axes || []
     if (e.srcElement.getAttribute("hand-controls").hand === "left") {
@@ -530,7 +531,7 @@ AFRAME.registerComponent("wall", {
 })
 AFRAME.registerComponent("start", {
 
-  update: function () {
+  init: function () {
     // Do something when component's data is updated.
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
     let pos = this.el.object3D.position
@@ -548,7 +549,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -651,7 +652,7 @@ AFRAME.registerSystem("physics", {
 require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
-},{"../libs/cmdCodec":8,"./physics/body":4,"./physics/joint":5,"./physics/shape":6}],4:[function(require,module,exports){
+},{"../libs/cmdCodec":9,"./physics/body":5,"./physics/joint":6,"./physics/shape":7}],5:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -816,7 +817,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":8}],5:[function(require,module,exports){
+},{"../../libs/cmdCodec":9}],6:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -883,7 +884,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":8}],6:[function(require,module,exports){
+},{"../../libs/cmdCodec":9}],7:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -960,7 +961,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":8}],7:[function(require,module,exports){
+},{"../../libs/cmdCodec":9}],8:[function(require,module,exports){
 require("./libs/pools")
 require("./libs/copyWorldPosRot")
 require("./libs/ensureElement")
@@ -974,9 +975,14 @@ setTimeout(() => {
 
 require("./components/include")
 require("./components/physics")
+require("./components/injectplayer")
 require("./components/locomotion")
 
-},{"./components/include":1,"./components/locomotion":2,"./components/physics":3,"./libs/copyWorldPosRot":9,"./libs/ensureElement":10,"./libs/pools":11,"./libs/touchGestures":12}],8:[function(require,module,exports){
+require("./primitives/a-main")
+require("./primitives/a-player")
+require("./primitives/a-hand")
+
+},{"./components/include":1,"./components/injectplayer":2,"./components/locomotion":3,"./components/physics":4,"./libs/copyWorldPosRot":10,"./libs/ensureElement":11,"./libs/pools":12,"./libs/touchGestures":13,"./primitives/a-hand":14,"./primitives/a-main":15,"./primitives/a-player":16}],9:[function(require,module,exports){
 module.exports = {
   parse: function (cmd) {
     let words = cmd.split(" ")
@@ -997,7 +1003,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -1015,7 +1021,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}) {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -1030,7 +1036,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}) {
   }
   return _childEl
 }
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -1056,7 +1062,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -1150,4 +1156,25 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}]},{},[7]);
+},{}],14:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerPrimitive("a-hand", {
+  mappings: {
+    side: "hand-controls.hand"
+  }
+})
+
+},{}],15:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerPrimitive("a-main", {})
+},{}],16:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerPrimitive("a-player", {
+  defaultComponents: {
+    injectplayer: {}
+  }
+})
+},{}]},{},[8]);
