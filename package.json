@@ -1,6 +1,6 @@
 {
   "name": "gameframe",
-  "version": "0.1.13",
+  "version": "0.1.15",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {

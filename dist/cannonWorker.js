@@ -16,7 +16,6 @@ let vec = new CANNON.Vec3()
 let quat = new CANNON.Quaternion()
 let cyloff = new CANNON.Quaternion()
 let lastStep = 0
-let numEmittingBodies = 0
 
 function init() {
   cyloff.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), Math.PI / 2)
@@ -47,7 +46,7 @@ function onMessage(e) {
         body.quaternion.copy(quat)
       }
     }
-    if (now - lastStep < 1024) {
+    if (now - lastStep < 128) {
       world.step((now - lastStep) / 1000)
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
@@ -114,7 +113,6 @@ function bodyCommand(params) {
       world.addBody(bodies[id] = body)
       break
     case "remove":
-      if (numEmittingBodies && body._emitsWith_) numEmittingBodies--
       world.removeBody(body)
       bodies[id] = null
       if (body._mid_ !== null)
@@ -141,11 +139,9 @@ function bodyCommand(params) {
       break
     case "emitsWith":
       if (params[0] && !body._emitsWith_) {
-        numEmittingBodies++
         body.addEventListener("collide", onCollide)
       }
-      if (numEmittingBodies && body._emitsWith_ && !params[0]) {
-        numEmittingBodies--
+      if (body._emitsWith_ && !params[0]) {
         body.removeEventListener("collide", onCollide)
       }
       body._emitsWith_ = params[0]

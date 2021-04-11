@@ -15,8 +15,8 @@
 <body>
   <a-scene physics="workerUrl:./cannonWorker.js;">
     <a-entity include="./scenes/_assets.html"></a-entity>
-    <a-camera look-controls="pointerLockEnabled:true;" wasd-controls="fly:true;"></a-camera>
-    <a-entity include="./scenes/chairs.html" id="world"></a-entity>
+    <a-entity id="player" locomotion></a-entity>
+    <a-entity include="./scenes/ballmachine.html" id="world"></a-entity>
   </a-scene>
 
   <!-- don't include these tags! -->
