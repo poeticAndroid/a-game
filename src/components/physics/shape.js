@@ -66,7 +66,9 @@ AFRAME.registerComponent("shape", {
   },
 
   remove: function () {
+    if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
+    if (!worker) return
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null

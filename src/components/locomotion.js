@@ -14,19 +14,21 @@ AFRAME.registerComponent("locomotion", {
   init: function () {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onKeyUp = this._onKeyUp.bind(this)
+    this._onAxisMove = this._onAxisMove.bind(this)
 
     this._keysDown = {}
+    this._axes = [0, 0, 0, 0]
     this.centerPos = new THREE.Vector3()
     this.headPos = new THREE.Vector3()
     this.headDir = new THREE.Vector3()
     this.feetPos = new THREE.Vector3()
 
     this._camera = this.el.querySelector("a-camera")
-    this._cameraObj = this._camera.querySelector(".tracker")
+    // this._cameraObj = this._camera.querySelector("[tracker]")
     this._leftHand = this.el.querySelector("a-hand[side=\"left\"]")
     this._rightHand = this.el.querySelector("a-hand[side=\"right\"]")
-    this._legs = this.el.sceneEl.ensure(".legs", "a-sphere", {
-      class: "legs", position: "0 0.5 0", radius: 0.125, color: "blue",
+    this._legs = this.el.sceneEl.ensure(".legs", "a-entity", {
+      class: "legs", position: "0 0.5 0", // radius: 0.125, color: "blue",
       raycaster: {
         autoRefresh: false,
         objects: "[floor]",
@@ -35,16 +37,16 @@ AFRAME.registerComponent("locomotion", {
         // showLine: true
       }
     })
-    this._legBumper = this.el.sceneEl.ensure(".legBumper", "a-sphere", {
-      class: "legBumper", position: "0 15 0", radius: 0.125, color: "red",
+    this._legBumper = this.el.sceneEl.ensure(".legBumper", "a-entity", {
+      class: "legBumper", position: "0 15 0", // radius: 0.125, color: "red",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",
-        showLine: true
+        // showLine: true
       }
     })
     this._headBumper = this.el.sceneEl.ensure(".headBumper", "a-entity", {
-      class: "headBumper", position: "0 15 0",
+      class: "headBumper", position: "0 15 0", // radius: 0.125, color: "green",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",
@@ -59,11 +61,14 @@ AFRAME.registerComponent("locomotion", {
   play: function () {
     document.addEventListener("keydown", this._onKeyDown)
     document.addEventListener("keyup", this._onKeyUp)
+    this._leftHand.addEventListener("axismove", this._onAxisMove)
+    this._rightHand.addEventListener("axismove", this._onAxisMove)
   },
 
   pause: function () {
     document.removeEventListener("keydown", this._onKeyDown)
     document.removeEventListener("keyup", this._onKeyUp)
+    this._rightHand.removeEventListener("axismove", this._onAxisMove)
   },
 
   remove: function () {
@@ -75,10 +80,15 @@ AFRAME.registerComponent("locomotion", {
   tick: function (time, timeDelta) {
     timeDelta /= 1000
     this.el.object3D.getWorldPosition(this.centerPos)
-    this._cameraObj.object3D.getWorldPosition(this.headPos)
-    this._cameraObj.object3D.getWorldDirection(this.headDir)
+    this.headPos.copy(this._camera.object3D.position)
+    this._camera.object3D.parent.localToWorld(this.headPos)
+    this.headDir.set(0, 0, -1)
+      .applyQuaternion(this._camera.object3D.quaternion)
+      .applyQuaternion(this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp()))
     this._legs.object3D.getWorldPosition(this.feetPos)
     this.feetPos.y -= 0.5
+
+    // this._headBumper.object3D.position.copy(this.headPos).add(this.headDir)
 
     this._applyMoveStick(timeDelta)
     this._applyAuxStick(timeDelta)
@@ -106,8 +116,11 @@ AFRAME.registerComponent("locomotion", {
     }
 
     // bump walls
-    this._bump(this._legs, this._legBumper)
-    this._bump(this._cameraObj, this._headBumper)
+    let pos = THREE.Vector3.temp()
+    pos.copy(this.feetPos).y += 0.5
+    // this._bump(pos, this._legBumper)
+    pos.copy(this.headPos)
+    this._bump(pos, this._headBumper)
   },
 
   _move: function (delta) {
@@ -139,14 +152,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _bump: function (object, bumper) {
+  _bump: function (pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
-    object.object3D.getWorldPosition(delta)
+    delta.copy(pos)
     delta.sub(bumper.object3D.position)
     let dist = delta.length()
     if (dist) {
-      bumper.setAttribute("raycaster", "far", dist + 0.125)
+      bumper.setAttribute("raycaster", "far", dist)
       bumper.setAttribute("raycaster", "direction", delta.normalize())
       // bumper.setAttribute("raycaster", "origin", delta.multiplyScalar(-0.25))
       ray = bumper.components.raycaster
@@ -158,7 +171,7 @@ AFRAME.registerComponent("locomotion", {
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
           .normalize()
-          .multiplyScalar(0.125 + dist)
+          .multiplyScalar(0.25 * dist)
         this._move(delta)
         delta.y = 0
         this._legs.object3D.position.add(delta)
@@ -172,18 +185,27 @@ AFRAME.registerComponent("locomotion", {
   },
 
   _callMoveStick() {
-    let stick = THREE.Vector2.temp().set(0, 0)
+    let bestStick = THREE.Vector2.temp().set(0, 0)
+    let stick = THREE.Vector2.temp()
+
+    stick.set(0, 0)
     if (this._keysDown["a"]) stick.x--
     if (this._keysDown["d"]) stick.x++
     if (this._keysDown["w"] || this._keysDown["ArrowUp"]) stick.y--
     if (this._keysDown["s"] || this._keysDown["ArrowDown"]) stick.y++
-    return stick
+    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
+    stick.set(this._axes[0], this._axes[1])
+    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
+    if (bestStick.length() > 1) bestStick.normalize()
+    return bestStick
   },
   _applyMoveStick: function (seconds) {
     let stick = this._callMoveStick()
     stick.multiplyScalar(this.data.speed)
     stick.multiplyScalar(seconds)
-    let heading = THREE.Vector2.temp().set(-this.headDir.z, this.headDir.x).angle() - Math.PI
+    let heading = THREE.Vector2.temp().set(this.headDir.z, -this.headDir.x).angle() - Math.PI
     let x2 = Math.cos(heading) * stick.x - Math.sin(heading) * stick.y
     let y2 = Math.sin(heading) * stick.x + Math.cos(heading) * stick.y
     let delta = THREE.Vector3.temp().set(x2, 0, y2)
@@ -204,12 +226,21 @@ AFRAME.registerComponent("locomotion", {
   },
 
   _callAuxStick() {
-    let stick = THREE.Vector2.temp().set(0, 0)
+    let bestStick = THREE.Vector2.temp().set(0, 0)
+    let stick = THREE.Vector2.temp()
+
+    stick.set(0, 0)
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
     if (this._keysDown["Space"]) stick.y--
     if (this._keysDown["Control"]) stick.y++
-    return stick
+    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
+    stick.set(this._axes[2], this._axes[3])
+    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
+    if (bestStick.length() > 1) bestStick.normalize()
+    return bestStick
   },
   _applyAuxStick: function (seconds) {
     let stick = this._callAuxStick()
@@ -251,6 +282,15 @@ AFRAME.registerComponent("locomotion", {
 
   _onKeyDown(e) { this._keysDown[e.key] = true },
   _onKeyUp(e) { this._keysDown[e.key] = false },
+  _onAxisMove(e) {
+    if (e.srcElement.getAttribute("hand-controls").hand === "left") {
+      this._axes[0] = e.detail.axis[2]
+      this._axes[1] = e.detail.axis[3]
+    } else {
+      this._axes[2] = e.detail.axis[2]
+      this._axes[3] = e.detail.axis[3]
+    }
+  },
 })
 
 require("./locomotion/floor")

@@ -7,7 +7,7 @@ AFRAME.registerComponent("injectplayer", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }
     })
-    cam.ensure(".tracker", "a-entity", { class: "tracker" })
+    // cam.ensure("[tracker]", "a-entity", { tracker: "" })
     let boxsize = 0.0625
     let leftHand = this.el.ensure("a-hand[side=\"left\"]", "a-hand", { side: "left" })
     // let leftHitbox = leftHand.ensure(".left-hitbox", "a-box", { class: "left-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
