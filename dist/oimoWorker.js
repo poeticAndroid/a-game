@@ -12382,6 +12382,7 @@ function worldCommand(params) {
 function bodyCommand(params) {
   let id = params.shift()
   let body = bodies[id]
+  if (!body && params[0] !== "create") return
   switch (params.shift()) {
     case "shape":
       shapeCommand(body, params)
@@ -12460,6 +12461,7 @@ function bodyCommand(params) {
 function jointCommand(params) {
   let id = params.shift()
   let joint = joints[id]
+  if (!joint && params[0] !== "create") return
   switch (params.shift()) {
     case "create":
       if (joint) {
@@ -12490,6 +12492,7 @@ function shapeCommand(body, params) {
   if (!body) return
   let id = params.shift()
   let shape = body._shapes_[id]
+  if (!shape && params[0] !== "create") return
   switch (params.shift()) {
     case "create":
       if (shape)

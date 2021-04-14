@@ -3,7 +3,10 @@
 AFRAME.registerComponent("injectplayer", {
 
   init: function () {
-    let cam = this.el.ensure("a-camera", "a-camera", { "look-controls": { pointerLockEnabled: true, touchEnabled: false } })
+    let cam = this.el.ensure("a-camera", "a-camera", {
+      "look-controls": { pointerLockEnabled: true, touchEnabled: false },
+      "wasd-controls": { enabled: false }
+    })
     cam.ensure(".tracker", "a-entity", { class: "tracker" })
     let boxsize = 0.0625
     let leftHand = this.el.ensure("a-hand[side=\"left\"]", "a-hand", { side: "left" })

@@ -17,3 +17,6 @@ require("./components/locomotion")
 require("./primitives/a-main")
 require("./primitives/a-player")
 require("./primitives/a-hand")
+
+const pkg = require("../package")
+console.log(`${pkg.name} Version ${pkg.version} by ${pkg.author}`)
