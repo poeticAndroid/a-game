@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
   "name": "gameframe",
-  "version": "0.1.25",
+  "version": "0.1.26",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -365,6 +365,17 @@ AFRAME.registerComponent("locomotion", {
     stick.set(this._axes[0], this._axes[1])
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        stick.set(
+          Math.abs(gamepad.axes[0]) > 0.25 ? gamepad.axes[0] : 0,
+          Math.abs(gamepad.axes[1]) > 0.25 ? gamepad.axes[1] : 0
+        )
+        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+      }
+    }
+
     if (bestStick.length() > 1) bestStick.normalize()
     return bestStick
   },
@@ -408,6 +419,17 @@ AFRAME.registerComponent("locomotion", {
 
     stick.copy(this._touchAxes)
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        stick.set(
+          Math.abs(gamepad.axes[2]) > 0.25 ? gamepad.axes[2] : 0,
+          Math.abs(gamepad.axes[3]) > 0.25 ? gamepad.axes[3] : 0
+        )
+        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+      }
+    }
 
     if (bestStick.length() > 1) bestStick.normalize()
     return bestStick
@@ -515,6 +537,14 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["g"]) toggles = toggles | 2
     if (this._vrRightClick) toggles = toggles | 1
     if (this._vrLeftClick) toggles = toggles | 2
+
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        if (gamepad.buttons[11].pressed) toggles = toggles | 1
+        if (gamepad.buttons[10].pressed) toggles = toggles | 2
+      }
+    }
 
     return toggles
   },
