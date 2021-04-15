@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
   "name": "gameframe",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -109,6 +109,7 @@ AFRAME.registerComponent("locomotion", {
 
     this._keysDown = {}
     this._axes = [0, 0, 0, 0]
+    this.currentFloorPosition = new THREE.Vector3()
     this.centerPos = new THREE.Vector3()
     this.headPos = new THREE.Vector3()
     this.headDir = new THREE.Vector3()
@@ -127,16 +128,16 @@ AFRAME.registerComponent("locomotion", {
         // showLine: true
       }
     })
-    this._legBumper = this.el.sceneEl.ensure(".legBumper", "a-entity", {
-      class: "legBumper", position: "0 0.5 0", // radius: 0.125, color: "red",
+    this._legBumper = this.el.sceneEl.ensure(".leg-bumper", "a-entity", {
+      class: "leg-bumper", position: "0 0.5 0", // radius: 0.125, color: "red",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",
         // showLine: true
       }
     })
-    this._headBumper = this.el.sceneEl.ensure(".headBumper", "a-entity", {
-      class: "headBumper", position: "0 0.5 0", // radius: 0.125, color: "green",
+    this._headBumper = this.el.sceneEl.ensure(".head-bumper", "a-entity", {
+      class: "head-bumper", position: "0 0.5 0", // radius: 0.125, color: "green",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",
@@ -210,9 +211,23 @@ AFRAME.registerComponent("locomotion", {
       ray.refreshObjects()
       let hit = ray.intersections[0]
       if (hit) {
+        if (this.currentFloor === hit.object.el) {
+          let delta = THREE.Vector3.temp()
+          delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
+          this._move(delta)
+          delta.y = 0
+          this._legs.object3D.position.add(delta)
+        } else {
+          if (this.currentFloor) this.currentFloor.emit("playerleave")
+          hit.object.el.emit("playerenter")
+        }
         this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
+        this.currentFloor = hit.object.el
+        this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
+        if (this.currentFloor) this.currentFloor.emit("playerleave")
         this._move(THREE.Vector3.temp().set(0, -0.125, 0))
+        this.currentFloor = null
       }
     }
 
@@ -234,14 +249,7 @@ AFRAME.registerComponent("locomotion", {
     this._headBumper.object3D.position.copy(this._legs.object3D.position)
   },
 
-  _move: function (delta) {
-    this.el.object3D.position.add(delta)
-    this.centerPos.add(delta)
-    this.headPos.add(delta)
-    this._legs.object3D.position.y += delta.y
-    this.feetPos.y += delta.y
-  },
-  _toggleCrouch: function (reset) {
+  toggleCrouch: function (reset) {
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
     if (this.centerPos.y !== this.feetPos.y) {
@@ -263,6 +271,13 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
+  _move: function (delta) {
+    this.el.object3D.position.add(delta)
+    this.centerPos.add(delta)
+    this.headPos.add(delta)
+    this._legs.object3D.position.y += delta.y
+    this.feetPos.y += delta.y
+  },
   _bump: function (pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
@@ -384,13 +399,12 @@ AFRAME.registerComponent("locomotion", {
     if (Math.round(stick.y) > 0) {
       if (!this._crouching) {
         this._crouching = true
-        this._toggleCrouch()
+        this.toggleCrouch()
       }
     } else {
       this._crouching = false
     }
     if (Math.round(stick.y) < 0) {
-      console.log("teleporting?")
       if (!this._teleporting) {
         this._teleportCursor.setAttribute("visible", true)
         this._teleporting = true
@@ -468,16 +482,14 @@ AFRAME.registerComponent("start", {
 
   init: function () {
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
-    let pos = this.el.object3D.position
-    console.log("starting at", pos)
-    // loco.moveTo(pos.x, pos.y, pos.z, true)
+    let pos = new THREE.Vector3()
+    // console.log("starting at", pos)
 
     setTimeout(() => {
-      loco.moveTo(pos.x, pos.y + 1, pos.z, true, true)
+      this.el.object3D.getWorldPosition(pos)
+      loco.teleport(pos)
       setTimeout(() => {
-        if (loco.floorOffset) {
-          loco.toggleCrouch()
-        }
+        loco.toggleCrouch(true)
       }, 256)
     }, 256)
   }

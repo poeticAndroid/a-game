@@ -10,13 +10,14 @@
   <script src="./gameframe.js"></script>
 
   <script src="./scenes/ballmachine.js"></script>
+  <script src="./scenes/demo.js"></script>
 </head>
 
 <body>
   <a-scene physics="workerUrl:./cannonWorker.js;">
     <a-entity include="./scenes/_assets.html"></a-entity>
     <a-player locomotion></a-player>
-    <a-main include="./scenes/ballmachine.html"></a-main>
+    <a-main include="./scenes/demo.html"></a-main>
   </a-scene>
 
   <!-- don't include these tags! -->
