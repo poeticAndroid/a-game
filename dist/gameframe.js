@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
   "name": "gameframe",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -115,7 +115,6 @@ AFRAME.registerComponent("locomotion", {
     this.feetPos = new THREE.Vector3()
 
     this._camera = this.el.querySelector("a-camera")
-    // this._cameraObj = this._camera.querySelector("[tracker]")
     this._leftHand = this.el.querySelector("a-hand[side=\"left\"]")
     this._rightHand = this.el.querySelector("a-hand[side=\"right\"]")
     this._legs = this.el.sceneEl.ensure(".legs", "a-entity", {
@@ -129,7 +128,7 @@ AFRAME.registerComponent("locomotion", {
       }
     })
     this._legBumper = this.el.sceneEl.ensure(".legBumper", "a-entity", {
-      class: "legBumper", position: "0 15 0", // radius: 0.125, color: "red",
+      class: "legBumper", position: "0 0.5 0", // radius: 0.125, color: "red",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",
@@ -137,12 +136,23 @@ AFRAME.registerComponent("locomotion", {
       }
     })
     this._headBumper = this.el.sceneEl.ensure(".headBumper", "a-entity", {
-      class: "headBumper", position: "0 15 0", // radius: 0.125, color: "green",
+      class: "headBumper", position: "0 0.5 0", // radius: 0.125, color: "green",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",
         // showLine: true
       }
+    })
+    this._teleportBeam = this._camera.ensure(".teleportBeam", "a-entity", {
+      class: "teleportBeam",
+      raycaster: {
+        autoRefresh: false,
+        objects: "[floor], [wall]",
+        // showLine: true
+      }
+    })
+    this._teleportCursor = this.el.ensure(".teleport-cursor", "a-cylinder", {
+      class: "teleport-cursor", radius: 0.5, height: 0.0625, visible: false, material: "transparent:false; opacity:0.5;"
     })
   },
 
@@ -212,6 +222,16 @@ AFRAME.registerComponent("locomotion", {
     // this._bump(pos, this._legBumper)
     pos.copy(this.headPos)
     this._bump(pos, this._headBumper)
+  },
+
+  teleport: function (pos) {
+    let delta = THREE.Vector3.temp()
+    delta.copy(pos).sub(this.feetPos)
+    this._move(delta)
+    this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
+    this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
+    this._legBumper.object3D.position.copy(this._legs.object3D.position)
+    this._headBumper.object3D.position.copy(this._legs.object3D.position)
   },
 
   _move: function (delta) {
@@ -323,7 +343,7 @@ AFRAME.registerComponent("locomotion", {
     stick.set(0, 0)
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
-    if (this._keysDown["Space"]) stick.y--
+    if (this._keysDown[" "]) stick.y--
     if (this._keysDown["Control"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
@@ -369,6 +389,35 @@ AFRAME.registerComponent("locomotion", {
     } else {
       this._crouching = false
     }
+    if (Math.round(stick.y) < 0) {
+      console.log("teleporting?")
+      if (!this._teleporting) {
+        this._teleportCursor.setAttribute("visible", true)
+        this._teleporting = true
+      }
+      ray = this._teleportBeam.components.raycaster
+      ray.refreshObjects()
+      hit = ray.intersections[0]
+      if (hit && hit.object.el.getAttribute("floor") != null) {
+        let delta = THREE.Vector3.temp()
+        delta.copy(hit.point).sub(this.feetPos)
+        if (delta.y > 1.5) delta.multiplyScalar(0)
+        if (delta.length() > this.data.teleportDistance) delta.normalize().multiplyScalar(this.data.teleportDistance)
+        delta.add(this.feetPos)
+        this._teleportCursor.object3D.position.copy(delta)
+        this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+      } else {
+        this._teleportCursor.object3D.position.copy(this.feetPos)
+        this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+      }
+    } else if (this._teleporting) {
+      let pos = THREE.Vector3.temp()
+      this._teleportCursor.object3D.getWorldPosition(pos)
+      this.teleport(pos)
+      this._teleportCursor.setAttribute("visible", false)
+      this._teleportCursor.setAttribute("position", "0 0 0")
+      this._teleporting = false
+    }
   },
 
   _onKeyDown(e) { this._keysDown[e.key] = true },
@@ -380,6 +429,17 @@ AFRAME.registerComponent("locomotion", {
     } else {
       this._axes[2] = e.detail.axis[2]
       this._axes[3] = e.detail.axis[3]
+    }
+    if (!this._handEnabled) {
+      this._teleportBeam.parentElement.removeChild(this._teleportBeam)
+      this._teleportBeam = this._rightHand.ensure(".teleportBeam", "a-entity", {
+        class: "teleportBeam",
+        raycaster: {
+          autoRefresh: false,
+          objects: "[floor], [wall]",
+        }
+      })
+      this._handEnabled = true
     }
   },
 })
