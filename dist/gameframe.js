@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
   "name": "gameframe",
-  "version": "0.1.23",
+  "version": "0.1.24",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -445,6 +445,13 @@ AFRAME.registerComponent("locomotion", {
         this._teleportCursor.setAttribute("visible", true)
         this._teleporting = true
       }
+      let quat = THREE.Quaternion.temp()
+      this._teleportCursor.object3D.getWorldQuaternion(quat)
+      this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
+      this._teleportCursor.object3D.quaternion.x = 0
+      this._teleportCursor.object3D.quaternion.z = 0
+      this._teleportCursor.object3D.quaternion.normalize()
+
       ray = this._teleportBeam.components.raycaster
       ray.refreshObjects()
       hit = ray.intersections[0]
@@ -452,18 +459,12 @@ AFRAME.registerComponent("locomotion", {
         let straight = THREE.Vector3.temp()
         let delta = THREE.Vector3.temp()
         let matrix = THREE.Matrix3.temp()
-        let quat = THREE.Quaternion.temp()
         delta.copy(hit.point).sub(this.feetPos)
         if (delta.y > 1.5) delta.multiplyScalar(0)
         if (delta.length() > this.data.teleportDistance) delta.normalize().multiplyScalar(this.data.teleportDistance)
         delta.add(this.feetPos)
         this._teleportCursor.object3D.position.copy(delta)
         this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
-        this._teleportCursor.object3D.getWorldQuaternion(quat)
-        this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
-        this._teleportCursor.object3D.quaternion.x = 0
-        this._teleportCursor.object3D.quaternion.z = 0
-        this._teleportCursor.object3D.quaternion.normalize()
 
         matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
         delta
@@ -477,10 +478,6 @@ AFRAME.registerComponent("locomotion", {
       } else {
         this._teleportCursor.object3D.position.copy(this.feetPos)
         this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
-        this._teleportCursor.object3D.quaternion.copy(this._camera.object3D.quaternion)
-        this._teleportCursor.object3D.quaternion.x = 0
-        this._teleportCursor.object3D.quaternion.z = 0
-        this._teleportCursor.object3D.quaternion.normalize()
       }
     } else if (this._teleporting) {
       let pos = THREE.Vector3.temp()
