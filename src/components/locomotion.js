@@ -16,9 +16,15 @@ AFRAME.registerComponent("locomotion", {
     this._onKeyUp = this._onKeyUp.bind(this)
     this._onAxisMove = this._onAxisMove.bind(this)
     this._onButtonChanged = this._onButtonChanged.bind(this)
+    this._onSwipeLeft = this._onSwipeLeft.bind(this)
+    this._onSwipeRight = this._onSwipeRight.bind(this)
+    this._onSwipeUp = this._onSwipeUp.bind(this)
+    this._onSwipeDown = this._onSwipeDown.bind(this)
+    this._onSwipeEnd = this._onSwipeEnd.bind(this)
 
     this._keysDown = {}
     this._axes = [0, 0, 0, 0]
+    this._touchAxes = new THREE.Vector2()
     this._teleporting = true
     this._flyDir = 1
     this._bumpOverload = 0
@@ -81,6 +87,11 @@ AFRAME.registerComponent("locomotion", {
     this._rightHand.addEventListener("axismove", this._onAxisMove)
     this._leftHand.addEventListener("buttonchanged", this._onButtonChanged)
     this._rightHand.addEventListener("buttonchanged", this._onButtonChanged)
+    this.el.sceneEl.canvas.addEventListener("swipeleft", this._onSwipeLeft)
+    this.el.sceneEl.canvas.addEventListener("swiperight", this._onSwipeRight)
+    this.el.sceneEl.canvas.addEventListener("swipeup", this._onSwipeUp)
+    this.el.sceneEl.canvas.addEventListener("swipedown", this._onSwipeDown)
+    this.el.sceneEl.canvas.addEventListener("touchend", this._onSwipeEnd)
   },
 
   pause: function () {
@@ -90,6 +101,11 @@ AFRAME.registerComponent("locomotion", {
     this._rightHand.removeEventListener("axismove", this._onAxisMove)
     this._leftHand.removeEventListener("buttonchanged", this._onButtonChanged)
     this._rightHand.removeEventListener("buttonchanged", this._onButtonChanged)
+    this.el.sceneEl.canvas.removeEventListener("swipeleft", this._onSwipeLeft)
+    this.el.sceneEl.canvas.removeEventListener("swiperight", this._onSwipeRight)
+    this.el.sceneEl.canvas.removeEventListener("swipeup", this._onSwipeUp)
+    this.el.sceneEl.canvas.removeEventListener("swipedown", this._onSwipeDown)
+    this.el.sceneEl.canvas.removeEventListener("touchend", this._onSwipeEnd)
   },
 
   remove: function () {
@@ -299,6 +315,9 @@ AFRAME.registerComponent("locomotion", {
     stick.set(this._axes[2], this._axes[3])
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
+    stick.copy(this._touchAxes)
+    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
     if (bestStick.length() > 1) bestStick.normalize()
     return bestStick
   },
@@ -424,7 +443,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onKeyDown(e) { this._keysDown[e.key] = true },
+  _onKeyDown(e) { this._keysDown[e.key] = true; console.log(e) },
   _onKeyUp(e) { this._keysDown[e.key] = false },
   _onAxisMove(e) {
     if (e.srcElement.getAttribute("hand-controls").hand === "left") {
@@ -453,6 +472,11 @@ AFRAME.registerComponent("locomotion", {
       if (e.detail.id == 3) this._vrRightClick = e.detail.state.pressed
     }
   },
+  _onSwipeLeft: function (e) { this._touchAxes.x = -1 },
+  _onSwipeRight: function (e) { this._touchAxes.x = 1 },
+  _onSwipeUp: function (e) { this._touchAxes.y = -1 },
+  _onSwipeDown: function (e) { this._touchAxes.y = 1 },
+  _onSwipeEnd: function (e) { this._touchAxes.set(0, 0) },
 })
 
 require("./locomotion/floor")
