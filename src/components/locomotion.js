@@ -15,10 +15,12 @@ AFRAME.registerComponent("locomotion", {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onKeyUp = this._onKeyUp.bind(this)
     this._onAxisMove = this._onAxisMove.bind(this)
+    this._onButtonChanged = this._onButtonChanged.bind(this)
 
     this._keysDown = {}
     this._axes = [0, 0, 0, 0]
     this._teleporting = true
+    this._flyDir = 1
     this.currentFloorPosition = new THREE.Vector3()
     this.centerPos = new THREE.Vector3()
     this.headPos = new THREE.Vector3()
@@ -68,6 +70,7 @@ AFRAME.registerComponent("locomotion", {
   },
 
   update: function (oldData) {
+    this._godMode = this.data.godMode
   },
 
   play: function () {
@@ -75,12 +78,17 @@ AFRAME.registerComponent("locomotion", {
     document.addEventListener("keyup", this._onKeyUp)
     this._leftHand.addEventListener("axismove", this._onAxisMove)
     this._rightHand.addEventListener("axismove", this._onAxisMove)
+    this._leftHand.addEventListener("buttonchanged", this._onButtonChanged)
+    this._rightHand.addEventListener("buttonchanged", this._onButtonChanged)
   },
 
   pause: function () {
     document.removeEventListener("keydown", this._onKeyDown)
     document.removeEventListener("keyup", this._onKeyUp)
+    this._leftHand.removeEventListener("axismove", this._onAxisMove)
     this._rightHand.removeEventListener("axismove", this._onAxisMove)
+    this._leftHand.removeEventListener("buttonchanged", this._onButtonChanged)
+    this._rightHand.removeEventListener("buttonchanged", this._onButtonChanged)
   },
 
   remove: function () {
@@ -100,8 +108,7 @@ AFRAME.registerComponent("locomotion", {
     this._legs.object3D.getWorldPosition(this.feetPos)
     this.feetPos.y -= 0.5
 
-    // this._headBumper.object3D.position.copy(this.headPos).add(this.headDir)
-
+    this._applyToggles(timeDelta)
     this._applyMoveStick(timeDelta)
     this._applyAuxStick(timeDelta)
 
@@ -116,7 +123,7 @@ AFRAME.registerComponent("locomotion", {
     }
 
     // fall
-    if (!this._caution) {
+    if (!this._godMode && !this._caution) {
       let ray = this._legs.components.raycaster
       ray.refreshObjects()
       let hit = ray.intersections[0]
@@ -142,11 +149,16 @@ AFRAME.registerComponent("locomotion", {
     }
 
     // bump walls
-    let pos = THREE.Vector3.temp()
-    pos.copy(this.feetPos).y += 0.5
-    // this._bump(pos, this._legBumper)
-    pos.copy(this.headPos)
-    this._bump(pos, this._headBumper)
+    if (!this._godMode) {
+      let pos = THREE.Vector3.temp()
+      pos.copy(this.feetPos).y += 0.5
+      this._bump(pos, this._legBumper)
+      pos.copy(this.headPos)
+      this._bump(pos, this._headBumper)
+    } else {
+      this._legBumper.object3D.position.copy(this._legs.object3D.position)
+      this._headBumper.object3D.position.copy(this._legs.object3D.position)
+    }
   },
 
   teleport: function (pos) {
@@ -162,7 +174,7 @@ AFRAME.registerComponent("locomotion", {
   toggleCrouch: function (reset) {
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
-    if (this.centerPos.y !== this.feetPos.y) {
+    if (Math.abs(this.centerPos.y - this.feetPos.y) > 0.03125) {
       delta = this.feetPos.y - this.centerPos.y
     } else if (!reset) {
       if (head2toe > 1) {
@@ -172,12 +184,16 @@ AFRAME.registerComponent("locomotion", {
       }
     }
     if (delta) {
+      console.log("anim!")
       this.el.setAttribute("animation", {
         property: "object3D.position.y",
         to: this.el.object3D.position.y + delta,
         dur: 256,
         // easing: "easeInOutSine"
       })
+      setTimeout(() => {
+        this.el.removeAttribute("animation")
+      }, 512)
     }
   },
 
@@ -195,7 +211,7 @@ AFRAME.registerComponent("locomotion", {
     delta.sub(bumper.object3D.position)
     let dist = delta.length()
     if (dist) {
-      bumper.setAttribute("raycaster", "far", dist)
+      bumper.setAttribute("raycaster", "far", dist + 0.125)
       bumper.setAttribute("raycaster", "direction", delta.normalize())
       // bumper.setAttribute("raycaster", "origin", delta.multiplyScalar(-0.25))
       ray = bumper.components.raycaster
@@ -207,7 +223,7 @@ AFRAME.registerComponent("locomotion", {
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
           .normalize()
-          .multiplyScalar(0.25 * dist)
+          .multiplyScalar(0.125 + dist)
         this._move(delta)
         delta.y = 0
         this._legs.object3D.position.add(delta)
@@ -215,7 +231,7 @@ AFRAME.registerComponent("locomotion", {
       } else if (this._caution) {
         this._caution--
       } else {
-        bumper.object3D.position.lerp(this._legs.object3D.position, 0.25)
+        bumper.object3D.position.lerp(pos, 0.25)
       }
     }
   },
@@ -307,11 +323,16 @@ AFRAME.registerComponent("locomotion", {
       this.centerPos.add(delta)
     }
     if (Math.round(stick.y) > 0) {
-      if (!this._crouching) {
+      if (this._godMode) {
+        this.el.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
+        this._legs.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
+        this._crouching = true
+      } else if (!this._crouching) {
         this._crouching = true
         this.toggleCrouch()
       }
     } else {
+      if (this._crouching) this._flyDir *= -1
       this._crouching = false
     }
     if (Math.round(stick.y) < 0) {
@@ -364,6 +385,32 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
+  _callToggles() {
+    let toggles = 0
+
+    if (this._keysDown["h"]) toggles = toggles | 1
+    if (this._keysDown["g"]) toggles = toggles | 2
+    if (this._vrRightClick) toggles = toggles | 1
+    if (this._vrLeftClick) toggles = toggles | 2
+
+    return toggles
+  },
+  _applyToggles: function () {
+    let toggles = this._callToggles()
+    if (toggles) {
+      if (!this._toggling) {
+        if (toggles & 1) this.data.quantizeRotation = !this.data.quantizeRotation
+        if (toggles & 2) {
+          if (this.data.godMode) this._godMode = !this._godMode
+          else this.data.quantizeMovement = !this.data.quantizeMovement
+        }
+      }
+      this._toggling = true
+    } else {
+      this._toggling = false
+    }
+  },
+
   _onKeyDown(e) { this._keysDown[e.key] = true },
   _onKeyUp(e) { this._keysDown[e.key] = false },
   _onAxisMove(e) {
@@ -384,6 +431,13 @@ AFRAME.registerComponent("locomotion", {
         }
       })
       this._handEnabled = true
+    }
+  },
+  _onButtonChanged: function (e) {
+    if (e.srcElement.getAttribute("hand-controls").hand === "left") {
+      if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
+    } else {
+      if (e.detail.id == 3) this._vrRightClick = e.detail.state.pressed
     }
   },
 })

@@ -32,12 +32,10 @@ This makes it possible to move around the using the following controls.
 
 ## Methods
 
-| Method              | Description                                                           |
-| ------------------- | --------------------------------------------------------------------- |
-| moveBy(x,y,z, safe) | Move by given vector. Ignore walls in the way, if `safe` is `true`.   |
-| moveTo(x,y,z, safe) | Move to given position. Ignore walls in the way, if `safe` is `true`. |
-| rotateBy(angle)     | Rotate by given angle.                                                |
-| toggleCrouch()      | Toggle crouch mode.                                                   |
+| Method         | Description                 |
+| -------------- | --------------------------- |
+| teleport(pos)  | Teleport to given position. |
+| toggleCrouch() | Toggle crouch mode.         |
 
 ## Related components
 
