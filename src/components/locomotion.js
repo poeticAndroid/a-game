@@ -21,6 +21,7 @@ AFRAME.registerComponent("locomotion", {
     this._axes = [0, 0, 0, 0]
     this._teleporting = true
     this._flyDir = 1
+    this._bumpOverload = 0
     this.currentFloorPosition = new THREE.Vector3()
     this.centerPos = new THREE.Vector3()
     this.headPos = new THREE.Vector3()
@@ -149,26 +150,34 @@ AFRAME.registerComponent("locomotion", {
     }
 
     // bump walls
-    if (!this._godMode) {
+    if (this._godMode) {
+      this._legBumper.object3D.position.copy(this._legs.object3D.position)
+      this._headBumper.object3D.position.copy(this._legs.object3D.position)
+    } else if (this._bumpOverload > 4 || Math.abs(this.headPos.y - this.feetPos.y) > 3) {
+      this.feetPos.y = this.centerPos.y
+      this._legs.object3D.position.y = this.feetPos.y + 0.5
+      this.teleport(this._legBumper.object3D.position, true)
+      if (this._bumpOverload) this._bumpOverload--
+    } else {
       let pos = THREE.Vector3.temp()
       pos.copy(this.feetPos).y += 0.5
       this._bump(pos, this._legBumper)
       pos.copy(this.headPos)
       this._bump(pos, this._headBumper)
-    } else {
-      this._legBumper.object3D.position.copy(this._legs.object3D.position)
-      this._headBumper.object3D.position.copy(this._legs.object3D.position)
     }
   },
 
-  teleport: function (pos) {
+  teleport: function (pos, force) {
     let delta = THREE.Vector3.temp()
     delta.copy(pos).sub(this.feetPos)
     this._move(delta)
     this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
     this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
-    this._legBumper.object3D.position.copy(this._legs.object3D.position)
-    this._headBumper.object3D.position.copy(this._legs.object3D.position)
+    this._caution = 8
+    if (force) {
+      this._legBumper.object3D.position.copy(this._legs.object3D.position)
+      this._headBumper.object3D.position.copy(this._legs.object3D.position)
+    }
   },
 
   toggleCrouch: function (reset) {
@@ -183,17 +192,14 @@ AFRAME.registerComponent("locomotion", {
         delta = 1
       }
     }
+    this.el.removeAttribute("animation")
     if (delta) {
-      console.log("anim!")
       this.el.setAttribute("animation", {
         property: "object3D.position.y",
         to: this.el.object3D.position.y + delta,
         dur: 256,
         // easing: "easeInOutSine"
       })
-      setTimeout(() => {
-        this.el.removeAttribute("animation")
-      }, 512)
     }
   },
 
@@ -223,14 +229,16 @@ AFRAME.registerComponent("locomotion", {
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
           .normalize()
-          .multiplyScalar(0.125 + dist)
+          .multiplyScalar(0.25 + dist / 2)
+        let feety = this._legs.object3D.position.y
         this._move(delta)
-        delta.y = 0
-        this._legs.object3D.position.add(delta)
+        this._legs.object3D.position.y = feety
         this._caution = 4
+        this._bumpOverload++
       } else if (this._caution) {
         this._caution--
       } else {
+        if (this._bumpOverload) this._bumpOverload--
         bumper.object3D.position.lerp(pos, 0.25)
       }
     }
@@ -297,6 +305,8 @@ AFRAME.registerComponent("locomotion", {
   _applyAuxStick: function (seconds) {
     let stick = this._callAuxStick()
     let rotation = 0
+
+    // Rotation
     if (this.data.quantizeRotation) {
       if (Math.round(stick.x)) {
         if (!this._rotating) {
@@ -322,6 +332,8 @@ AFRAME.registerComponent("locomotion", {
       this.el.object3D.position.add(delta)
       this.centerPos.add(delta)
     }
+
+    // Crouching
     if (Math.round(stick.y) > 0) {
       if (this._godMode) {
         this.el.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
@@ -335,6 +347,8 @@ AFRAME.registerComponent("locomotion", {
       if (this._crouching) this._flyDir *= -1
       this._crouching = false
     }
+
+    // Teleportation!
     if (Math.round(stick.y) < 0) {
       if (!this._teleporting) {
         this._teleportCursor.setAttribute("visible", true)
@@ -354,7 +368,8 @@ AFRAME.registerComponent("locomotion", {
         delta.add(this.feetPos)
         this._teleportCursor.object3D.position.copy(delta)
         this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
-        this._teleportCursor.object3D.quaternion.copy(this._camera.object3D.quaternion)
+        this._teleportCursor.object3D.getWorldQuaternion(quat)
+        this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
         this._teleportCursor.object3D.quaternion.x = 0
         this._teleportCursor.object3D.quaternion.z = 0
         this._teleportCursor.object3D.quaternion.normalize()
@@ -364,6 +379,7 @@ AFRAME.registerComponent("locomotion", {
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
           .normalize()
+        delta.applyQuaternion(quat.copy(this.el.object3D.quaternion).conjugate())
         straight.set(0, 1, 0)
         quat.setFromUnitVectors(straight, delta)
         this._teleportCursor.object3D.quaternion.premultiply(quat)

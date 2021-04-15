@@ -32,10 +32,10 @@ This makes it possible to move around the using the following controls.
 
 ## Methods
 
-| Method         | Description                 |
-| -------------- | --------------------------- |
-| teleport(pos)  | Teleport to given position. |
-| toggleCrouch() | Toggle crouch mode.         |
+| Method               | Description                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| teleport(pos, force) | Teleport to given position. if `force` is `true`, player will pass through walls/floors along the way. |
+| toggleCrouch()       | Toggle crouch mode.                                                                                    |
 
 ## Related components
 
