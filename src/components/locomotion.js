@@ -473,7 +473,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onKeyDown(e) { this._keysDown[e.key] = true; console.log(e) },
+  _onKeyDown(e) { this._keysDown[e.key] = true },
   _onKeyUp(e) { this._keysDown[e.key] = false },
   _onAxisMove(e) {
     if (e.srcElement.getAttribute("hand-controls").hand === "left") {
