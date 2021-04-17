@@ -1,4 +1,4 @@
-# GameFrame!
+# A-Game!
 
 Essential game components for A-Frame!
 

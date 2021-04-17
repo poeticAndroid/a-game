@@ -1,7 +1,7 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
-  "name": "gameframe",
-  "version": "0.1.27",
+  "name": "a-game",
+  "version": "0.1.28",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -35,6 +35,30 @@ module.exports={
 }
 
 },{}],2:[function(require,module,exports){
+require("./libs/pools")
+require("./libs/copyWorldPosRot")
+require("./libs/ensureElement")
+require("./libs/touchGestures")
+
+setTimeout(() => {
+  document.body.addEventListener("swipeup", e => {
+    document.body.requestFullscreen()
+  })
+})
+
+require("./components/include")
+require("./components/physics")
+require("./components/injectplayer")
+require("./components/locomotion")
+
+require("./primitives/a-main")
+require("./primitives/a-player")
+require("./primitives/a-hand")
+
+const pkg = require("../package")
+console.log(`${pkg.name} Version ${pkg.version} by ${pkg.author}`)
+
+},{"../package":1,"./components/include":3,"./components/injectplayer":4,"./components/locomotion":5,"./components/physics":9,"./libs/copyWorldPosRot":14,"./libs/ensureElement":15,"./libs/pools":16,"./libs/touchGestures":17,"./primitives/a-hand":18,"./primitives/a-main":19,"./primitives/a-player":20}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("include", {
@@ -67,7 +91,7 @@ AFRAME.registerComponent("include", {
   }
 })
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("injectplayer", {
@@ -88,7 +112,7 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -604,7 +628,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":5,"./locomotion/start":6,"./locomotion/wall":7}],5:[function(require,module,exports){
+},{"./locomotion/floor":6,"./locomotion/start":7,"./locomotion/wall":8}],6:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -617,7 +641,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -637,7 +661,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -650,7 +674,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -754,7 +778,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../libs/cmdCodec":13,"./physics/body":9,"./physics/joint":10,"./physics/shape":11}],9:[function(require,module,exports){
+},{"../libs/cmdCodec":13,"./physics/body":10,"./physics/joint":11,"./physics/shape":12}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -919,7 +943,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":13}],10:[function(require,module,exports){
+},{"../../libs/cmdCodec":13}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -986,7 +1010,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":13}],11:[function(require,module,exports){
+},{"../../libs/cmdCodec":13}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1065,31 +1089,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":13}],12:[function(require,module,exports){
-require("./libs/pools")
-require("./libs/copyWorldPosRot")
-require("./libs/ensureElement")
-require("./libs/touchGestures")
-
-setTimeout(() => {
-  document.body.addEventListener("swipeup", e => {
-    document.body.requestFullscreen()
-  })
-})
-
-require("./components/include")
-require("./components/physics")
-require("./components/injectplayer")
-require("./components/locomotion")
-
-require("./primitives/a-main")
-require("./primitives/a-player")
-require("./primitives/a-hand")
-
-const pkg = require("../package")
-console.log(`${pkg.name} Version ${pkg.version} by ${pkg.author}`)
-
-},{"../package":1,"./components/include":2,"./components/injectplayer":3,"./components/locomotion":4,"./components/physics":8,"./libs/copyWorldPosRot":14,"./libs/ensureElement":15,"./libs/pools":16,"./libs/touchGestures":17,"./primitives/a-hand":18,"./primitives/a-main":19,"./primitives/a-player":20}],13:[function(require,module,exports){
+},{"../../libs/cmdCodec":13}],13:[function(require,module,exports){
 module.exports = {
   parse: function (cmd) {
     let words = cmd.split(" ")
@@ -1286,4 +1286,4 @@ AFRAME.registerPrimitive("a-player", {
     injectplayer: {}
   }
 })
-},{}]},{},[12]);
+},{}]},{},[2]);
