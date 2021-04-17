@@ -6,12 +6,6 @@ AFRAME.registerComponent("shape", {
   // dependencies: ["body"],
   multiple: true,
   schema: {
-    // type: { type: "string", default: "box" },
-    // density: { type: "number", default: 1 },
-    // friction: { type: "number", default: 0.2 },
-    // restitution: { type: "number", default: 0.2 },
-    // belongsTo: { type: "int", default: 1 },
-    // collidesWith: { type: "int", default: 0xffffffff },
   },
 
   init: function () {
@@ -56,6 +50,7 @@ AFRAME.registerComponent("shape", {
         //   shape.type = "plane"
         //   break
       }
+      shape.size.multiply(this.el.object3D.getWorldScale(THREE.Vector3.temp()))
 
       worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
     })

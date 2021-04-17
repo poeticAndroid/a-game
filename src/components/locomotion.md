@@ -13,11 +13,11 @@ This makes it possible to move around the using the following controls.
 | Action                                  | Controller             | Desktop | Touch            |
 | --------------------------------------- | ---------------------- | ------- | ---------------- |
 | Move                                    | Left stick             | WASD    |
-| Rotate                                  | Right stick left/right | Mouse   | Swipe left/right |
+| Rotate                                  | Right stick left/right | Arrows  | Swipe left/right |
 | Teleport                                | Right stick up         | Space   | Swipe up         |
 | Crouch                                  | Right stick down       | C       | Swipe down       |
 | Toggle quantized movement (or God mode) | Click left stick       | G       |
-| Toggle quantized rotation               | Click right stick      |
+| Toggle quantized rotation               | Click right stick      | H       |
 
 ## Properties
 
