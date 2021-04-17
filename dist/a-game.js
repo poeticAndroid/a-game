@@ -1,7 +1,8 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 module.exports={
   "name": "a-game",
-  "version": "0.1.28",
+  "title": "A-Game",
+  "version": "0.1.29",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -56,7 +57,7 @@ require("./primitives/a-player")
 require("./primitives/a-hand")
 
 const pkg = require("../package")
-console.log(`${pkg.name} Version ${pkg.version} by ${pkg.author}`)
+console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
 
 },{"../package":1,"./components/include":3,"./components/injectplayer":4,"./components/locomotion":5,"./components/physics":9,"./libs/copyWorldPosRot":14,"./libs/ensureElement":15,"./libs/pools":16,"./libs/touchGestures":17,"./primitives/a-hand":18,"./primitives/a-main":19,"./primitives/a-player":20}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
@@ -879,6 +880,16 @@ AFRAME.registerComponent("body", {
   },
 
   remove: function () {
+    if (this.data.autoShape) {
+      this.el.removeAttibute("shape")
+      if (this.el.firstElementChild) {
+        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
+        if (els) els.forEach(el => {
+          el.removeAttribute("shape")
+        })
+      }
+    }
+
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies

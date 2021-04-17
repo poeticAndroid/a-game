@@ -98,6 +98,16 @@ AFRAME.registerComponent("body", {
   },
 
   remove: function () {
+    if (this.data.autoShape) {
+      this.el.removeAttibute("shape")
+      if (this.el.firstElementChild) {
+        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
+        if (els) els.forEach(el => {
+          el.removeAttribute("shape")
+        })
+      }
+    }
+
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
