@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.32",
+  "version": "0.1.33",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -179,17 +179,25 @@ AFRAME.registerComponent("grabber", {
   tick: function (time, timeDelta) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
-      if (this[_hand].grabbed && !this[_hand].isPhysical) {
-        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+      if (this[_hand].grabbed) {
+        if (!this[_hand].isPhysical)
+          this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
       } else {
-        // ray = this[_hand].ray.components.raycaster
-        // ray.refreshObjects()
-        // hit = ray.intersections[0]
-        // if (hit && hit.object.el.getAttribute("grabbable") != null) {
-        //   this[_hand].ray.setAttribute("raycaster", "showLine", true)
-        // } else {
-        //   this[_hand].ray.setAttribute("raycaster", "showLine", false)
-        // }
+        ray = this[_hand].ray.components.raycaster
+        ray.refreshObjects()
+        hit = ray.intersections[0]
+        if (hit && hit.object.el.getAttribute("grabbable") != null) {
+          if (this[_hand]._lastHit !== hit.object.el) {
+            if (this[_hand]._lastHit)
+              this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
+            this[_hand]._lastHit = hit.object.el
+            this.emit("reach", this[_hand].glove, this[_hand]._lastHit)
+          }
+        } else {
+          if (this[_hand]._lastHit)
+            this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
+          this[_hand]._lastHit = null
+        }
       }
     }
   },
@@ -228,6 +236,7 @@ AFRAME.registerComponent("grabber", {
       })
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
+      this.emit("grab", this[_hand].glove, this[_hand].grabbed)
     }
   },
   drop: function (hand = "head") {
@@ -237,6 +246,7 @@ AFRAME.registerComponent("grabber", {
     this[_hand].anchor.removeAttribute("joint__3")
     this[_hand].anchor.removeAttribute("animation")
     this[_hand].glove.setAttribute("visible", true)
+    this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
   dropObject: function (el) {
@@ -255,21 +265,21 @@ AFRAME.registerComponent("grabber", {
   useDown: function (hand = "head", button = 0) {
     let _hand = "_" + hand
     if (!this[_hand].grabbed) return this.grab(hand)
-    this.emit("usedown", this[_hand].hand, this[_hand].grabbed, { button: button })
+    this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
   useUp: function (hand = "head", button = 0) {
     let _hand = "_" + hand
-    this.emit("useup", this[_hand].hand, this[_hand].grabbed, { button: button })
+    this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
 
-  emit: function (eventtype, hand, grabbed, e = {}) {
+  emit: function (eventtype, glove, grabbed, e = {}) {
     e.grabber = this.el
     e.grabbedElement = grabbed
-    e.handElement = hand
+    e.gloveElement = glove
     for (let _hand of this._hands) {
-      if (this["_" + _hand].hand === hand) e.hand = _hand
+      if (this["_" + _hand].hand === glove) e.hand = _hand
     }
-    hand.emit(eventtype, e)
+    glove.emit(eventtype, e)
     if (grabbed) grabbed.emit(eventtype, e)
   },
 

@@ -1,11 +1,13 @@
 <a-main>
   <a-sky src="#skyImg"></a-sky>
-  <a-entity start position="0 0 0"></a-entity>
+  <a-entity start position="0 30 0"></a-entity>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
   <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable></a-box>
   <a-box color="#c9f" position="-0.55 .55 -4" rotation="10 11 12" grabbable></a-box>
   <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable></a-box>
-  <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4"></a-gltf-model>
+  <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4">
+    <a-cylinder height="0.5" radius="0.125" visible="false"></a-cylinder>
+  </a-gltf-model>
   <a-gltf-model grabbable="physics:false" src="#bunny" position="0 2 -3" scale=".03125 .03125 .03125"></a-gltf-model>
   <a-gltf-model grabbable="freeOrientation:false" src="#gunMdl" sound="on:usedown; src:#shot; poolSize:8;"
     position="0 .1 -1" rotation="1 2 4" scale=".05 .05 .05"></a-gltf-model>
