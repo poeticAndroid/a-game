@@ -33,10 +33,10 @@
       rotation="0 0 21"></a-box>
     <a-box rotation="-90 0 0" src="#woodImg" material="repeat: 2 2" width="16" height="16" depth="0.01" floor></a-box>
   </a-entity>
-  <a-box floor src="#granite" position="-8 0 0" scale="2 1 2"
+  <a-box floor src="#granite" position="-8 0 0" scale="2 1 2" body="type:kinematic;"
     animation="dur: 20000; property: position; to: -16 0 0; dir: alternate; loop:true;"></a-box>
-  <a-box floor src="#granite" position="8 -2 0" scale="2 1 2"
+  <a-box floor src="#granite" position="8 -2 0" scale="2 1 2" body="type:kinematic;"
     animation="dur: 20000; property: position; to: 8 12 0; dir: alternate; loop:true;"></a-box>
-  <a-box floor visible="false" position="0 -10 0" scale="1024 1 1024"
+  <a-box floor visible="false" position="0 -10 0" scale="1024 1 1024" body="type:kinematic;"
     animation="dur: 20000; property: position; to: 0 -0.6 0; dir: alternate; loop:true;"></a-box>
 </a-main>

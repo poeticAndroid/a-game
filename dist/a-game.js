@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.31",
+  "version": "0.1.32",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -65,7 +65,7 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
 
 AFRAME.registerComponent("grabber", {
   schema: {
-    hideOnGrab: { type: "boolean", default: false }
+    hideOnGrab: { type: "boolean", default: true }
   },
 
   init: function () {
@@ -92,42 +92,50 @@ AFRAME.registerComponent("grabber", {
     this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
     this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
 
-    if (this._left.hand !== this._left.glove) this._left.hand.setAttribute("visible", false)
-    if (this._right.hand !== this._right.glove) this._right.hand.setAttribute("visible", false)
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      if (this[_hand].hand !== this[_hand].glove) {
+        this[_hand].hand.setAttribute("visible", false)
+        this[_hand].hand.setAttribute("body", "type:kinematic;autoShape:false;")
+        this[_hand].hand.setAttribute("joint__1", { body2: this[_hand].glove, pivot1: "-1 -1 0", pivot2: "-1 -1 0" })
+        this[_hand].hand.setAttribute("joint__2", { body2: this[_hand].glove, pivot1: "1 -1 0", pivot2: "1 -1 0" })
+        this[_hand].hand.setAttribute("joint__3", { body2: this[_hand].glove, pivot1: "0 1 0", pivot2: "0 1 0" })
+      }
+    }
 
     this._head.ray = this._head.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray", position: "0 -0.0625 0",
+      class: "grabber-ray", position: "0 -0.125 0",
       raycaster: {
         objects: "[body], [grabbable]",
         autoRefresh: false,
         // showLine: true,
       }
     })
-    let dia = Math.sin(Math.PI / 4)
+    // let dia = Math.sin(Math.PI / 4)
     this._left.ray = this._left.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray",
+      class: "grabber-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
       raycaster: {
         objects: "[body], [grabbable]",
-        origin: { x: -0.0625, y: 0, z: 0.0625 },
-        direction: { x: dia, y: 0, z: -dia },
+        // origin: { x: -0.0625, y: 0, z: 0.0625 },
+        // direction: { x: dia, y: 0, z: -dia },
         autoRefresh: false,
         // showLine: true,
       }
     })
     this._right.ray = this._right.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray",
+      class: "grabber-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
       raycaster: {
         objects: "[body], [grabbable]",
-        origin: { x: 0.0625, y: 0, z: 0.0625 },
-        direction: { x: -dia, y: 0, z: -dia },
+        // origin: { x: 0.0625, y: 0, z: 0.0625 },
+        // direction: { x: -dia, y: 0, z: -dia },
         autoRefresh: false,
         // showLine: true,
       }
     })
 
-    this._head.anchor = this._head.glove.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false" })
-    this._left.anchor = this._left.glove.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false" })
-    this._right.anchor = this._right.glove.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false" })
+    this._head.anchor = this._head.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.anchor = this._left.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._right.anchor = this._right.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
   update: function (oldData) {
@@ -171,13 +179,17 @@ AFRAME.registerComponent("grabber", {
   tick: function (time, timeDelta) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
-      ray = this[_hand].ray.components.raycaster
-      ray.refreshObjects()
-      hit = ray.intersections[0]
-      if (hit && hit.object.el.getAttribute("grabbable") != null) {
-        this[_hand].ray.setAttribute("raycaster", "showLine", true)
+      if (this[_hand].grabbed && !this[_hand].isPhysical) {
+        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
       } else {
-        this[_hand].ray.setAttribute("raycaster", "showLine", false)
+        // ray = this[_hand].ray.components.raycaster
+        // ray.refreshObjects()
+        // hit = ray.intersections[0]
+        // if (hit && hit.object.el.getAttribute("grabbable") != null) {
+        //   this[_hand].ray.setAttribute("raycaster", "showLine", true)
+        // } else {
+        //   this[_hand].ray.setAttribute("raycaster", "showLine", false)
+        // }
       }
     }
   },
@@ -187,8 +199,52 @@ AFRAME.registerComponent("grabber", {
     if (this[_hand].grabbed) this.drop(hand)
     else this.grab(hand)
   },
-  grab: function (hand = "head") { },
-  drop: function (hand = "head") { },
+  grab: function (hand = "head") {
+    let _hand = "_" + hand
+    if (this[_hand].grabbed) this.drop(hand)
+    ray = this[_hand].ray.components.raycaster
+    ray.refreshObjects()
+    hit = ray.intersections[0]
+    if (hit && hit.object.el.getAttribute("grabbable") != null) {
+      this.dropObject(hit.object.el)
+      this[_hand].grabbed = hit.object.el
+      this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
+      if (this[_hand].grabbed.getAttribute("body") != null) {
+        this[_hand].anchor.setAttribute("joint__1", { body2: this[_hand].grabbed, pivot1: "-1 -1 0", pivot2: "-1 -1 0" })
+        this[_hand].anchor.setAttribute("joint__2", { body2: this[_hand].grabbed, pivot1: "1 -1 0", pivot2: "1 -1 0" })
+        this[_hand].anchor.setAttribute("joint__3", { body2: this[_hand].grabbed, pivot1: "0 1 0", pivot2: "0 1 0" })
+        this[_hand].isPhysical = true
+      } else {
+        this[_hand].isPhysical = false
+      }
+      this[_hand].anchor.removeAttribute("animation")
+      let delta = hit.distance
+      if (hand === "head") delta -= 0.5
+      else delta -= 0.0625
+      this[_hand].anchor.setAttribute("animation", {
+        property: "object3D.position.z",
+        to: this[_hand].anchor.object3D.position.z + delta,
+        dur: 256
+      })
+      if (this.data.hideOnGrab)
+        this[_hand].glove.setAttribute("visible", false)
+    }
+  },
+  drop: function (hand = "head") {
+    let _hand = "_" + hand
+    this[_hand].anchor.removeAttribute("joint__1")
+    this[_hand].anchor.removeAttribute("joint__2")
+    this[_hand].anchor.removeAttribute("joint__3")
+    this[_hand].anchor.removeAttribute("animation")
+    this[_hand].glove.setAttribute("visible", true)
+    this[_hand].grabbed = null
+  },
+  dropObject: function (el) {
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      if (this[_hand].grabbed === el) this.drop(hand)
+    }
+  },
   use: function (hand = "head", button = 0) {
     let _hand = "_" + hand
     this.useDown(hand, button)
