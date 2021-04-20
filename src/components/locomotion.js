@@ -63,8 +63,8 @@ AFRAME.registerComponent("locomotion", {
         // showLine: true
       }
     })
-    this._teleportBeam = this._camera.ensure(".teleportBeam", "a-entity", {
-      class: "teleportBeam",
+    this._teleportBeam = this._camera.ensure(".teleport-ray", "a-entity", {
+      class: "teleport-ray",
       raycaster: {
         autoRefresh: false,
         objects: "[floor], [wall]",

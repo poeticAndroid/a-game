@@ -1,8 +1,6 @@
-# a-items.js
+# grabber.js
 
 Components to facilitate grabbable and usable items.
-
-## grabber
 
 Add the `grabber` component to your player rig like so:
 
@@ -21,7 +19,7 @@ This makes it possible to grab and use grabbable objects using the following con
 
 
 
-### Methods
+## Methods
 
 `hand` parameter is either `"head"`(default), `"left"` or `"right"`.
 `button` parameter is 0 - 2, where 0 is the primary use button.
@@ -35,3 +33,8 @@ This makes it possible to grab and use grabbable objects using the following con
 | useUp(hand, button)   | Stop using grabbable.                                 |
 | drop(hand)            | Drop grabbable.                                       |
 | dropObject(el)        | Drop specified grabbable if held.                     |
+
+
+## Related components
+
+ - [grabbable](./grabber/grabbable.md)
