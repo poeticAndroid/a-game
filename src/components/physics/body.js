@@ -99,7 +99,7 @@ AFRAME.registerComponent("body", {
 
   remove: function () {
     if (this.data.autoShape) {
-      this.el.removeAttibute("shape")
+      this.el.removeAttribute("shape")
       if (this.el.firstElementChild) {
         let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
         if (els) els.forEach(el => {

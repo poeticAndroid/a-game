@@ -2,10 +2,11 @@
 
 AFRAME.registerComponent("grabber", {
   schema: {
-    hideOnGrab: { type: "boolean", default: true }
+    hideOnGrab: { type: "boolean", default: false }
   },
 
   init: function () {
+    this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
     this._onMouseUp = this._onMouseUp.bind(this)
@@ -29,50 +30,29 @@ AFRAME.registerComponent("grabber", {
     this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
     this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
 
+    // this._left.glove.setAttribute("visible", false)
+    // this._right.glove.setAttribute("visible", false)
     for (let hand of this._hands) {
       let _hand = "_" + hand
+      this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
       if (this[_hand].hand !== this[_hand].glove) {
-        this[_hand].hand.setAttribute("visible", false)
-        this[_hand].hand.setAttribute("body", "type:kinematic;autoShape:false;")
-        this[_hand].hand.setAttribute("joint__1", { body2: this[_hand].glove, pivot1: "-1 -1 0", pivot2: "-1 -1 0" })
-        this[_hand].hand.setAttribute("joint__2", { body2: this[_hand].glove, pivot1: "1 -1 0", pivot2: "1 -1 0" })
-        this[_hand].hand.setAttribute("joint__3", { body2: this[_hand].glove, pivot1: "0 1 0", pivot2: "0 1 0" })
+        // this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+        this[_hand].glove.flushToDOM(true)
+        this[_hand].gloveBody = "" + this[_hand].glove.outerHTML
+        // console.log(this[_hand].gloveBody)
+        this.el.removeChild(this[_hand].glove)
       }
     }
 
     this._head.ray = this._head.glove.ensure(".grabber-ray", "a-entity", {
       class: "grabber-ray", position: "0 -0.125 0",
       raycaster: {
-        objects: "[body], [grabbable]",
+        objects: "[floor], [wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
       }
     })
-    // let dia = Math.sin(Math.PI / 4)
-    this._left.ray = this._left.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
-      raycaster: {
-        objects: "[body], [grabbable]",
-        // origin: { x: -0.0625, y: 0, z: 0.0625 },
-        // direction: { x: dia, y: 0, z: -dia },
-        autoRefresh: false,
-        // showLine: true,
-      }
-    })
-    this._right.ray = this._right.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
-      raycaster: {
-        objects: "[body], [grabbable]",
-        // origin: { x: 0.0625, y: 0, z: 0.0625 },
-        // direction: { x: -dia, y: 0, z: -dia },
-        autoRefresh: false,
-        // showLine: true,
-      }
-    })
-
     this._head.anchor = this._head.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._left.anchor = this._left.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._right.anchor = this._right.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
   update: function (oldData) {
@@ -83,6 +63,7 @@ AFRAME.registerComponent("grabber", {
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
     for (let hand of [this._left.hand, this._right.hand]) {
+      // hand.addEventListener("buttonchanged", this._enableHands)
       hand.addEventListener("gripdown", this._onGripDown)
       hand.addEventListener("gripup", this._onGripUp)
       hand.addEventListener("triggerdown", this._onTriggerDown)
@@ -99,6 +80,7 @@ AFRAME.registerComponent("grabber", {
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
     for (let hand of [this._left.hand, this._right.hand]) {
+      // hand.removeEventListener("buttonchanged", this._enableHands)
       hand.removeEventListener("gripdown", this._onGripDown)
       hand.removeEventListener("gripup", this._onGripUp)
       hand.removeEventListener("triggerdown", this._onTriggerDown)
@@ -119,7 +101,7 @@ AFRAME.registerComponent("grabber", {
       if (this[_hand].grabbed) {
         if (!this[_hand].isPhysical)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
-      } else {
+      } else if (this[_hand].ray) {
         ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
         hit = ray.intersections[0]
@@ -146,6 +128,7 @@ AFRAME.registerComponent("grabber", {
   },
   grab: function (hand = "head") {
     let _hand = "_" + hand
+    if (!this[_hand].ray) return
     if (this[_hand].grabbed) this.drop(hand)
     ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
@@ -173,6 +156,7 @@ AFRAME.registerComponent("grabber", {
       })
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
+      this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
     }
   },
@@ -183,6 +167,7 @@ AFRAME.registerComponent("grabber", {
     this[_hand].anchor.removeAttribute("joint__3")
     this[_hand].anchor.removeAttribute("animation")
     this[_hand].glove.setAttribute("visible", true)
+    this[_hand].glove.setAttribute("body", "collidesWith", 1)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
@@ -218,6 +203,56 @@ AFRAME.registerComponent("grabber", {
     }
     glove.emit(eventtype, e)
     if (grabbed) grabbed.emit(eventtype, e)
+  },
+
+  _enableHands: function () {
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
+      if (this[_hand].hand !== this[_hand].glove) {
+        let div = document.createElement("div")
+        div.innerHTML = this[_hand].gloveBody
+        // console.log(div.firstElementChild)
+        this[_hand].glove = this.el.appendChild(div.firstElementChild)
+      }
+    }
+    setTimeout(() => {
+      for (let hand of this._hands) {
+        let _hand = "_" + hand
+        if (this[_hand].hand !== this[_hand].glove) {
+          this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+
+          this[_hand].hand.setAttribute("body", "type:kinematic;autoShape:false;")
+          this[_hand].hand.setAttribute("joint", { type: "lock", body2: this[_hand].glove })
+          this[_hand].hand.setAttribute("visible", false)
+        }
+      }
+    })
+    // this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
+    // this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
+    // let dia = Math.sin(Math.PI / 4)
+    this._left.ray = this._left.glove.ensure(".grabber-ray", "a-entity", {
+      class: "grabber-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
+      raycaster: {
+        objects: "[floor], [wall], [grabbable]",
+        // origin: { x: -0.0625, y: 0, z: 0.0625 },
+        // direction: { x: dia, y: 0, z: -dia },
+        autoRefresh: false,
+        showLine: true,
+      }
+    })
+    this._right.ray = this._right.glove.ensure(".grabber-ray", "a-entity", {
+      class: "grabber-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
+      raycaster: {
+        objects: "[floor], [wall], [grabbable]",
+        // origin: { x: 0.0625, y: 0, z: 0.0625 },
+        // direction: { x: -dia, y: 0, z: -dia },
+        autoRefresh: false,
+        showLine: true,
+      }
+    })
+    this._left.anchor = this._left.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._right.anchor = this._right.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
   _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },

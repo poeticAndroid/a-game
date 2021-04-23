@@ -182,7 +182,12 @@ function jointCommand(params) {
             bodies[params[0].body2]
           )
           break
-
+        case "lock":
+          joint = new CANNON.LockConstraint(
+            bodies[params[0].body1],
+            bodies[params[0].body2]
+          )
+          break
         default:
           joint = new CANNON.PointToPointConstraint(
             bodies[params[0].body1],
@@ -223,7 +228,9 @@ function shapeCommand(body, params) {
       body.updateMassProperties()
       break
     case "remove":
-      body.removeShape(shape)
+      // body.removeShape(shape)
+      let i = body.shapes.indexOf(shape)
+      if (i >= 0) body.shapes.splice(i, 1)
       body._shapes_[id] = null
       body.updateMassProperties()
       break
