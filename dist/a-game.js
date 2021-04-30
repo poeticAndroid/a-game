@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.34",
+  "version": "0.1.35",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -93,17 +93,19 @@ AFRAME.registerComponent("grabber", {
     this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
     this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
 
-    // this._left.glove.setAttribute("visible", false)
-    // this._right.glove.setAttribute("visible", false)
+    this._left.glove.setAttribute("visible", false)
+    this._right.glove.setAttribute("visible", false)
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
       if (this[_hand].hand !== this[_hand].glove) {
         // this[_hand].glove.copyWorldPosRot(this[_hand].hand)
-        this[_hand].glove.flushToDOM(true)
-        this[_hand].gloveBody = "" + this[_hand].glove.outerHTML
+        // this[_hand].glove.flushToDOM(true)
+        // this[_hand].gloveBody = this[_hand].glove.getAttribute("body")
+        // this[_hand].glove.removeAttribute("body")
         // console.log(this[_hand].gloveBody)
-        this.el.removeChild(this[_hand].glove)
+        // this.el.removeChild(this[_hand].glove)
+        this[_hand].glove.pause()
       }
     }
 
@@ -273,24 +275,22 @@ AFRAME.registerComponent("grabber", {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
       if (this[_hand].hand !== this[_hand].glove) {
-        let div = document.createElement("div")
-        div.innerHTML = this[_hand].gloveBody
+        this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+        this[_hand].glove.setAttribute("visible", true)
+        this[_hand].glove.play()
+        // let div = document.createElement("div")
+        // div.innerHTML = this[_hand].gloveBody
         // console.log(div.firstElementChild)
-        this[_hand].glove = this.el.appendChild(div.firstElementChild)
+        // this[_hand].glove = this.el.appendChild(div.firstElementChild)
+        // this[_hand].glove.setAttribute("body", this[_hand].gloveBody)
+
+        let boxsize = 0.0625
+        this[_hand].hand.ensure(".hitbox", "a-box", { class: "hitbox", position: "0 -0 0.0625", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
+        this[_hand].hand.setAttribute("body", "type:kinematic;")
+        this[_hand].hand.setAttribute("joint", { type: "point", body2: this[_hand].glove })
+        // this[_hand].hand.setAttribute("visible", false)
       }
     }
-    setTimeout(() => {
-      for (let hand of this._hands) {
-        let _hand = "_" + hand
-        if (this[_hand].hand !== this[_hand].glove) {
-          this[_hand].glove.copyWorldPosRot(this[_hand].hand)
-
-          this[_hand].hand.setAttribute("body", "type:kinematic;autoShape:false;")
-          this[_hand].hand.setAttribute("joint", { type: "lock", body2: this[_hand].glove })
-          this[_hand].hand.setAttribute("visible", false)
-        }
-      }
-    })
     // this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
     // this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
     // let dia = Math.sin(Math.PI / 4)
@@ -410,8 +410,8 @@ AFRAME.registerComponent("injectplayer", {
       "wasd-controls": { enabled: false }
     })
     // cam.ensure("[tracker]", "a-entity", { tracker: "" })
-    let boxsize = 0.0625
     let leftHand = this.el.ensure("a-hand[side=\"left\"]", "a-hand", { side: "left" })
+    let boxsize = 0.0625
     // let leftHitbox = leftHand.ensure(".left-hitbox", "a-box", { class: "left-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
     // let leftGlove = leftHitbox.ensure(".left-glove", "a-entity", { class: "left-glove", position: "0 0 -0.0625" })
     let rightHand = this.el.ensure("a-hand[side=\"right\"]", "a-hand", { side: "right" })
@@ -1158,6 +1158,14 @@ AFRAME.registerComponent("body", {
         }
       }
     }
+    this._initiated = true
+  },
+
+  play: function () {
+    if (!this._initiated) {
+      this.init()
+      this.update({})
+    }
   },
 
   update: function (oldData) {
@@ -1179,14 +1187,14 @@ AFRAME.registerComponent("body", {
     })
   },
 
-  pause: function () {
+  sleep: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     worker.postMessage("world body " + this.id + " sleeping = true")
     this.sleeping = true
   },
 
-  remove: function () {
+  pause: function () {
     if (this.data.autoShape) {
       this.el.removeAttribute("shape")
       if (this.el.firstElementChild) {
@@ -1205,6 +1213,7 @@ AFRAME.registerComponent("body", {
     if (this.mid !== null)
       movingBodies[this.mid] = null
     worker.postMessage("world body " + this.id + " remove")
+    this._initiated = false
   },
 
   tick: function () {
@@ -1342,56 +1351,58 @@ AFRAME.registerComponent("shape", {
   init: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
-    setTimeout(() => {
-      this.body = this.el
-      while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
-      this.bodyId = this.body.components.body.id
 
-      let shapes = this.body.components.body.shapes
-      this.id = shapes.indexOf(null)
-      if (this.id < 0) this.id = shapes.length
-      shapes[this.id] = this.el
+    this.body = this.el
+    while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
+    if (!this.body) return this._retry = setTimeout(() => {
+      this.init()
+    }, 256)
+    this.bodyId = this.body.components.body.id
 
-      let shape = {}
-      shape.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
-      this.body.object3D.worldToLocal(shape.position)
-      shape.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
-      let bodyquat = this.body.object3D.getWorldQuaternion(THREE.Quaternion.temp())
-      shape.quaternion.multiply(bodyquat.conjugate().normalize()).normalize()
-      shape.size = THREE.Vector3.temp().set(1, 1, 1)
+    let shapes = this.body.components.body.shapes
+    this.id = shapes.indexOf(null)
+    if (this.id < 0) this.id = shapes.length
+    shapes[this.id] = this.el
 
-      switch (this.el.tagName.toLowerCase()) {
-        case "a-sphere":
-          shape.type = "sphere"
-          shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
-          break
-        case "a-cylinder":
-          shape.type = "cylinder"
-          shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
-          break
-        case "a-box":
-          shape.type = "box"
-          shape.size.set(
-            parseFloat(this.el.getAttribute("width") || 1),
-            parseFloat(this.el.getAttribute("height") || 1),
-            parseFloat(this.el.getAttribute("depth") || 1)
-          )
-          break
-        // case "a-plane":
-        //   shape.type = "plane"
-        //   break
-      }
-      shape.size.multiply(this.el.object3D.getWorldScale(THREE.Vector3.temp()))
+    let shape = {}
+    shape.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+    this.body.object3D.worldToLocal(shape.position)
+    shape.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    let bodyquat = this.body.object3D.getWorldQuaternion(THREE.Quaternion.temp())
+    shape.quaternion.multiply(bodyquat.conjugate().normalize()).normalize()
+    shape.size = THREE.Vector3.temp().set(1, 1, 1)
 
-      worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
-    })
+    switch (this.el.tagName.toLowerCase()) {
+      case "a-sphere":
+        shape.type = "sphere"
+        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
+        break
+      case "a-cylinder":
+        shape.type = "cylinder"
+        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
+        break
+      case "a-box":
+        shape.type = "box"
+        shape.size.set(
+          parseFloat(this.el.getAttribute("width") || 1),
+          parseFloat(this.el.getAttribute("height") || 1),
+          parseFloat(this.el.getAttribute("depth") || 1)
+        )
+        break
+      // case "a-plane":
+      //   shape.type = "plane"
+      //   break
+    }
+    shape.size.multiply(this.el.object3D.getWorldScale(THREE.Vector3.temp()))
 
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
   update: function () {
   },
 
   remove: function () {
+    clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return

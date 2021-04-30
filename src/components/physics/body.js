@@ -69,6 +69,14 @@ AFRAME.registerComponent("body", {
         }
       }
     }
+    this._initiated = true
+  },
+
+  play: function () {
+    if (!this._initiated) {
+      this.init()
+      this.update({})
+    }
   },
 
   update: function (oldData) {
@@ -90,14 +98,14 @@ AFRAME.registerComponent("body", {
     })
   },
 
-  pause: function () {
+  sleep: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     worker.postMessage("world body " + this.id + " sleeping = true")
     this.sleeping = true
   },
 
-  remove: function () {
+  pause: function () {
     if (this.data.autoShape) {
       this.el.removeAttribute("shape")
       if (this.el.firstElementChild) {
@@ -116,6 +124,7 @@ AFRAME.registerComponent("body", {
     if (this.mid !== null)
       movingBodies[this.mid] = null
     worker.postMessage("world body " + this.id + " remove")
+    this._initiated = false
   },
 
   tick: function () {
