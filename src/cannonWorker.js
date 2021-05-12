@@ -24,6 +24,9 @@ function onMessage(e) {
   if (typeof e.data === "string") {
     let command = cmd.parse(e.data)
     switch (command.shift()) {
+      case "log":
+        console.log(...command)
+        break
       case "world":
         worldCommand(command)
         break

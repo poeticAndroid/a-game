@@ -4,6 +4,7 @@ AFRAME.registerComponent("start", {
 
   init: function () {
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
+    if (!loco) return setTimeout(() => { this.init() }, 256)
     let pos = new THREE.Vector3()
     // console.log("starting at", pos)
 

@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.35",
+  "version": "0.1.36",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -956,6 +956,7 @@ AFRAME.registerComponent("start", {
 
   init: function () {
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
+    if (!loco) return setTimeout(() => { this.init() }, 256)
     let pos = new THREE.Vector3()
     // console.log("starting at", pos)
 
@@ -990,7 +991,7 @@ const cmd = require("../libs/cmdCodec")
 AFRAME.registerSystem("physics", {
   schema: {
     workerUrl: { type: "string" },
-    gravity: { type: "vec3", default: { x: 0, y: -9.8, z: 0 } },
+    gravity: { type: "vec3", default: { x: 0, y: -10, z: 0 } },
     debug: { type: "boolean", default: false }
   },
 
@@ -998,6 +999,7 @@ AFRAME.registerSystem("physics", {
     if (this.data.workerUrl) {
       if (!this.worker) {
         this.worker = new Worker(this.data.workerUrl)
+        this.worker.postMessage("log " + cmd.stringifyParam("Physics worker ready!"))
         this.worker.addEventListener("message", this.onMessage.bind(this))
       }
       this.bodies = this.bodies || []
