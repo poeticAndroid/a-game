@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.36",
+  "version": "0.1.37",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -430,7 +430,9 @@ AFRAME.registerComponent("locomotion", {
     rotationSpeed: { type: "number", default: 1 },
     quantizeMovement: { type: "boolean", default: false },
     quantizeRotation: { type: "boolean", default: true },
-    teleportDistance: { type: "number", default: 3 },
+    teleportDistance: { type: "number", default: 0 },
+    jumpForce: { type: "number", default: 5 },
+    gravity: { type: "number", default: 10 },
     godMode: { type: "boolean", default: false }
   },
 
@@ -451,6 +453,7 @@ AFRAME.registerComponent("locomotion", {
     this._teleporting = true
     this._flyDir = 1
     this._bumpOverload = 0
+    this._vertVelocity = 1
     this.currentFloorPosition = new THREE.Vector3()
     this.centerPos = new THREE.Vector3()
     this.headPos = new THREE.Vector3()
@@ -567,7 +570,8 @@ AFRAME.registerComponent("locomotion", {
       let ray = this._legs.components.raycaster
       ray.refreshObjects()
       let hit = ray.intersections[0]
-      if (hit) {
+      if (hit && this._vertVelocity <= 0) {
+        this._vertVelocity = 0
         if (this.currentFloor === hit.object.el) {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
@@ -583,7 +587,8 @@ AFRAME.registerComponent("locomotion", {
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
         if (this.currentFloor) this.currentFloor.emit("playerleave")
-        this._move(THREE.Vector3.temp().set(0, -0.125, 0))
+        this._vertVelocity -= this.data.gravity * timeDelta
+        this._move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
         this.currentFloor = null
       }
     }
@@ -674,6 +679,7 @@ AFRAME.registerComponent("locomotion", {
         this._legs.object3D.position.y = feety
         this._caution = 4
         this._bumpOverload++
+        this._vertVelocity = Math.min(0, this._vertVelocity)
       } else if (this._caution) {
         this._caution--
       } else {
@@ -812,9 +818,9 @@ AFRAME.registerComponent("locomotion", {
       this._crouching = false
     }
 
-    // Teleportation!
+    // Teleportation and jumping
     if (Math.round(stick.y) < 0) {
-      if (!this._teleporting) {
+      if (!this._teleporting && this.data.teleportDistance) {
         this._teleportCursor.setAttribute("visible", true)
         this._teleporting = true
       }
@@ -852,6 +858,11 @@ AFRAME.registerComponent("locomotion", {
         this._teleportCursor.object3D.position.copy(this.feetPos)
         this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
       }
+      // jump!
+      if (this.currentFloor && !this._jumping) {
+        this._vertVelocity = this.data.jumpForce
+        this._jumping = true
+      }
     } else if (this._teleporting) {
       let pos = THREE.Vector3.temp()
       this._teleportCursor.object3D.getWorldPosition(pos)
@@ -859,6 +870,8 @@ AFRAME.registerComponent("locomotion", {
       this._teleportCursor.setAttribute("visible", false)
       this._teleportCursor.setAttribute("position", "0 0 0")
       this._teleporting = false
+    } else if (this._jumping) {
+      this._jumping = false
     }
   },
 
