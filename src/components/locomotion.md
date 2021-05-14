@@ -14,8 +14,8 @@ This makes it possible to move around the using the following controls.
 | --------------------------------------- | ---------------------- | ------- | ---------------- |
 | Move                                    | Left stick             | WASD    |
 | Rotate                                  | Right stick left/right | Arrows  | Swipe left/right |
-| Teleport                                | Right stick up         | Space   | Swipe up         |
-| Crouch                                  | Right stick down       | C       | Swipe down       |
+| Teleport/jump                           | Right stick up         | Space   | Swipe up         |
+| Crouch                                  | Right stick down       | Ctrl    | Swipe down       |
 | Toggle quantized movement (or God mode) | Click left stick       | G       |
 | Toggle quantized rotation               | Click right stick      | H       |
 
@@ -25,9 +25,9 @@ This makes it possible to move around the using the following controls.
 | ---------------- | ---------------------------------------------------------------- | ------- |
 | speed            | Speed of movement                                                | 4       |
 | rotationSpeed    | Speed of rotation                                                | 1       |
-| quantizeMovement | Quantize movement                                                | false   |
-| quantizeRotation | Quantize rotation                                                | true    |
-| teleportDistance | Maximum teleportation distance                                   | 3       |
+| teleportDistance | Maximum teleportation distance                                   | 5       |
+| jumpForce        | Amount of force to jump                                          | 0       |
+| gravity          | Amount of gravity when jumping and falling                       | 10      |
 | godMode          | Enable ability to fly through walls and floors in any direction  | false   |
 
 ## Methods

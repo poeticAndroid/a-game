@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.37",
+  "version": "0.1.40",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -428,10 +428,8 @@ AFRAME.registerComponent("locomotion", {
   schema: {
     speed: { type: "number", default: 4 },
     rotationSpeed: { type: "number", default: 1 },
-    quantizeMovement: { type: "boolean", default: false },
-    quantizeRotation: { type: "boolean", default: true },
-    teleportDistance: { type: "number", default: 0 },
-    jumpForce: { type: "number", default: 5 },
+    teleportDistance: { type: "number", default: 5 },
+    jumpForce: { type: "number", default: 0 },
     gravity: { type: "number", default: 10 },
     godMode: { type: "boolean", default: false }
   },
@@ -446,6 +444,8 @@ AFRAME.registerComponent("locomotion", {
     this._onSwipeUp = this._onSwipeUp.bind(this)
     this._onSwipeDown = this._onSwipeDown.bind(this)
     this._onSwipeEnd = this._onSwipeEnd.bind(this)
+    this._onEnterVR = this._onEnterVR.bind(this)
+    this._onExitVR = this._onExitVR.bind(this)
 
     this._keysDown = {}
     this._axes = [0, 0, 0, 0]
@@ -459,6 +459,14 @@ AFRAME.registerComponent("locomotion", {
     this.headPos = new THREE.Vector3()
     this.headDir = new THREE.Vector3()
     this.feetPos = new THREE.Vector3()
+
+    this._config = JSON.parse(localStorage.getItem("a-game.locomotion")) || {
+      quantizeMovement: false,
+      quantizeRotation: false,
+      quantizeMovementVR: !!(this.el.sceneEl.isMobile),
+      quantizeRotationVR: true
+    }
+    this._onExitVR()
 
     this._camera = this.el.querySelector("a-camera")
     this._leftHand = this.el.querySelector("a-hand[side=\"left\"]")
@@ -518,6 +526,8 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.canvas.addEventListener("swipeup", this._onSwipeUp)
     this.el.sceneEl.canvas.addEventListener("swipedown", this._onSwipeDown)
     this.el.sceneEl.canvas.addEventListener("touchend", this._onSwipeEnd)
+    this.el.sceneEl.addEventListener("enter-vr", this._onEnterVR)
+    this.el.sceneEl.addEventListener("exit-vr", this._onExitVR)
   },
 
   pause: function () {
@@ -532,6 +542,8 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.canvas.removeEventListener("swipeup", this._onSwipeUp)
     this.el.sceneEl.canvas.removeEventListener("swipedown", this._onSwipeDown)
     this.el.sceneEl.canvas.removeEventListener("touchend", this._onSwipeEnd)
+    this.el.sceneEl.removeEventListener("enter-vr", this._onEnterVR)
+    this.el.sceneEl.removeEventListener("exit-vr", this._onExitVR)
   },
 
   remove: function () {
@@ -725,7 +737,7 @@ AFRAME.registerComponent("locomotion", {
     let x2 = Math.cos(heading) * stick.x - Math.sin(heading) * stick.y
     let y2 = Math.sin(heading) * stick.x + Math.cos(heading) * stick.y
     let delta = THREE.Vector3.temp().set(x2, 0, y2)
-    if (this.data.quantizeMovement) {
+    if (this.quantizeMovement) {
       this._quantTime = this._quantTime || 0
       this._quantDelta = this._quantDelta || new THREE.Vector3()
       this._quantTime += seconds
@@ -777,7 +789,7 @@ AFRAME.registerComponent("locomotion", {
     let rotation = 0
 
     // Rotation
-    if (this.data.quantizeRotation) {
+    if (this.quantizeRotation) {
       if (Math.round(stick.x)) {
         if (!this._rotating) {
           this._rotating = true
@@ -897,11 +909,19 @@ AFRAME.registerComponent("locomotion", {
     let toggles = this._callToggles()
     if (toggles) {
       if (!this._toggling) {
-        if (toggles & 1) this.data.quantizeRotation = !this.data.quantizeRotation
+        if (toggles & 1) this.quantizeRotation = !this.quantizeRotation
         if (toggles & 2) {
           if (this.data.godMode) this._godMode = !this._godMode
-          else this.data.quantizeMovement = !this.data.quantizeMovement
+          else this.quantizeMovement = !this.quantizeMovement
         }
+        if (this.isVR) {
+          this._config.quantizeMovementVR = this.quantizeMovement
+          this._config.quantizeRotationVR = this.quantizeRotation
+        } else {
+          this._config.quantizeMovement = this.quantizeMovement
+          this._config.quantizeRotation = this.quantizeRotation
+        }
+        localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
       }
       this._toggling = true
     } else {
@@ -943,6 +963,17 @@ AFRAME.registerComponent("locomotion", {
   _onSwipeUp: function (e) { this._touchAxes.y = -1 },
   _onSwipeDown: function (e) { this._touchAxes.y = 1 },
   _onSwipeEnd: function (e) { this._touchAxes.set(0, 0) },
+
+  _onEnterVR: function (e) {
+    this.isVR = true
+    this.quantizeMovement = this._config.quantizeMovementVR
+    this.quantizeRotation = this._config.quantizeRotationVR
+  },
+  _onExitVR: function (e) {
+    this.isVR = false
+    this.quantizeMovement = this._config.quantizeMovement
+    this.quantizeRotation = this._config.quantizeRotation
+  },
 })
 
 require("./locomotion/floor")
