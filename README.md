@@ -13,4 +13,5 @@ Essential game components for A-Frame!
  - [include](./src/components/include.md)
  - [physics](./src/components/physics.md)
  - [locomotion](./src/components/locomotion.md)
+ - [grabbing](./src/components/grabbing.md)
  

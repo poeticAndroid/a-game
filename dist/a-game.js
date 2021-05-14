@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.44",
+  "version": "0.2.1",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
