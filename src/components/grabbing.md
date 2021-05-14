@@ -18,6 +18,13 @@ This makes it possible to grab and use grabbable objects using the following con
 | Tertiary    | B                    | Middle click |
 
 
+## Properties
+
+| Property     | Description                          | Default |
+| ------------ | ------------------------------------ | ------- |
+| hideOnGrab   | Hide the glove when grabbing         | false   |
+| grabDistance | Maximum distance to grab object from | 1       |
+
 
 ## Methods
 

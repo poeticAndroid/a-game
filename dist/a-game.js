@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.43",
+  "version": "0.1.44",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -65,7 +65,8 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
 
 AFRAME.registerComponent("grabbing", {
   schema: {
-    hideOnGrab: { type: "boolean", default: false }
+    hideOnGrab: { type: "boolean", default: false },
+    grabDistance: { type: "number", default: 1 }
   },
 
   init: function () {
@@ -112,6 +113,11 @@ AFRAME.registerComponent("grabbing", {
   },
 
   update: function (oldData) {
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      if (this[_hand].ray)
+        this[_hand].ray.setAttribute("raycaster", "far", this.data.grabDistance + (hand === "head" ? 1 : 0.1875))
+    }
   },
 
   play: function () {
@@ -286,7 +292,7 @@ AFRAME.registerComponent("grabbing", {
       raycaster: {
         objects: "[wall], [grabbable]",
         autoRefresh: false,
-        showLine: true,
+        // showLine: true,
       }
     })
     this._right.ray = this._right.glove.ensure(".grabbing-ray", "a-entity", {
@@ -294,11 +300,12 @@ AFRAME.registerComponent("grabbing", {
       raycaster: {
         objects: "[wall], [grabbable]",
         autoRefresh: false,
-        showLine: true,
+        // showLine: true,
       }
     })
     this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this.update()
   },
 
   _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
