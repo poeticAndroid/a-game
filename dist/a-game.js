@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.41",
+  "version": "0.1.42",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -51,7 +51,7 @@ require("./components/include")
 require("./components/physics")
 require("./components/injectplayer")
 require("./components/locomotion")
-require("./components/grabber")
+require("./components/grabbing")
 
 require("./primitives/a-main")
 require("./primitives/a-player")
@@ -60,10 +60,10 @@ require("./primitives/a-hand")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
 
-},{"../package":1,"./components/grabber":3,"./components/include":5,"./components/injectplayer":6,"./components/locomotion":7,"./components/physics":11,"./libs/copyWorldPosRot":16,"./libs/ensureElement":17,"./libs/pools":18,"./libs/touchGestures":19,"./primitives/a-hand":20,"./primitives/a-main":21,"./primitives/a-player":22}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":5,"./components/injectplayer":6,"./components/locomotion":7,"./components/physics":11,"./libs/copyWorldPosRot":16,"./libs/ensureElement":17,"./libs/pools":18,"./libs/touchGestures":19,"./primitives/a-hand":20,"./primitives/a-main":21,"./primitives/a-player":22}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
-AFRAME.registerComponent("grabber", {
+AFRAME.registerComponent("grabbing", {
   schema: {
     hideOnGrab: { type: "boolean", default: false }
   },
@@ -109,15 +109,15 @@ AFRAME.registerComponent("grabber", {
       }
     }
 
-    this._head.ray = this._head.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray", position: "0 -0.125 0",
+    this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
+      class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
         objects: "[floor], [wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
       }
     })
-    this._head.anchor = this._head.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
   update: function (oldData) {
@@ -260,7 +260,7 @@ AFRAME.registerComponent("grabber", {
   },
 
   emit: function (eventtype, glove, grabbed, e = {}) {
-    e.grabber = this.el
+    e.grabbing = this.el
     e.grabbedElement = grabbed
     e.gloveElement = glove
     for (let _hand of this._hands) {
@@ -294,8 +294,8 @@ AFRAME.registerComponent("grabber", {
     // this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
     // this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
     // let dia = Math.sin(Math.PI / 4)
-    this._left.ray = this._left.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
+    this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
+      class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
       raycaster: {
         objects: "[floor], [wall], [grabbable]",
         // origin: { x: -0.0625, y: 0, z: 0.0625 },
@@ -304,8 +304,8 @@ AFRAME.registerComponent("grabber", {
         showLine: true,
       }
     })
-    this._right.ray = this._right.glove.ensure(".grabber-ray", "a-entity", {
-      class: "grabber-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
+    this._right.ray = this._right.glove.ensure(".grabbing-ray", "a-entity", {
+      class: "grabbing-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
       raycaster: {
         objects: "[floor], [wall], [grabbable]",
         // origin: { x: 0.0625, y: 0, z: 0.0625 },
@@ -314,8 +314,8 @@ AFRAME.registerComponent("grabber", {
         showLine: true,
       }
     })
-    this._left.anchor = this._left.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._right.anchor = this._right.ray.ensure(".grabber-anchor", "a-entity", { class: "grabber-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
   _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
@@ -349,9 +349,9 @@ AFRAME.registerComponent("grabber", {
   },
 })
 
-require("./grabber/grabbable")
+require("./grabbing/grabbable")
 
-},{"./grabber/grabbable":4}],4:[function(require,module,exports){
+},{"./grabbing/grabbable":4}],4:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbable", {
@@ -431,7 +431,7 @@ AFRAME.registerComponent("locomotion", {
     teleportDistance: { type: "number", default: 5 },
     jumpForce: { type: "number", default: 0 },
     gravity: { type: "number", default: 10 },
-    godMode: { type: "boolean", default: true }
+    godMode: { type: "boolean", default: false }
   },
 
   init: function () {
@@ -487,7 +487,7 @@ AFRAME.registerComponent("locomotion", {
       class: "leg-bumper", position: "0 0.5 0", // radius: 0.125, color: "red",
       raycaster: {
         autoRefresh: false,
-        objects: "[floor], [wall]",
+        objects: "[wall]",
         // showLine: true
       }
     })
@@ -495,7 +495,7 @@ AFRAME.registerComponent("locomotion", {
       class: "head-bumper", position: "0 0.5 0", // radius: 0.125, color: "green",
       raycaster: {
         autoRefresh: false,
-        objects: "[floor], [wall]",
+        objects: "[wall]",
         // showLine: true
       }
     })
@@ -503,7 +503,7 @@ AFRAME.registerComponent("locomotion", {
       class: "teleport-ray",
       raycaster: {
         autoRefresh: false,
-        objects: "[floor], [wall]",
+        objects: "[wall]",
         // showLine: true
       }
     })
@@ -946,7 +946,7 @@ AFRAME.registerComponent("locomotion", {
         class: "teleportBeam",
         raycaster: {
           autoRefresh: false,
-          objects: "[floor], [wall]",
+          objects: "[wall]",
         }
       })
       this._handEnabled = true
@@ -1041,7 +1041,7 @@ AFRAME.registerComponent("floor", {
   },
 
   update: function () {
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:static")
+    this.el.setAttribute("wall", this.data)
   }
 })
 

@@ -8,7 +8,7 @@ AFRAME.registerComponent("locomotion", {
     teleportDistance: { type: "number", default: 5 },
     jumpForce: { type: "number", default: 0 },
     gravity: { type: "number", default: 10 },
-    godMode: { type: "boolean", default: true }
+    godMode: { type: "boolean", default: false }
   },
 
   init: function () {
@@ -64,7 +64,7 @@ AFRAME.registerComponent("locomotion", {
       class: "leg-bumper", position: "0 0.5 0", // radius: 0.125, color: "red",
       raycaster: {
         autoRefresh: false,
-        objects: "[floor], [wall]",
+        objects: "[wall]",
         // showLine: true
       }
     })
@@ -72,7 +72,7 @@ AFRAME.registerComponent("locomotion", {
       class: "head-bumper", position: "0 0.5 0", // radius: 0.125, color: "green",
       raycaster: {
         autoRefresh: false,
-        objects: "[floor], [wall]",
+        objects: "[wall]",
         // showLine: true
       }
     })
@@ -80,7 +80,7 @@ AFRAME.registerComponent("locomotion", {
       class: "teleport-ray",
       raycaster: {
         autoRefresh: false,
-        objects: "[floor], [wall]",
+        objects: "[wall]",
         // showLine: true
       }
     })
@@ -523,7 +523,7 @@ AFRAME.registerComponent("locomotion", {
         class: "teleportBeam",
         raycaster: {
           autoRefresh: false,
-          objects: "[floor], [wall]",
+          objects: "[wall]",
         }
       })
       this._handEnabled = true

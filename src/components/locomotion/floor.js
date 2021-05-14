@@ -6,6 +6,6 @@ AFRAME.registerComponent("floor", {
   },
 
   update: function () {
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:static")
+    this.el.setAttribute("wall", this.data)
   }
 })
