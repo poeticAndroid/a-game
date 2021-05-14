@@ -10,12 +10,12 @@ Add the `locomotion` component to your player rig like so:
 
 This makes it possible to move around the using the following controls.
 
-| Action                                  | Controller             | Desktop | Touch            |
-| --------------------------------------- | ---------------------- | ------- | ---------------- |
-| Move                                    | Left stick             | WASD    |
-| Rotate                                  | Right stick left/right | Arrows  | Swipe left/right |
-| Teleport/jump                           | Right stick up         | Space   | Swipe up         |
-| Crouch                                  | Right stick down       | Ctrl    | Swipe down       |
+| Action                                  | Controller             | Desktop | Touch                       |
+| --------------------------------------- | ---------------------- | ------- | --------------------------- |
+| Move                                    | Left stick             | WASD    | Left side swipe             |
+| Rotate                                  | Right stick left/right | Arrows  | Right side swipe left/right |
+| Teleport/jump                           | Right stick up         | Space   | Right side swipe up         |
+| Crouch                                  | Right stick down       | Ctrl    | Right side swipe down       |
 | Toggle quantized movement (or God mode) | Click left stick       | G       |
 | Toggle quantized rotation               | Click right stick      | H       |
 

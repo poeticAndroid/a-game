@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.40",
+  "version": "0.1.41",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -431,7 +431,7 @@ AFRAME.registerComponent("locomotion", {
     teleportDistance: { type: "number", default: 5 },
     jumpForce: { type: "number", default: 0 },
     gravity: { type: "number", default: 10 },
-    godMode: { type: "boolean", default: false }
+    godMode: { type: "boolean", default: true }
   },
 
   init: function () {
@@ -439,17 +439,18 @@ AFRAME.registerComponent("locomotion", {
     this._onKeyUp = this._onKeyUp.bind(this)
     this._onAxisMove = this._onAxisMove.bind(this)
     this._onButtonChanged = this._onButtonChanged.bind(this)
-    this._onSwipeLeft = this._onSwipeLeft.bind(this)
-    this._onSwipeRight = this._onSwipeRight.bind(this)
-    this._onSwipeUp = this._onSwipeUp.bind(this)
-    this._onSwipeDown = this._onSwipeDown.bind(this)
-    this._onSwipeEnd = this._onSwipeEnd.bind(this)
+    this._onTouchStart = this._onTouchStart.bind(this)
+    this._onTouchMove = this._onTouchMove.bind(this)
+    this._onTouchEnd = this._onTouchEnd.bind(this)
     this._onEnterVR = this._onEnterVR.bind(this)
     this._onExitVR = this._onExitVR.bind(this)
 
     this._keysDown = {}
     this._axes = [0, 0, 0, 0]
-    this._touchAxes = new THREE.Vector2()
+    this._leftTouchCenter = new THREE.Vector2()
+    this._leftTouchDir = new THREE.Vector2()
+    this._rightTouchCenter = new THREE.Vector2()
+    this._rightTouchDir = new THREE.Vector2()
     this._teleporting = true
     this._flyDir = 1
     this._bumpOverload = 0
@@ -466,7 +467,8 @@ AFRAME.registerComponent("locomotion", {
       quantizeMovementVR: !!(this.el.sceneEl.isMobile),
       quantizeRotationVR: true
     }
-    this._onExitVR()
+    if (this.el.sceneEl.is('vr-mode')) this._onEnterVR()
+    else this._onExitVR()
 
     this._camera = this.el.querySelector("a-camera")
     this._leftHand = this.el.querySelector("a-hand[side=\"left\"]")
@@ -521,11 +523,9 @@ AFRAME.registerComponent("locomotion", {
     this._rightHand.addEventListener("axismove", this._onAxisMove)
     this._leftHand.addEventListener("buttonchanged", this._onButtonChanged)
     this._rightHand.addEventListener("buttonchanged", this._onButtonChanged)
-    this.el.sceneEl.canvas.addEventListener("swipeleft", this._onSwipeLeft)
-    this.el.sceneEl.canvas.addEventListener("swiperight", this._onSwipeRight)
-    this.el.sceneEl.canvas.addEventListener("swipeup", this._onSwipeUp)
-    this.el.sceneEl.canvas.addEventListener("swipedown", this._onSwipeDown)
-    this.el.sceneEl.canvas.addEventListener("touchend", this._onSwipeEnd)
+    this.el.sceneEl.canvas.addEventListener("touchstart", this._onTouchStart)
+    this.el.sceneEl.canvas.addEventListener("touchmove", this._onTouchMove)
+    this.el.sceneEl.canvas.addEventListener("touchend", this._onTouchEnd)
     this.el.sceneEl.addEventListener("enter-vr", this._onEnterVR)
     this.el.sceneEl.addEventListener("exit-vr", this._onExitVR)
   },
@@ -537,11 +537,9 @@ AFRAME.registerComponent("locomotion", {
     this._rightHand.removeEventListener("axismove", this._onAxisMove)
     this._leftHand.removeEventListener("buttonchanged", this._onButtonChanged)
     this._rightHand.removeEventListener("buttonchanged", this._onButtonChanged)
-    this.el.sceneEl.canvas.removeEventListener("swipeleft", this._onSwipeLeft)
-    this.el.sceneEl.canvas.removeEventListener("swiperight", this._onSwipeRight)
-    this.el.sceneEl.canvas.removeEventListener("swipeup", this._onSwipeUp)
-    this.el.sceneEl.canvas.removeEventListener("swipedown", this._onSwipeDown)
-    this.el.sceneEl.canvas.removeEventListener("touchend", this._onSwipeEnd)
+    this.el.sceneEl.canvas.removeEventListener("touchstart", this._onTouchStart)
+    this.el.sceneEl.canvas.removeEventListener("touchmove", this._onTouchMove)
+    this.el.sceneEl.canvas.removeEventListener("touchend", this._onTouchEnd)
     this.el.sceneEl.removeEventListener("enter-vr", this._onEnterVR)
     this.el.sceneEl.removeEventListener("exit-vr", this._onExitVR)
   },
@@ -715,6 +713,9 @@ AFRAME.registerComponent("locomotion", {
     stick.set(this._axes[0], this._axes[1])
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
+    stick.copy(this._leftTouchDir)
+    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
@@ -767,7 +768,7 @@ AFRAME.registerComponent("locomotion", {
     stick.set(this._axes[2], this._axes[3])
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.copy(this._touchAxes)
+    stick.copy(this._rightTouchDir)
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
@@ -958,11 +959,62 @@ AFRAME.registerComponent("locomotion", {
       if (e.detail.id == 3) this._vrRightClick = e.detail.state.pressed
     }
   },
-  _onSwipeLeft: function (e) { this._touchAxes.x = -1 },
-  _onSwipeRight: function (e) { this._touchAxes.x = 1 },
-  _onSwipeUp: function (e) { this._touchAxes.y = -1 },
-  _onSwipeDown: function (e) { this._touchAxes.y = 1 },
-  _onSwipeEnd: function (e) { this._touchAxes.set(0, 0) },
+
+  _onTouchStart: function (e) {
+    let vw = this.el.sceneEl.canvas.clientWidth
+    for (let j = 0; j < e.changedTouches.length; j++) {
+      let touchEvent = e.changedTouches[j]
+      if (touchEvent.clientX < vw / 2) {
+        this._leftTouchId = touchEvent.identifier
+        this._leftTouchCenter.set(touchEvent.clientX, touchEvent.clientY)
+      }
+      if (touchEvent.clientX > vw / 2) {
+        this._rightTouchId = touchEvent.identifier
+        this._rightTouchCenter.set(touchEvent.clientX, touchEvent.clientY)
+      }
+    }
+    e.preventDefault()
+  },
+  _onTouchMove: function (e) {
+    let stickRadius = 32
+    for (let j = 0; j < e.changedTouches.length; j++) {
+      let touchEvent = e.changedTouches[j]
+      let touchCenter = null
+      let touchDir = null
+      if (this._leftTouchId === touchEvent.identifier) {
+        touchCenter = this._leftTouchCenter
+        touchDir = this._leftTouchDir
+      }
+      if (this._rightTouchId === touchEvent.identifier) {
+        touchCenter = this._rightTouchCenter
+        touchDir = this._rightTouchDir
+      }
+      if (touchDir) {
+        touchDir.set(touchEvent.clientX, touchEvent.clientY)
+        touchDir.sub(touchCenter)
+        if (touchDir.length() > stickRadius) {
+          touchDir.multiplyScalar((touchDir.length() - stickRadius) / touchDir.length())
+          touchCenter.add(touchDir)
+          touchDir.multiplyScalar(stickRadius / touchDir.length())
+        }
+        touchDir.divideScalar(stickRadius)
+      }
+    }
+    e.preventDefault()
+  },
+  _onTouchEnd: function (e) {
+    for (let j = 0; j < e.changedTouches.length; j++) {
+      let touchEvent = e.changedTouches[j];
+      if (this._leftTouchId === touchEvent.identifier) {
+        this._leftTouchId = null
+        this._leftTouchDir.set(0, 0)
+      }
+      if (this._rightTouchId === touchEvent.identifier) {
+        this._rightTouchId = null
+        this._rightTouchDir.set(0, 0)
+      }
+    }
+  },
 
   _onEnterVR: function (e) {
     this.isVR = true
