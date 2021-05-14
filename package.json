@@ -1,14 +1,22 @@
 {
-  "name": "gameframe",
-  "version": "0.1.0",
+  "name": "a-game",
+  "title": "A-Game",
+  "version": "0.1.44",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
-    "prepare": "npm run build && cp pre-commit .git/hooks/",
+    "prepare": "npm run build",
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
-    "minify": "rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\""
+    "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
+    "bump": "npm version patch --no-git-tag-version",
+    "gitadd": "git add package*.json dist/"
   },
+  "pre-commit": [
+    "bump",
+    "build",
+    "gitadd"
+  ],
   "keywords": [
     "aframe",
     "webvr",
@@ -21,6 +29,7 @@
     "browserify": "^17.0.0",
     "foreach-cli": "^1.8.1",
     "minify": "^7.0.1",
+    "pre-commit": "^1.2.2",
     "watchify": "^4.0.0"
   }
 }
