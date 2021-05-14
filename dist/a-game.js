@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.42",
+  "version": "0.1.43",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -90,23 +90,14 @@ AFRAME.registerComponent("grabbing", {
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
     this._head.glove = this._head.hand
-    this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
-    this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
+    this._left.glove = this.el.querySelector(".left.glove") || this._left.hand
+    this._right.glove = this.el.querySelector(".right.glove") || this._right.hand
 
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
-      if (this[_hand].hand !== this[_hand].glove) {
-        // this[_hand].glove.copyWorldPosRot(this[_hand].hand)
-        // this[_hand].glove.flushToDOM(true)
-        // this[_hand].gloveBody = this[_hand].glove.getAttribute("body")
-        // this[_hand].glove.removeAttribute("body")
-        // console.log(this[_hand].gloveBody)
-        // this.el.removeChild(this[_hand].glove)
-        this[_hand].glove.pause()
-      }
     }
 
     this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
@@ -287,19 +278,13 @@ AFRAME.registerComponent("grabbing", {
         let boxsize = 0.0625
         this[_hand].hand.ensure(".hitbox", "a-box", { class: "hitbox", position: "0 -0 0.0625", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
         this[_hand].hand.setAttribute("body", "type:kinematic;")
-        this[_hand].hand.setAttribute("joint", { type: "point", body2: this[_hand].glove })
         // this[_hand].hand.setAttribute("visible", false)
       }
     }
-    // this._left.glove = this.el.querySelector(".left-glove") || this._left.hand
-    // this._right.glove = this.el.querySelector(".right-glove") || this._right.hand
-    // let dia = Math.sin(Math.PI / 4)
     this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
       raycaster: {
-        objects: "[floor], [wall], [grabbable]",
-        // origin: { x: -0.0625, y: 0, z: 0.0625 },
-        // direction: { x: dia, y: 0, z: -dia },
+        objects: "[wall], [grabbable]",
         autoRefresh: false,
         showLine: true,
       }
@@ -307,9 +292,7 @@ AFRAME.registerComponent("grabbing", {
     this._right.ray = this._right.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
       raycaster: {
-        objects: "[floor], [wall], [grabbable]",
-        // origin: { x: 0.0625, y: 0, z: 0.0625 },
-        // direction: { x: -dia, y: 0, z: -dia },
+        objects: "[wall], [grabbable]",
         autoRefresh: false,
         showLine: true,
       }
@@ -405,18 +388,12 @@ AFRAME.registerComponent("include", {
 AFRAME.registerComponent("injectplayer", {
 
   init: function () {
-    let cam = this.el.ensure("a-camera", "a-camera", {
+    this.el.ensure("a-camera", "a-camera", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }
     })
-    // cam.ensure("[tracker]", "a-entity", { tracker: "" })
-    let leftHand = this.el.ensure("a-hand[side=\"left\"]", "a-hand", { side: "left" })
-    let boxsize = 0.0625
-    // let leftHitbox = leftHand.ensure(".left-hitbox", "a-box", { class: "left-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-    // let leftGlove = leftHitbox.ensure(".left-glove", "a-entity", { class: "left-glove", position: "0 0 -0.0625" })
-    let rightHand = this.el.ensure("a-hand[side=\"right\"]", "a-hand", { side: "right" })
-    // let rightHitbox = rightHand.ensure(".right-hitbox", "a-box", { class: "right-hitbox", position: "0 -0 0.0625", material: "visible:false", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-    // let rightGlove = rightHitbox.ensure(".right-glove", "a-entity", { class: "right-glove", position: "0 0 -0.0625" })
+    this.el.ensure("a-hand[side=\"left\"]", "a-hand", { side: "left" })
+    this.el.ensure("a-hand[side=\"right\"]", "a-hand", { side: "right" })
   }
 })
 

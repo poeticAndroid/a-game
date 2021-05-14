@@ -1,11 +1,11 @@
-# grabber.js
+# grabbing.js
 
 Components to facilitate grabbable and usable items.
 
-Add the `grabber` component to your player rig like so:
+Add the `grabbing` component to your player rig like so:
 
 ```html
-<a-entity id="player" grabber></a-entity>
+<a-player grabbing></a-player>
 ```
 
 This makes it possible to grab and use grabbable objects using the following controls.
@@ -37,4 +37,4 @@ This makes it possible to grab and use grabbable objects using the following con
 
 ## Related components
 
- - [grabbable](./grabber/grabbable.md)
+ - [grabbable](./grabbing/grabbable.md)

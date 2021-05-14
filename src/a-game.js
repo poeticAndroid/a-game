@@ -13,7 +13,7 @@ require("./components/include")
 require("./components/physics")
 require("./components/injectplayer")
 require("./components/locomotion")
-require("./components/grabber")
+require("./components/grabbing")
 
 require("./primitives/a-main")
 require("./primitives/a-player")
