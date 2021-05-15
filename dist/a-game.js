@@ -1071,8 +1071,12 @@ AFRAME.registerSystem("physics", {
   update: function () {
     if (this.data.workerUrl) {
       if (!this.worker) {
-        let script = `importScripts(${JSON.stringify(this.data.workerUrl)})`
-        this.worker = new Worker(`data:text/javascript;base64,${btoa(script)}`)
+        if (this.data.workerUrl.includes("//")) {
+          let script = `importScripts(${JSON.stringify(this.data.workerUrl)})`
+          this.worker = new Worker(`data:text/javascript;base64,${btoa(script)}`)
+        } else {
+          this.worker = new Worker(this.data.workerUrl)
+        }
         this.worker.postMessage("log " + cmd.stringifyParam("Physics worker ready!"))
         this.worker.addEventListener("message", this.onMessage.bind(this))
       }
