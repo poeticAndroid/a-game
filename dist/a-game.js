@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,7 @@ module.exports={
     "gitadd": "git add package*.json dist/"
   },
   "pre-commit": [
+    "bump",
     "build",
     "gitadd"
   ],
@@ -33,6 +34,7 @@ module.exports={
     "watchify": "^4.0.0"
   }
 }
+
 },{}],2:[function(require,module,exports){
 require("./libs/pools")
 require("./libs/copyWorldPosRot")
