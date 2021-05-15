@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -101,10 +101,12 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
     }
 
+    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", visible: false, radius: 0.5 })
+    this._head.glove.setAttribute("body", "type:kinematic;")
     this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
-        objects: "[floor], [wall], [grabbable]",
+        objects: "[wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
       }
@@ -271,21 +273,10 @@ AFRAME.registerComponent("grabbing", {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
-      if (this[_hand].hand !== this[_hand].glove) {
-        this[_hand].glove.copyWorldPosRot(this[_hand].hand)
-        this[_hand].glove.setAttribute("visible", true)
-        this[_hand].glove.play()
-        // let div = document.createElement("div")
-        // div.innerHTML = this[_hand].gloveBody
-        // console.log(div.firstElementChild)
-        // this[_hand].glove = this.el.appendChild(div.firstElementChild)
-        // this[_hand].glove.setAttribute("body", this[_hand].gloveBody)
 
-        let boxsize = 0.0625
-        this[_hand].hand.ensure(".hitbox", "a-box", { class: "hitbox", position: "0 -0 0.0625", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-        this[_hand].hand.setAttribute("body", "type:kinematic;")
-        // this[_hand].hand.setAttribute("visible", false)
-      }
+      let boxsize = 0.0625
+      this[_hand].glove.ensure(".hitbox", "a-box", { class: "hitbox", visible: false, position: "0 0 0.03125", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
+      this[_hand].glove.setAttribute("body", "type:kinematic;")
     }
     this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
