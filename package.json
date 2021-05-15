@@ -1,7 +1,7 @@
 {
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {

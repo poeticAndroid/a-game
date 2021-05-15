@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -1058,10 +1058,12 @@ AFRAME.registerComponent("wall", {
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
+const pkg = require("../../package")
+
 
 AFRAME.registerSystem("physics", {
   schema: {
-    workerUrl: { type: "string" },
+    workerUrl: { type: "string", default: `https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v${"pkg.version"}/dist/cannonWorker.min.js` },
     gravity: { type: "vec3", default: { x: 0, y: -10, z: 0 } },
     debug: { type: "boolean", default: false }
   },
@@ -1069,7 +1071,8 @@ AFRAME.registerSystem("physics", {
   update: function () {
     if (this.data.workerUrl) {
       if (!this.worker) {
-        this.worker = new Worker(this.data.workerUrl)
+        let script = `importScripts(${JSON.stringify(this.data.workerUrl)})`
+        this.worker = new Worker(`data:text/javascript;base64,${btoa(script)}`)
         this.worker.postMessage("log " + cmd.stringifyParam("Physics worker ready!"))
         this.worker.addEventListener("message", this.onMessage.bind(this))
       }
@@ -1159,7 +1162,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../libs/cmdCodec":15,"./physics/body":12,"./physics/joint":13,"./physics/shape":14}],12:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":15,"./physics/body":12,"./physics/joint":13,"./physics/shape":14}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
