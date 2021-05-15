@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.1.44",
+  "version": "0.3.0",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version patch --no-git-tag-version",
+    "bump": "npm version minor --no-git-tag-version",
     "gitadd": "git add package*.json dist/"
   },
   "pre-commit": [
@@ -101,10 +101,12 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
     }
 
+    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", visible: false, radius: 0.5 })
+    this._head.glove.setAttribute("body", "type:kinematic;")
     this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
-        objects: "[floor], [wall], [grabbable]",
+        objects: "[wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
       }
@@ -271,21 +273,10 @@ AFRAME.registerComponent("grabbing", {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
-      if (this[_hand].hand !== this[_hand].glove) {
-        this[_hand].glove.copyWorldPosRot(this[_hand].hand)
-        this[_hand].glove.setAttribute("visible", true)
-        this[_hand].glove.play()
-        // let div = document.createElement("div")
-        // div.innerHTML = this[_hand].gloveBody
-        // console.log(div.firstElementChild)
-        // this[_hand].glove = this.el.appendChild(div.firstElementChild)
-        // this[_hand].glove.setAttribute("body", this[_hand].gloveBody)
 
-        let boxsize = 0.0625
-        this[_hand].hand.ensure(".hitbox", "a-box", { class: "hitbox", position: "0 -0 0.0625", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
-        this[_hand].hand.setAttribute("body", "type:kinematic;")
-        // this[_hand].hand.setAttribute("visible", false)
-      }
+      let boxsize = 0.0625
+      this[_hand].glove.ensure(".hitbox", "a-box", { class: "hitbox", visible: false, position: "0 0 0.03125", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
+      this[_hand].glove.setAttribute("body", "type:kinematic;")
     }
     this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
@@ -1067,10 +1058,12 @@ AFRAME.registerComponent("wall", {
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
+const pkg = require("../../package")
+
 
 AFRAME.registerSystem("physics", {
   schema: {
-    workerUrl: { type: "string" },
+    workerUrl: { type: "string", default: `https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v${"pkg.version"}/dist/cannonWorker.min.js` },
     gravity: { type: "vec3", default: { x: 0, y: -10, z: 0 } },
     debug: { type: "boolean", default: false }
   },
@@ -1078,7 +1071,8 @@ AFRAME.registerSystem("physics", {
   update: function () {
     if (this.data.workerUrl) {
       if (!this.worker) {
-        this.worker = new Worker(this.data.workerUrl)
+        let script = `importScripts(${JSON.stringify(this.data.workerUrl)})`
+        this.worker = new Worker(`data:text/javascript;base64,${btoa(script)}`)
         this.worker.postMessage("log " + cmd.stringifyParam("Physics worker ready!"))
         this.worker.addEventListener("message", this.onMessage.bind(this))
       }
@@ -1168,7 +1162,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../libs/cmdCodec":15,"./physics/body":12,"./physics/joint":13,"./physics/shape":14}],12:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":15,"./physics/body":12,"./physics/joint":13,"./physics/shape":14}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
