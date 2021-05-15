@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -10,7 +10,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/"
   },
   "pre-commit": [
@@ -1063,7 +1063,7 @@ const pkg = require("../../package")
 
 AFRAME.registerSystem("physics", {
   schema: {
-    workerUrl: { type: "string", default: `https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v${"pkg.version"}/dist/cannonWorker.min.js` },
+    workerUrl: { type: "string", default: `https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v${pkg.version}/dist/cannonWorker.min.js` },
     gravity: { type: "vec3", default: { x: 0, y: -10, z: 0 } },
     debug: { type: "boolean", default: false }
   },

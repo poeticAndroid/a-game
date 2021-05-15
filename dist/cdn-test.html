@@ -7,7 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>🎮 A-Game! 👍</title>
   <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.3.0/dist/a-game.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.4.0/dist/a-game.min.js"></script>
 
   <script src="./scenes/ballmachine.js"></script>
   <script src="./scenes/demo.js"></script>
@@ -16,15 +16,15 @@
 <body>
   <a-scene physics>
     <a-entity include="./scenes/_assets.html"></a-entity>
+    <a-main include="./scenes/hello.html">
+      <a-box start floor rotation="-90 0 0" width="40" height="40" depth="0.125" color="#7BC8A4"></a-box>
+    </a-main>
     <a-player locomotion grabbing>
       <a-cylinder class="teleport-cursor" radius="0.5" height="0.0625" material="opacity:0.5;">
         <a-cone radius-top="0" radius-bottom="0.25" height="0.625" scale="1 1 0.125" rotation="-90 0 0"
           material="opacity:0.5;"></a-cone>
       </a-cylinder>
     </a-player>
-    <a-main include="./scenes/hello.html">
-      <a-box start floor rotation="-90 0 0" width="40" height="40" depth="0.125" color="#7BC8A4"></a-box>
-    </a-main>
   </a-scene>
 
   <!-- don't include these tags! -->
