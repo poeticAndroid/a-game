@@ -18,7 +18,7 @@ A WebWorker based physics system..
 | Property  | Description          | Default  |
 | --------- | -------------------- | -------- |
 | workerUrl | URL of worker script |          |
-| gravity   | Gravity vector       | 0 -9.8 0 |
+| gravity   | Gravity vector       | 0 -10 0 |
 
 ## Related components
 

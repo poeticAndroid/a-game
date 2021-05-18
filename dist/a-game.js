@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -10,10 +10,11 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version patch --no-git-tag-version",
+    "bump": "npm version minor --no-git-tag-version",
     "gitadd": "git add package*.json dist/"
   },
   "pre-commit": [
+    "bump",
     "build",
     "gitadd"
   ],
@@ -33,6 +34,7 @@ module.exports={
     "watchify": "^4.0.0"
   }
 }
+
 },{}],2:[function(require,module,exports){
 require("./libs/pools")
 require("./libs/copyWorldPosRot")
@@ -63,7 +65,7 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
 
 AFRAME.registerComponent("grabbing", {
   schema: {
-    hideOnGrab: { type: "boolean", default: false },
+    hideOnGrab: { type: "boolean", default: true },
     grabDistance: { type: "number", default: 1 }
   },
 
@@ -199,7 +201,7 @@ AFRAME.registerComponent("grabbing", {
       this.dropObject(hit.object.el)
       this[_hand].grabbed = hit.object.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
-      if (this[_hand].grabbed.getAttribute("body") != null) {
+      if (this[_hand].grabbed.components.body != null) {
         this[_hand].anchor.setAttribute("joint__1", { body2: this[_hand].grabbed, pivot1: "-1 -1 0", pivot2: "-1 -1 0" })
         this[_hand].anchor.setAttribute("joint__2", { body2: this[_hand].grabbed, pivot1: "1 -1 0", pivot2: "1 -1 0" })
         this[_hand].anchor.setAttribute("joint__3", { body2: this[_hand].grabbed, pivot1: "0 1 0", pivot2: "0 1 0" })
@@ -207,15 +209,32 @@ AFRAME.registerComponent("grabbing", {
       } else {
         this[_hand].isPhysical = false
       }
-      this[_hand].anchor.removeAttribute("animation")
+      this[_hand].anchor.removeAttribute("animation__pos")
+      this[_hand].anchor.removeAttribute("animation__rot")
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
       else delta -= 0.0625
-      this[_hand].anchor.setAttribute("animation", {
-        property: "object3D.position.z",
-        to: this[_hand].anchor.object3D.position.z + delta,
-        dur: 256
-      })
+      if (this[_hand].grabbed.components.grabbable.data.freeOrientation) {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "object3D.position.z",
+          to: this[_hand].anchor.object3D.position.z + delta,
+          dur: 256
+        })
+      } else {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "position",
+          to: { x: 0, y: 0, z: -0.09375 },
+          dur: 256
+        })
+        let rot = { x: 0, y: 0, z: 0 }
+        if (hand === "left") rot.y = 45
+        if (hand === "right") rot.y = -45
+        this[_hand].anchor.setAttribute("animation__rot", {
+          property: "rotation",
+          to: rot,
+          dur: 256
+        })
+      }
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
@@ -683,7 +702,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["s"] || this._keysDown["ArrowDown"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.set(this._axes[0], this._axes[1])
+    this._deadZone(stick.set(this._axes[0], this._axes[1]))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     stick.copy(this._leftTouchDir)
@@ -692,10 +711,7 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        stick.set(
-          Math.abs(gamepad.axes[0]) > 0.25 ? gamepad.axes[0] : 0,
-          Math.abs(gamepad.axes[1]) > 0.25 ? gamepad.axes[1] : 0
-        )
+        this._deadZone(stick.set(gamepad.axes[0], gamepad.axes[1]))
         if (stick.length() > bestStick.length()) bestStick.copy(stick)
       }
     }
@@ -735,10 +751,10 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
     if (this._keysDown[" "]) stick.y--
-    if (this._keysDown["Control"]) stick.y++
+    if (this._keysDown["c"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.set(this._axes[2], this._axes[3])
+    this._deadZone(stick.set(this._axes[2], this._axes[3]))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     stick.copy(this._rightTouchDir)
@@ -747,10 +763,7 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        stick.set(
-          Math.abs(gamepad.axes[2]) > 0.25 ? gamepad.axes[2] : 0,
-          Math.abs(gamepad.axes[3]) > 0.25 ? gamepad.axes[3] : 0
-        )
+        this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3]))
         if (stick.length() > bestStick.length()) bestStick.copy(stick)
       }
     }
@@ -901,6 +914,15 @@ AFRAME.registerComponent("locomotion", {
     } else {
       this._toggling = false
     }
+  },
+
+  _deadZone(vec, limit = 0.25) {
+    if (vec.length() > limit) {
+      vec.multiplyScalar(((vec.length() - limit) / (1 - limit)) / vec.length())
+    } else {
+      vec.set(0, 0)
+    }
+    return vec
   },
 
   _onKeyDown(e) { this._keysDown[e.key] = true },
@@ -1069,8 +1091,12 @@ AFRAME.registerSystem("physics", {
   update: function () {
     if (this.data.workerUrl) {
       if (!this.worker) {
-        let script = `importScripts(${JSON.stringify(this.data.workerUrl)})`
-        this.worker = new Worker(`data:text/javascript;base64,${btoa(script)}`)
+        if (this.data.workerUrl.includes("//")) {
+          let script = `importScripts(${JSON.stringify(this.data.workerUrl)})`
+          this.worker = new Worker(`data:text/javascript;base64,${btoa(script)}`)
+        } else {
+          this.worker = new Worker(this.data.workerUrl)
+        }
         this.worker.postMessage("log " + cmd.stringifyParam("Physics worker ready!"))
         this.worker.addEventListener("message", this.onMessage.bind(this))
       }

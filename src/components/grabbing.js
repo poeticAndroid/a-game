@@ -2,7 +2,7 @@
 
 AFRAME.registerComponent("grabbing", {
   schema: {
-    hideOnGrab: { type: "boolean", default: false },
+    hideOnGrab: { type: "boolean", default: true },
     grabDistance: { type: "number", default: 1 }
   },
 
@@ -138,7 +138,7 @@ AFRAME.registerComponent("grabbing", {
       this.dropObject(hit.object.el)
       this[_hand].grabbed = hit.object.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
-      if (this[_hand].grabbed.getAttribute("body") != null) {
+      if (this[_hand].grabbed.components.body != null) {
         this[_hand].anchor.setAttribute("joint__1", { body2: this[_hand].grabbed, pivot1: "-1 -1 0", pivot2: "-1 -1 0" })
         this[_hand].anchor.setAttribute("joint__2", { body2: this[_hand].grabbed, pivot1: "1 -1 0", pivot2: "1 -1 0" })
         this[_hand].anchor.setAttribute("joint__3", { body2: this[_hand].grabbed, pivot1: "0 1 0", pivot2: "0 1 0" })
@@ -146,15 +146,32 @@ AFRAME.registerComponent("grabbing", {
       } else {
         this[_hand].isPhysical = false
       }
-      this[_hand].anchor.removeAttribute("animation")
+      this[_hand].anchor.removeAttribute("animation__pos")
+      this[_hand].anchor.removeAttribute("animation__rot")
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
       else delta -= 0.0625
-      this[_hand].anchor.setAttribute("animation", {
-        property: "object3D.position.z",
-        to: this[_hand].anchor.object3D.position.z + delta,
-        dur: 256
-      })
+      if (this[_hand].grabbed.components.grabbable.data.freeOrientation) {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "object3D.position.z",
+          to: this[_hand].anchor.object3D.position.z + delta,
+          dur: 256
+        })
+      } else {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "position",
+          to: { x: 0, y: 0, z: -0.09375 },
+          dur: 256
+        })
+        let rot = { x: 0, y: 0, z: 0 }
+        if (hand === "left") rot.y = 45
+        if (hand === "right") rot.y = -45
+        this[_hand].anchor.setAttribute("animation__rot", {
+          property: "rotation",
+          to: rot,
+          dur: 256
+        })
+      }
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)

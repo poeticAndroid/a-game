@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>#world</title>
+  <link rel="stylesheet" href="editor.css" />
+  <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+  <script src="../dist/a-game.js"></script>
+  <script type="text/javascript" src="./components/editor.js"></script>
+</head>
+
+<body>
+  <p>
+    <button id="loadBtn">💾 Load</button>
+    <button id="copyBtn">📋 Copy</button>
+    <button id="editBtn">✍ Edit</button>
+    <button id="runBtn">👟 Run</button>
+    <label for="densxzTxt">📦 Density:</label>
+    <input id="densxzTxt" title="XZ" type="number" min="0" value="1" /><input id="densyTxt" title="Y" type="number"
+      min="0" value="1" />
+    <label for="rotyTxt">🎡 RotSteps:</label>
+    <input id="rotxzTxt" title="XZ" type="number" min="0" value="2" /><input id="rotyTxt" title="Y" type="number"
+      min="0" value="3" />
+  </p>
+  <p>
+    <textarea autofocus></textarea>
+  </p>
+  <script src="editor.js"></script>
+
+  <script src="/live.js"></script>
+</body>
+
+</html>

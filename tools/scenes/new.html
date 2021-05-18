@@ -1,0 +1,46 @@
+<a-main>
+  <a-sky src="#grid"></a-sky>
+  <a-entity start position="5 5 0"></a-entity>
+  <a-box rotation="-90 0 0" src="#grid" width="16" height="16" depth="0.01" floor></a-box>
+  <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable></a-box>
+  <a-box color="#c9f" position="-0.55 .55 -4" rotation="10 11 12" grabbable></a-box>
+  <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable></a-box>
+  <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4">
+    <a-cylinder height="0.5" radius="0.125" visible="false"></a-cylinder>
+  </a-gltf-model>
+  <a-gltf-model grabbable="physics:false" src="#bunny" position="0 2 -3" scale=".03125 .03125 .03125"></a-gltf-model>
+  <a-gltf-model grabbable="freeOrientation:false" src="#gunMdl" sound="on:usedown; src:#shot; poolSize:8;"
+    position="0 .1 -1" rotation="1 2 4" scale=".05 .05 .05"></a-gltf-model>
+  <a-box src="#grid" thickness="1" material="repeat: 5 1" floor wall position="0 0 5" rotation="0 0 10"></a-box>
+  <a-entity position="0 5 0">
+    <a-box src="#grid" material="repeat: 20 1" floor width="20" height="0.1" position="0 -2.5 -8.5" rotation="0 0 21">
+    </a-box>
+    <a-box src="#grid" thickness=".25" material="repeat: 16 3" rotation=" 0 90 0" wall position="0 3.5 0"></a-box>
+    <a-box src="#grid" thickness=".25" material="repeat: 8 5" rotation=" 0 90 0" wall position="0 2.5 4"></a-box>
+    <a-box src="#grid" thickness=".25" material="repeat: 7 5" rotation=" 0 90 0" wall position="0 2.5 -4.5">
+    </a-box>
+    <a-entity id="door1" body="type:kinematic;" position="0 1 0" rotation="0 90 0">
+      <a-box wall grabbable body="type:dynamic;" joint__1="body2:#door1;pivot1:-0.5 1 0;pivot2:0 1 0;"
+        joint__2="body2:#door1;pivot1:-0.5 -1 0;pivot2:0 -1 0;" material="repeat: 1 2" thickness="0.125"
+        position="0.5 0 0" src="#grid">
+        <a-box position="0.4 0 0" color="#421" scale="0.125 0.0625 0.25"></a-box>
+      </a-box>
+    </a-entity>
+    <a-box src="#grid" material="repeat: 2.5 2.5" floor width="2.5" height=".25" depth="2.5" position="0 2 5.75">
+    </a-box>
+    <a-box src="#grid" material="repeat: 2.5 2.5" floor width="2.5" height=".25" depth="2.5" position="0 1 3.25">
+    </a-box>
+    <a-box rotation="-90 0 0" src="#grid" material="repeat: 2 2" width="16" height="16" depth="0.01" floor></a-box>
+  </a-entity>
+  <a-entity position="0 10 0">
+    <a-box src="#grid" material="repeat: 20 1" floor width="20" height="0.1" position="0 -2.5 -8.5" rotation="0 0 21">
+    </a-box>
+    <a-box rotation="-90 0 0" src="#grid" material="repeat: 2 2" width="16" height="16" depth="0.01" floor></a-box>
+  </a-entity>
+  <a-box floor src="#grid" position="-8 0 0" scale="2 1 2" body="type:kinematic;"
+    animation="dur: 20000; property: position; to: -16 0 0; dir: alternate; loop:true;"></a-box>
+  <a-box floor src="#grid" position="8 -2 0" scale="2 1 2" body="type:kinematic;"
+    animation="dur: 20000; property: position; to: 8 12 0; dir: alternate; loop:true;"></a-box>
+  <a-box floor visible="false" position="0 -10 0" scale="1024 1 1024" body="type:kinematic;"
+    animation="dur: 20000; property: position; to: 0 -0.6 0; dir: alternate; loop:true;"></a-box>
+</a-main>
