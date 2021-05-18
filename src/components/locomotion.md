@@ -15,7 +15,7 @@ This makes it possible to move around the using the following controls.
 | Move                                    | Left stick             | WASD    | Left side swipe             |
 | Rotate                                  | Right stick left/right | Arrows  | Right side swipe left/right |
 | Teleport/jump                           | Right stick up         | Space   | Right side swipe up         |
-| Crouch                                  | Right stick down       | Ctrl    | Right side swipe down       |
+| Crouch                                  | Right stick down       | C       | Right side swipe down       |
 | Toggle quantized movement (or God mode) | Click left stick       | G       |
 | Toggle quantized rotation               | Click right stick      | H       |
 

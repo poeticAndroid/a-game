@@ -287,7 +287,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["s"] || this._keysDown["ArrowDown"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.set(this._axes[0], this._axes[1])
+    this._deadZone(stick.set(this._axes[0], this._axes[1]))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     stick.copy(this._leftTouchDir)
@@ -296,10 +296,7 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        stick.set(
-          Math.abs(gamepad.axes[0]) > 0.25 ? gamepad.axes[0] : 0,
-          Math.abs(gamepad.axes[1]) > 0.25 ? gamepad.axes[1] : 0
-        )
+        this._deadZone(stick.set(gamepad.axes[0], gamepad.axes[1]))
         if (stick.length() > bestStick.length()) bestStick.copy(stick)
       }
     }
@@ -339,10 +336,10 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
     if (this._keysDown[" "]) stick.y--
-    if (this._keysDown["Control"]) stick.y++
+    if (this._keysDown["c"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.set(this._axes[2], this._axes[3])
+    this._deadZone(stick.set(this._axes[2], this._axes[3]))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     stick.copy(this._rightTouchDir)
@@ -351,10 +348,7 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        stick.set(
-          Math.abs(gamepad.axes[2]) > 0.25 ? gamepad.axes[2] : 0,
-          Math.abs(gamepad.axes[3]) > 0.25 ? gamepad.axes[3] : 0
-        )
+        this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3]))
         if (stick.length() > bestStick.length()) bestStick.copy(stick)
       }
     }
@@ -505,6 +499,15 @@ AFRAME.registerComponent("locomotion", {
     } else {
       this._toggling = false
     }
+  },
+
+  _deadZone(vec, limit = 0.25) {
+    if (vec.length() > limit) {
+      vec.multiplyScalar(((vec.length() - limit) / (1 - limit)) / vec.length())
+    } else {
+      vec.set(0, 0)
+    }
+    return vec
   },
 
   _onKeyDown(e) { this._keysDown[e.key] = true },
