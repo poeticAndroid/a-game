@@ -185,7 +185,9 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.removeAttribute("joint__3")
     this[_hand].anchor.removeAttribute("animation")
     this[_hand].glove.setAttribute("visible", true)
-    this[_hand].glove.setAttribute("body", "collidesWith", 1)
+    setTimeout(() => {
+      this[_hand].glove.setAttribute("body", "collidesWith", 1)
+    }, 1024)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },

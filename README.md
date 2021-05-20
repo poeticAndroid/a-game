@@ -6,12 +6,14 @@ Essential game components for A-Frame!
 <html>
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.5.0/dist/a-game.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.6.0/dist/a-game.min.js"></script>
   </head>
   <body>
     <a-scene physics>
       <a-entity include="./scenes/_assets.html"></a-entity>
-      <a-main include="./scenes/main.html"></a-main>
+      <a-main include="./scenes/main.html">
+        <a-box color="gray" floor width="32" height="0.25" depth="32"></a-box>
+      </a-main>
       <a-player locomotion grabbing></a-player>
     </a-scene>
   </body>
