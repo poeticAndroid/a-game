@@ -20,7 +20,7 @@
     <a-box src="#damaskImg" thickness=".25" material="repeat: 7 5" rotation=" 0 90 0" wall position="0 2.5 -4.5">
     </a-box>
     <a-entity id="door1" body="type:kinematic;" position="0 1 0" rotation="0 90 0">
-      <a-box wall grabbable body="type:dynamic;" joint__1="body2:#door1;pivot1:-0.5 1 0;pivot2:0 1 0;"
+      <a-box body="type:dynamic;" joint__1="body2:#door1;pivot1:-0.5 1 0;pivot2:0 1 0;"
         joint__2="body2:#door1;pivot1:-0.5 -1 0;pivot2:0 -1 0;" material="repeat: 1 2" thickness="0.125"
         position="0.5 0 0" src="#woodImg">
         <a-box position="0.4 0 0" color="#421" scale="0.125 0.0625 0.25"></a-box>

@@ -26,7 +26,7 @@ This makes it possible to move around the using the following controls.
 | speed            | Speed of movement                                                | 4       |
 | rotationSpeed    | Speed of rotation                                                | 1       |
 | teleportDistance | Maximum teleportation distance                                   | 5       |
-| jumpForce        | Amount of force to jump                                          | 0       |
+| jumpForce        | Amount of force to jump (will disable teleportation)             | 0       |
 | gravity          | Amount of gravity when jumping and falling                       | 10      |
 | godMode          | Enable ability to fly through walls and floors in any direction  | false   |
 

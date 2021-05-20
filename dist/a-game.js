@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -248,7 +248,9 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.removeAttribute("joint__3")
     this[_hand].anchor.removeAttribute("animation")
     this[_hand].glove.setAttribute("visible", true)
-    this[_hand].glove.setAttribute("body", "collidesWith", 1)
+    setTimeout(() => {
+      this[_hand].glove.setAttribute("body", "collidesWith", 1)
+    }, 1024)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
@@ -438,6 +440,7 @@ AFRAME.registerComponent("locomotion", {
     this._onExitVR = this._onExitVR.bind(this)
 
     this._keysDown = {}
+    this._kbStick = new THREE.Vector2()
     this._axes = [0, 0, 0, 0]
     this._leftTouchCenter = new THREE.Vector2()
     this._leftTouchDir = new THREE.Vector2()
@@ -505,6 +508,7 @@ AFRAME.registerComponent("locomotion", {
   },
 
   update: function (oldData) {
+    if (this.data.jumpForce) this.data.teleportDistance = 0
     this._godMode = this.data.godMode
   },
 
@@ -700,7 +704,11 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["d"]) stick.x++
     if (this._keysDown["w"] || this._keysDown["ArrowUp"]) stick.y--
     if (this._keysDown["s"] || this._keysDown["ArrowDown"]) stick.y++
-    if (stick.length() > bestStick.length()) bestStick.copy(stick)
+    if (this._kbStick.length() > 0.1) this._kbStick.multiplyScalar((this._kbStick.length() - 0.1) / this._kbStick.length())
+    else (this._kbStick.set(0, 0))
+    this._kbStick.add(stick.multiplyScalar(0.2))
+    if (this._kbStick.length() > 1) this._kbStick.normalize()
+    if (this._kbStick.length() > bestStick.length()) bestStick.copy(this._kbStick)
 
     this._deadZone(stick.set(this._axes[0], this._axes[1]))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
@@ -813,7 +821,10 @@ AFRAME.registerComponent("locomotion", {
         this.toggleCrouch()
       }
     } else {
-      if (this._crouching) this._flyDir *= -1
+      if (this._crouching) {
+        if (this._flyDir > 0) this._flyDir = -0.125
+        else this._flyDir = 1
+      }
       this._crouching = false
     }
 
