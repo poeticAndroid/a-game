@@ -1,11 +1,11 @@
-# editor
+# tile
 
-Component for making a scene editor.
+Component for making a scene tile.
 
-Add the `editor` component to an entity that represents your tool.
+Add the `tile` component to an entity that represents your tool.
 
 ```html
-<a-gltf-model src="tool.glb" position="0 1 -.25" editor></a-gltf-model>
+<a-gltf-model src="tool.glb" position="0 1 -.25" tile></a-gltf-model>
 ```
 
 ## Properties

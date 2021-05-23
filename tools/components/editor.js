@@ -149,6 +149,9 @@ AFRAME.registerComponent("editor", {
     }
     return index
   },
+  getPair:function (el) {
+    return this._map[this.findEntity(el)]
+  },
   removeEntity: function (el) {
     let index = el
     if (typeof el === "object") {
