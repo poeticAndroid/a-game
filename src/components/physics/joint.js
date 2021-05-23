@@ -60,6 +60,10 @@ AFRAME.registerComponent("joint", {
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
   },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
+  }
 
 })
 

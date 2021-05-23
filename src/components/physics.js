@@ -102,6 +102,9 @@ AFRAME.registerSystem("physics", {
           body.components.body.command(params)
         break
     }
+  },
+  eval: function (expr) {
+    this.worker.postMessage("world eval " + cmd.stringifyParam(expr))
   }
 })
 

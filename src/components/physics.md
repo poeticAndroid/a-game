@@ -13,12 +13,23 @@ A WebWorker based physics system..
 </a-scene>
 ```
 
+
 ## Properties
 
 | Property  | Description          | Default  |
 | --------- | -------------------- | -------- |
 | workerUrl | URL of worker script |          |
 | gravity   | Gravity vector       | 0 -10 0 |
+
+
+## Methods
+
+| Method           | Description                                                                      |
+| ---------------- | -------------------------------------------------------------------------------- |
+| eval(expression) | Evaluate an expression in the worker, where `world` refers to the physics world. |
+
+Note: the `eval` method depends on the specific physics engine that the worker is based on..
+
 
 ## Related components
 

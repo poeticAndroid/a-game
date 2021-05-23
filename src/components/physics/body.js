@@ -167,6 +167,10 @@ AFRAME.registerComponent("body", {
         this.el.emit(e.event, e)
         break
     }
+  },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 

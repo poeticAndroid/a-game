@@ -65,6 +65,11 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+  },
+
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 

@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -1190,6 +1190,9 @@ AFRAME.registerSystem("physics", {
           body.components.body.command(params)
         break
     }
+  },
+  eval: function (expr) {
+    this.worker.postMessage("world eval " + cmd.stringifyParam(expr))
   }
 })
 
@@ -1367,6 +1370,10 @@ AFRAME.registerComponent("body", {
         this.el.emit(e.event, e)
         break
     }
+  },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 
@@ -1434,6 +1441,10 @@ AFRAME.registerComponent("joint", {
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
   },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
+  }
 
 })
 
@@ -1506,6 +1517,11 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+  },
+
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 

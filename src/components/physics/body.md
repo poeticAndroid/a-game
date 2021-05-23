@@ -13,6 +13,7 @@ A physical body..
 </a-scene>
 ```
 
+
 ## Properties
 
 | Property     | Description                                            | Default    |
@@ -26,3 +27,12 @@ A physical body..
 | autoShape    | Automatically add `shape` components                   | true       |
 
 If `autoShape` is `true`, `shape` components will be added to all applicable descendants (`a-box`, `a-sphere` and `a-cylinder`).. If the body entity has no child nodes, `shape` component will be added to the body entity itself..
+
+
+## Methods
+
+| Method           | Description                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| eval(expression) | Evaluate an expression in the worker, where `world` and `body` refer to their native instances. |
+
+Note: the `eval` method depends on the specific physics engine that the worker is based on..
