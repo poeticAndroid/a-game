@@ -18,6 +18,7 @@ A physical body..
 | Property     | Description                                            | Default    |
 | ------------ | ------------------------------------------------------ | ---------- |
 | type         | `static`, `dynamic` or `kinematic`                     | static     |
+| mass         | mass of body                                           | 1          |
 | belongsTo    | Bitmask of groups body belongs to                      | 1          |
 | collidesWith | Bitmask of groups body collides with                   | 0xffffffff |
 | emitsWith    | Bitmask of groups body emits event when colliding with | 0          |

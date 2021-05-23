@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -1306,16 +1306,6 @@ AFRAME.registerComponent("body", {
   },
 
   pause: function () {
-    if (this.data.autoShape) {
-      this.el.removeAttribute("shape")
-      if (this.el.firstElementChild) {
-        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
-        if (els) els.forEach(el => {
-          el.removeAttribute("shape")
-        })
-      }
-    }
-
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -1406,7 +1396,7 @@ AFRAME.registerComponent("joint", {
     // spring: { type: "array" },
   },
 
-  init: function () {
+  play: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -1437,7 +1427,7 @@ AFRAME.registerComponent("joint", {
     //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
-  remove: function () {
+  pause: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -1455,18 +1445,17 @@ const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("shape", {
   // dependencies: ["body"],
-  multiple: true,
   schema: {
   },
 
-  init: function () {
+  play: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
     this.body = this.el
     while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
     if (!this.body) return this._retry = setTimeout(() => {
-      this.init()
+      this.play()
     }, 256)
     this.bodyId = this.body.components.body.id
 
@@ -1509,10 +1498,7 @@ AFRAME.registerComponent("shape", {
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
-  update: function () {
-  },
-
-  remove: function () {
+  pause: function () {
     clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
