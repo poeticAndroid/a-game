@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -160,6 +160,29 @@ AFRAME.registerComponent("grabbing", {
   },
 
   tick: function (time, timeDelta) {
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) this.toggleGrab()
+        if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
+        if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
+        if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
+      }
+    }
+    this._grabBtn = false
+    this._useBtn0 = false
+    this._useBtn1 = false
+    this._useBtn2 = false
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        this._grabBtn = this._grabBtn || gamepad.buttons[4].pressed || gamepad.buttons[5].pressed
+        this._useBtn0 = this._useBtn0 || gamepad.buttons[6].pressed || gamepad.buttons[7].pressed
+        this._useBtn1 = this._useBtn1 || gamepad.buttons[0].pressed
+        this._useBtn2 = this._useBtn2 || gamepad.buttons[1].pressed
+      }
+    }
+
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].grabbed) {
