@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -470,7 +470,6 @@ AFRAME.registerComponent("locomotion", {
     this._rightTouchCenter = new THREE.Vector2()
     this._rightTouchDir = new THREE.Vector2()
     this._teleporting = true
-    this._flyDir = 1
     this._bumpOverload = 0
     this._vertVelocity = 1
     this.currentFloorPosition = new THREE.Vector3()
@@ -723,10 +722,10 @@ AFRAME.registerComponent("locomotion", {
     let stick = THREE.Vector2.temp()
 
     stick.set(0, 0)
-    if (this._keysDown["a"]) stick.x--
-    if (this._keysDown["d"]) stick.x++
-    if (this._keysDown["w"] || this._keysDown["ArrowUp"]) stick.y--
-    if (this._keysDown["s"] || this._keysDown["ArrowDown"]) stick.y++
+    if (this._keysDown["KeyA"]) stick.x--
+    if (this._keysDown["KeyD"]) stick.x++
+    if (this._keysDown["KeyW"] || this._keysDown["ArrowUp"]) stick.y--
+    if (this._keysDown["KeyS"] || this._keysDown["ArrowDown"]) stick.y++
     if (this._kbStick.length() > 0.1) this._kbStick.multiplyScalar((this._kbStick.length() - 0.1) / this._kbStick.length())
     else (this._kbStick.set(0, 0))
     this._kbStick.add(stick.multiplyScalar(0.2))
@@ -748,6 +747,7 @@ AFRAME.registerComponent("locomotion", {
     }
 
     if (bestStick.length() > 1) bestStick.normalize()
+    if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
   _applyMoveStick: function (seconds) {
@@ -781,8 +781,8 @@ AFRAME.registerComponent("locomotion", {
     stick.set(0, 0)
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
-    if (this._keysDown[" "]) stick.y--
-    if (this._keysDown["c"]) stick.y++
+    if (this._keysDown["Space"]) stick.y--
+    if (this._keysDown["KeyC"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     this._deadZone(stick.set(this._axes[2], this._axes[3]))
@@ -800,6 +800,7 @@ AFRAME.registerComponent("locomotion", {
     }
 
     if (bestStick.length() > 1) bestStick.normalize()
+    if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.5625)
     return bestStick
   },
   _applyAuxStick: function (seconds) {
@@ -833,86 +834,84 @@ AFRAME.registerComponent("locomotion", {
       this.centerPos.add(delta)
     }
 
-    // Crouching
-    if (Math.round(stick.y) > 0) {
-      if (this._godMode) {
-        this.el.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
-        this._legs.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
-        this._crouching = true
-      } else if (!this._crouching) {
-        this._crouching = true
-        this.toggleCrouch()
-      }
+    // Levitating
+    if (this._godMode) {
+      this.el.object3D.position.y += -stick.y * this.data.speed * seconds
+      this._legs.object3D.position.y += -stick.y * this.data.speed * seconds
     } else {
-      if (this._crouching) {
-        if (this._flyDir > 0) this._flyDir = -0.125
-        else this._flyDir = 1
-      }
-      this._crouching = false
-    }
-
-    // Teleportation and jumping
-    if (Math.round(stick.y) < 0) {
-      if (!this._teleporting && this.data.teleportDistance) {
-        this._teleportCursor.setAttribute("visible", true)
-        this._teleporting = true
-      }
-      let quat = THREE.Quaternion.temp()
-      this._teleportCursor.object3D.getWorldQuaternion(quat)
-      this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
-      this._teleportCursor.object3D.quaternion.x = 0
-      this._teleportCursor.object3D.quaternion.z = 0
-      this._teleportCursor.object3D.quaternion.normalize()
-
-      ray = this._teleportBeam.components.raycaster
-      ray.refreshObjects()
-      hit = ray.intersections[0]
-      if (hit && hit.object.el.getAttribute("floor") != null) {
-        let straight = THREE.Vector3.temp()
-        let delta = THREE.Vector3.temp()
-        let matrix = THREE.Matrix3.temp()
-        delta.copy(hit.point).sub(this.feetPos)
-        if (delta.y > 1.5) delta.multiplyScalar(0)
-        if (delta.length() > this.data.teleportDistance) delta.normalize().multiplyScalar(this.data.teleportDistance)
-        delta.add(this.feetPos)
-        this._teleportCursor.object3D.position.copy(delta)
-        this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
-
-        matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
-        delta
-          .copy(hit.face.normal)
-          .applyMatrix3(matrix)
-          .normalize()
-        delta.applyQuaternion(quat.copy(this.el.object3D.quaternion).conjugate())
-        straight.set(0, 1, 0)
-        quat.setFromUnitVectors(straight, delta)
-        this._teleportCursor.object3D.quaternion.premultiply(quat)
+      // Crouching
+      if (Math.round(stick.y) > 0) {
+        if (!this._crouching) {
+          this._crouching = true
+          this.toggleCrouch()
+        }
       } else {
-        this._teleportCursor.object3D.position.copy(this.feetPos)
-        this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+        this._crouching = false
       }
-      // jump!
-      if (this.currentFloor && !this._jumping) {
-        this._vertVelocity = this.data.jumpForce
-        this._jumping = true
+
+      // Teleportation and jumping
+      if (Math.round(stick.y) < 0) {
+        if (!this._teleporting && this.data.teleportDistance) {
+          this._teleportCursor.setAttribute("visible", true)
+          this._teleporting = true
+        }
+        let quat = THREE.Quaternion.temp()
+        this._teleportCursor.object3D.getWorldQuaternion(quat)
+        this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
+        this._teleportCursor.object3D.quaternion.x = 0
+        this._teleportCursor.object3D.quaternion.z = 0
+        this._teleportCursor.object3D.quaternion.normalize()
+
+        ray = this._teleportBeam.components.raycaster
+        ray.refreshObjects()
+        hit = ray.intersections[0]
+        if (hit && hit.object.el.getAttribute("floor") != null) {
+          let straight = THREE.Vector3.temp()
+          let delta = THREE.Vector3.temp()
+          let matrix = THREE.Matrix3.temp()
+          delta.copy(hit.point).sub(this.feetPos)
+          if (delta.y > 1.5) delta.multiplyScalar(0)
+          if (delta.length() > this.data.teleportDistance) delta.normalize().multiplyScalar(this.data.teleportDistance)
+          delta.add(this.feetPos)
+          this._teleportCursor.object3D.position.copy(delta)
+          this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+
+          matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
+          delta
+            .copy(hit.face.normal)
+            .applyMatrix3(matrix)
+            .normalize()
+          delta.applyQuaternion(quat.copy(this.el.object3D.quaternion).conjugate())
+          straight.set(0, 1, 0)
+          quat.setFromUnitVectors(straight, delta)
+          this._teleportCursor.object3D.quaternion.premultiply(quat)
+        } else {
+          this._teleportCursor.object3D.position.copy(this.feetPos)
+          this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+        }
+        // jump!
+        if (this.currentFloor && !this._jumping) {
+          this._vertVelocity = this.data.jumpForce
+          this._jumping = true
+        }
+      } else if (this._teleporting) {
+        let pos = THREE.Vector3.temp()
+        this._teleportCursor.object3D.getWorldPosition(pos)
+        this.teleport(pos)
+        this._teleportCursor.setAttribute("visible", false)
+        this._teleportCursor.setAttribute("position", "0 0 0")
+        this._teleporting = false
+      } else if (this._jumping) {
+        this._jumping = false
       }
-    } else if (this._teleporting) {
-      let pos = THREE.Vector3.temp()
-      this._teleportCursor.object3D.getWorldPosition(pos)
-      this.teleport(pos)
-      this._teleportCursor.setAttribute("visible", false)
-      this._teleportCursor.setAttribute("position", "0 0 0")
-      this._teleporting = false
-    } else if (this._jumping) {
-      this._jumping = false
     }
   },
 
   _callToggles() {
     let toggles = 0
 
-    if (this._keysDown["h"]) toggles = toggles | 1
-    if (this._keysDown["g"]) toggles = toggles | 2
+    if (this._keysDown["KeyH"]) toggles = toggles | 1
+    if (this._keysDown["KeyG"]) toggles = toggles | 2
     if (this._vrRightClick) toggles = toggles | 1
     if (this._vrLeftClick) toggles = toggles | 2
 
@@ -959,8 +958,8 @@ AFRAME.registerComponent("locomotion", {
     return vec
   },
 
-  _onKeyDown(e) { this._keysDown[e.key] = true },
-  _onKeyUp(e) { this._keysDown[e.key] = false },
+  _onKeyDown(e) { this._keysDown[e.code] = true },
+  _onKeyUp(e) { this._keysDown[e.code] = false },
   _onAxisMove(e) {
     if (e.srcElement.getAttribute("hand-controls").hand === "left") {
       this._axes[0] = e.detail.axis[2]
