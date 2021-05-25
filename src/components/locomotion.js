@@ -360,7 +360,7 @@ AFRAME.registerComponent("locomotion", {
     }
 
     if (bestStick.length() > 1) bestStick.normalize()
-    if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.5625)
+    if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
   _applyAuxStick: function (seconds) {
