@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.6",
+  "version": "0.6.7",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -701,10 +701,12 @@ AFRAME.registerComponent("locomotion", {
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
           .normalize()
-          .multiplyScalar(0.25 + dist / 2)
+          .multiplyScalar(dist + 0.125)
         let feety = this._legs.object3D.position.y
         this._move(delta)
-        this._legs.object3D.position.y = feety
+        bumper.object3D.position.add(delta)
+        if (bumper === this._headBumper) this._legBumper.object3D.position.copy(this._headBumper.object3D.position)
+        this._legs.object3D.position.y = Math.max(feety, this.headPos.y - 1.5)
         this._caution = 4
         this._bumpOverload++
         this._vertVelocity = Math.min(0, this._vertVelocity)
