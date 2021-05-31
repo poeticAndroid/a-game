@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -183,15 +183,42 @@ AFRAME.registerComponent("grabbing", {
       }
     }
 
+    let headPos = THREE.Vector3.temp()
+    let delta = THREE.Vector3.temp()
+    headPos.copy(this._head.hand.object3D.position)
+    this._head.hand.object3D.parent.localToWorld(headPos)
+
+
     for (let hand of this._hands) {
       let _hand = "_" + hand
+
+      if (this[_hand]._occlusionRay) {
+        this[_hand]._occlusionRay.object3D.position.copy(headPos)
+        this[_hand].hand.object3D.getWorldPosition(delta)
+        delta.sub(headPos)
+        let handDist = delta.length()
+        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", delta.normalize())
+
+        let ray = this[_hand]._occlusionRay.components.raycaster
+        ray.refreshObjects()
+        let hit = ray.intersections[0]
+        if (hit) {
+          let dist = delta.copy(hit.point).sub(headPos).length()
+          // this[_hand].glove.object3D.position.copy(headPos).add(delta.normalize().multiplyScalar(dist))
+          this[_hand].glove.object3D.position.copy(hit.point)
+          this[_hand].glove.object3D.parent.worldToLocal(this[_hand].glove.object3D.position)
+        } else {
+          this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+        }
+      }
+
       if (this[_hand].grabbed) {
         if (!this[_hand].isPhysical)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
       } else if (this[_hand].ray) {
-        ray = this[_hand].ray.components.raycaster
+        let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
-        hit = ray.intersections[0]
+        let hit = ray.intersections[0]
         if (hit && hit.object.el.getAttribute("grabbable") != null) {
           if (this[_hand]._lastHit !== hit.object.el) {
             if (this[_hand]._lastHit)
@@ -217,9 +244,9 @@ AFRAME.registerComponent("grabbing", {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
     if (this[_hand].grabbed) this.drop(hand)
-    ray = this[_hand].ray.components.raycaster
+    let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
-    hit = ray.intersections[0]
+    let hit = ray.intersections[0]
     if (hit && hit.object.el.getAttribute("grabbable") != null) {
       this.dropObject(hit.object.el)
       this[_hand].grabbed = hit.object.el
@@ -319,6 +346,17 @@ AFRAME.registerComponent("grabbing", {
       let boxsize = 0.0625
       this[_hand].glove.ensure(".hitbox", "a-box", { class: "hitbox", visible: false, position: "0 0 0.03125", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
       this[_hand].glove.setAttribute("body", "type:kinematic;")
+
+      if (hand === "head") continue
+      this[_hand]._occlusionRay = this.el.sceneEl.ensure(".occlusion-ray." + hand, "a-entity", {
+        class: "occlusion-ray " + hand,
+        raycaster: {
+          objects: "[wall]",
+          autoRefresh: false,
+          far: 8,
+          showLine: true
+        }
+      })
     }
     this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
