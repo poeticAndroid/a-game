@@ -31,6 +31,8 @@ AFRAME.registerComponent("grabbing", {
     this._left.glove = this.el.querySelector(".left.glove") || this._left.hand
     this._right.glove = this.el.querySelector(".right.glove") || this._right.hand
 
+    this._left.hand.setAttribute("visible", false)
+    this._right.hand.setAttribute("visible", false)
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
     for (let hand of this._hands) {
@@ -125,7 +127,6 @@ AFRAME.registerComponent("grabbing", {
     headPos.copy(this._head.hand.object3D.position)
     this._head.hand.object3D.parent.localToWorld(headPos)
 
-
     for (let hand of this._hands) {
       let _hand = "_" + hand
 
@@ -134,14 +135,14 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].hand.object3D.getWorldPosition(delta)
         delta.sub(headPos)
         let handDist = delta.length()
-        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", delta.normalize())
+        delta.normalize()
+        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", { x: delta.x, y: delta.y, z: delta.z })
+        this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist)
 
         let ray = this[_hand]._occlusionRay.components.raycaster
         ray.refreshObjects()
         let hit = ray.intersections[0]
         if (hit) {
-          let dist = delta.copy(hit.point).sub(headPos).length()
-          // this[_hand].glove.object3D.position.copy(headPos).add(delta.normalize().multiplyScalar(dist))
           this[_hand].glove.object3D.position.copy(hit.point)
           this[_hand].glove.object3D.parent.worldToLocal(this[_hand].glove.object3D.position)
         } else {
@@ -234,6 +235,7 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.removeAttribute("joint__2")
     this[_hand].anchor.removeAttribute("joint__3")
     this[_hand].anchor.removeAttribute("animation")
+    this[_hand].hand.setAttribute("visible", false)
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -289,9 +291,7 @@ AFRAME.registerComponent("grabbing", {
         class: "occlusion-ray " + hand,
         raycaster: {
           objects: "[wall]",
-          autoRefresh: false,
-          far: 8,
-          showLine: true
+          autoRefresh: false
         }
       })
     }
