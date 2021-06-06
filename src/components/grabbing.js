@@ -31,8 +31,6 @@ AFRAME.registerComponent("grabbing", {
     this._left.glove = this.el.querySelector(".left.glove") || this._left.hand
     this._right.glove = this.el.querySelector(".right.glove") || this._right.hand
 
-    this._left.hand.setAttribute("visible", false)
-    this._right.hand.setAttribute("visible", false)
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
     for (let hand of this._hands) {
@@ -136,7 +134,7 @@ AFRAME.registerComponent("grabbing", {
         delta.sub(headPos)
         let handDist = delta.length()
         delta.normalize()
-        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", { x: delta.x, y: delta.y, z: delta.z })
+        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
         this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist)
 
         let ray = this[_hand]._occlusionRay.components.raycaster

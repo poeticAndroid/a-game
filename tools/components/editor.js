@@ -149,7 +149,7 @@ AFRAME.registerComponent("editor", {
     }
     return index
   },
-  getPair:function (el) {
+  getPair: function (el) {
     return this._map[this.findEntity(el)]
   },
   removeEntity: function (el) {
@@ -235,8 +235,8 @@ AFRAME.registerComponent("editor", {
         for (let atr of ["position", "rotation", "scale"]) {
           let _def = def.shift()
           if (child.getAttribute(atr)) {
-            m.world.setAttribute(atr, child.getAttribute(atr))
-            m.src.setAttribute(atr, child.getAttribute(atr))
+            m.world.setAttribute(atr, AFRAME.utils.coordinates.stringify(child.getAttribute(atr)))
+            m.src.setAttribute(atr, AFRAME.utils.coordinates.stringify(child.getAttribute(atr)))
           } else {
             m.world.setAttribute(atr, _def)
             m.src.removeAttribute(atr)

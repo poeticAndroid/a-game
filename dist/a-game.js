@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.9",
+  "version": "0.6.10",
   "description": "game components for A-Frame",
   "main": "index.js",
   "scripts": {
@@ -94,8 +94,6 @@ AFRAME.registerComponent("grabbing", {
     this._left.glove = this.el.querySelector(".left.glove") || this._left.hand
     this._right.glove = this.el.querySelector(".right.glove") || this._right.hand
 
-    this._left.hand.setAttribute("visible", false)
-    this._right.hand.setAttribute("visible", false)
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
     for (let hand of this._hands) {
@@ -199,7 +197,7 @@ AFRAME.registerComponent("grabbing", {
         delta.sub(headPos)
         let handDist = delta.length()
         delta.normalize()
-        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", { x: delta.x, y: delta.y, z: delta.z })
+        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
         this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist)
 
         let ray = this[_hand]._occlusionRay.components.raycaster
@@ -728,11 +726,11 @@ AFRAME.registerComponent("locomotion", {
     let dist = delta.length()
     if (dist) {
       bumper.setAttribute("raycaster", "far", dist + 0.125)
-      bumper.setAttribute("raycaster", "direction", delta.normalize())
+      bumper.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
       // bumper.setAttribute("raycaster", "origin", delta.multiplyScalar(-0.25))
-      ray = bumper.components.raycaster
+      let ray = bumper.components.raycaster
       ray.refreshObjects()
-      hit = ray.intersections[0]
+      let hit = ray.intersections[0]
       if (hit) {
         matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
         delta

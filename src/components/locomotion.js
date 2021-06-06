@@ -250,11 +250,11 @@ AFRAME.registerComponent("locomotion", {
     let dist = delta.length()
     if (dist) {
       bumper.setAttribute("raycaster", "far", dist + 0.125)
-      bumper.setAttribute("raycaster", "direction", delta.normalize())
+      bumper.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
       // bumper.setAttribute("raycaster", "origin", delta.multiplyScalar(-0.25))
-      ray = bumper.components.raycaster
+      let ray = bumper.components.raycaster
       ray.refreshObjects()
-      hit = ray.intersections[0]
+      let hit = ray.intersections[0]
       if (hit) {
         matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
         delta
