@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.13",
+  "version": "0.6.14",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -463,10 +463,12 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     if (finger < 5) {
-      this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+      // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
     } else {
       for (let finger = 2; finger < 5; finger++) {
-        this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+        // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
       }
     }
   },

@@ -23,18 +23,7 @@ E.g. if the glove recieves an event with `event.detail.finger == 1` (index finge
 
 ### Properties
 
-| Property | Description                                                                                          | Default |
-| -------- | ---------------------------------------------------------------------------------------------------- | ------- |
-| min      | When enabled grabbed object keep their orientation, otherwise it resets to same orientation as hand. | true    |
-| max      | Whether or not to add physics components automatically.                                              | true    |
-
-### Events
-
-These event are emitted on the fingerflex as well as the hand that initiated the event.
-
-| Event   | Description                                                    |
-| ------- | -------------------------------------------------------------- |
-| grab    | Emitted when grabbed.                                          |
-| usedown | Emitted when use-button is pressed while holding this object.  |
-| useup   | Emitted when use-button is released while holding this object. |
-| drop    | Emitted when dropped.                                          |
+| Property | Description                            |
+| -------- | -------------------------------------- |
+| min      | Angle for when the finger is straight. |
+| max      | Angle for when the finger is bent.     |

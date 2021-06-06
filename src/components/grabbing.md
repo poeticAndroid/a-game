@@ -42,6 +42,22 @@ This makes it possible to grab and use grabbable objects using the following con
 | dropObject(el)        | Drop specified grabbable if held.                     |
 
 
+## Events
+
+These events get emitted by the glove and the `grabbable` that it's holding, if any.
+
+| Event      | Description                             |
+| ---------- | --------------------------------------- |
+| reach      | Emitted when grabbable is within reach. |
+| unreach    | Emitted when grabbable is out of reach. |
+| grab       | Emitted when grabbing.                  |
+| grab       | Emitted when grabbing.                  |
+| usedown    | Emitted when use-button is pressed.     |
+| useup      | Emitted when use-button is released.    |
+| drop       | Emitted when dropping.                  |
+| fingerflex | Emitted when a finger is flexing.       |
+
+
 ## Related components
 
  - [grabbable](./grabbing/grabbable.md)

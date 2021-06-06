@@ -399,10 +399,12 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     if (finger < 5) {
-      this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+      // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
     } else {
       for (let finger = 2; finger < 5; finger++) {
-        this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+        // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
       }
     }
   },
