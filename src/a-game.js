@@ -20,4 +20,4 @@ require("./primitives/a-player")
 require("./primitives/a-hand")
 
 const pkg = require("../package")
-console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
+console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)

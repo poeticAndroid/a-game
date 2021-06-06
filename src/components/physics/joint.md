@@ -34,3 +34,10 @@ A way to connect bodies together..
 | collision | connected bodies allowed to collide | true     |
 
 
+## Methods
+
+| Method           | Description                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| eval(expression) | Evaluate an expression in the worker, where `world` and `joint` refer to their native instances. |
+
+Note: the `eval` method depends on the specific physics engine that the worker is based on..

@@ -38,9 +38,8 @@ editBtn.addEventListener("click", () => {
     <a-scene physics="workerUrl:../dist/cannonWorker.js">
       <a-entity include="scenes/_assets.html"></a-entity>
       <a-main></a-main>
-      <a-player locomotion="godMode:true" grabbing>
-        <a-gltf-model src="https://cdn.glitch.com/e956e2ed-f877-4602-a395-a2e234731117%2Fguncil.glb" position="0 1.5 -0.5" editor="gridSize: ${gridXZ} ${gridY} ${gridXZ};rotationSteps: ${rotXZ} ${rotY} ${rotXZ};"></a-gltf-model>
-      </a-player>
+      <a-player locomotion="godMode:true" grabbing></a-player>
+      <a-gltf-model src="https://cdn.glitch.com/e956e2ed-f877-4602-a395-a2e234731117%2Fguncil.glb" position="0 1.5 -0.5" editor="gridSize: ${gridXZ} ${gridY} ${gridXZ};rotationSteps: ${rotXZ} ${rotY} ${rotXZ};"></a-gltf-model>
     </a-scene>
   `
 })

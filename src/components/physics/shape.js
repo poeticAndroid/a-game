@@ -4,18 +4,17 @@ const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("shape", {
   // dependencies: ["body"],
-  multiple: true,
   schema: {
   },
 
-  init: function () {
+  play: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
     this.body = this.el
     while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
     if (!this.body) return this._retry = setTimeout(() => {
-      this.init()
+      this.play()
     }, 256)
     this.bodyId = this.body.components.body.id
 
@@ -58,10 +57,7 @@ AFRAME.registerComponent("shape", {
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
-  update: function () {
-  },
-
-  remove: function () {
+  pause: function () {
     clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
@@ -69,6 +65,11 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+  },
+
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 

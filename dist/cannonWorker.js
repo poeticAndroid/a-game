@@ -86,6 +86,9 @@ function worldCommand(params) {
     case "gravity":
       world.gravity.copy(params[0])
       break
+    case "eval":
+      eval(params[0])
+      break
   }
 }
 
@@ -154,6 +157,9 @@ function bodyCommand(params) {
       if (params[0]) body.sleep()
       else body.wakeUp()
       break
+    case "eval":
+      eval("const body = bodies[" + id + "];" + params[0])
+      break
   }
 }
 
@@ -208,6 +214,9 @@ function jointCommand(params) {
       world.removeConstraint(joint)
       joints[id] = null
       break
+    case "eval":
+      eval("const joint = joints[" + id + "];" + params[0])
+      break
   }
 }
 
@@ -236,6 +245,9 @@ function shapeCommand(body, params) {
       if (i >= 0) body.shapes.splice(i, 1)
       body._shapes_[id] = null
       body.updateMassProperties()
+      break
+    case "eval":
+      eval("const body = bodies[" + body._id_ + "],shape = body._shapes_[" + id + "];" + params[0])
       break
   }
 }

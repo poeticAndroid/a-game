@@ -1,8 +1,8 @@
 # start
 
-Add the `start` component to any object you want the player to start at.
+Add the `start` component to the entity you want the player to start on top of.
 
 ```html
-<a-box start></a-box>
+<a-entity start></a-entity>
 ```
 

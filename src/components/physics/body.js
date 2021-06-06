@@ -106,16 +106,6 @@ AFRAME.registerComponent("body", {
   },
 
   pause: function () {
-    if (this.data.autoShape) {
-      this.el.removeAttribute("shape")
-      if (this.el.firstElementChild) {
-        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
-        if (els) els.forEach(el => {
-          el.removeAttribute("shape")
-        })
-      }
-    }
-
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -177,6 +167,10 @@ AFRAME.registerComponent("body", {
         this.el.emit(e.event, e)
         break
     }
+  },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 

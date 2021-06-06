@@ -1,4 +1,4 @@
-Element.prototype.ensure = function (selector, name = selector, attrs = {}) {
+Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
   if (!_childEl) {
@@ -8,7 +8,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}) {
       val = attrs[attr]
       _childEl.setAttribute(attr, val)
     }
-    // _childEl.flushToDOM()
+    _childEl.innerHTML = innerHTML
   }
   return _childEl
 }

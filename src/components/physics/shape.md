@@ -13,3 +13,12 @@ A physical shape for a physical body.. The `shape` component are added automatic
     <a-box color="#f96" position="0 0.75 -0.5" width="1" height="0.5" depth="0.125"></a-box>
   </a-entity>
 ```
+
+
+## Methods
+
+| Method           | Description                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| eval(expression) | Evaluate an expression in the worker, where `world`, `body` and `shape` refer to their native instances. |
+
+Note: the `eval` method depends on the specific physics engine that the worker is based on..

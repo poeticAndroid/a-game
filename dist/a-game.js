@@ -2,8 +2,9 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "game components for A-Frame",
+  "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
   "scripts": {
     "prepare": "npm run build",
@@ -11,7 +12,7 @@ module.exports={
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
     "bump": "npm version minor --no-git-tag-version",
-    "gitadd": "git add package*.json dist/"
+    "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
     "bump",
@@ -58,9 +59,9 @@ require("./primitives/a-player")
 require("./primitives/a-hand")
 
 const pkg = require("../package")
-console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
+console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":5,"./components/injectplayer":6,"./components/locomotion":7,"./components/physics":11,"./libs/copyWorldPosRot":16,"./libs/ensureElement":17,"./libs/pools":18,"./libs/touchGestures":19,"./primitives/a-hand":20,"./primitives/a-main":21,"./primitives/a-player":22}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":6,"./components/injectplayer":7,"./components/locomotion":8,"./components/physics":12,"./libs/copyWorldPosRot":17,"./libs/ensureElement":18,"./libs/pools":19,"./libs/touchGestures":20,"./primitives/a-hand":21,"./primitives/a-main":22,"./primitives/a-player":23}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -74,12 +75,7 @@ AFRAME.registerComponent("grabbing", {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
     this._onMouseUp = this._onMouseUp.bind(this)
-    this._onGripDown = this._onGripDown.bind(this)
-    this._onGripUp = this._onGripUp.bind(this)
-    this._onTriggerDown = this._onTriggerDown.bind(this)
-    this._onTriggerUp = this._onTriggerUp.bind(this)
-    this._onButtonDown = this._onButtonDown.bind(this)
-    this._onButtonUp = this._onButtonUp.bind(this)
+    this._onButtonChanged = this._onButtonChanged.bind(this)
     this._onTouchTap = this._onTouchTap.bind(this)
     this._onTouchHold = this._onTouchHold.bind(this)
 
@@ -91,8 +87,8 @@ AFRAME.registerComponent("grabbing", {
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
     this._head.glove = this._head.hand
-    this._left.glove = this.el.querySelector(".left.glove") || this._left.hand
-    this._right.glove = this.el.querySelector(".right.glove") || this._right.hand
+    this._left.glove = this._ensureGlove(this._left.hand)
+    this._right.glove = this._ensureGlove(this._right.hand)
 
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
@@ -128,12 +124,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.addEventListener("buttonchanged", this._enableHands)
-      hand.addEventListener("gripdown", this._onGripDown)
-      hand.addEventListener("gripup", this._onGripUp)
-      hand.addEventListener("triggerdown", this._onTriggerDown)
-      hand.addEventListener("triggerup", this._onTriggerUp)
-      hand.addEventListener("buttondown", this._onButtonDown)
-      hand.addEventListener("buttonup", this._onButtonUp)
+      hand.addEventListener("buttonchanged", this._onButtonChanged)
     }
     this.el.sceneEl.canvas.addEventListener("tap", this._onTouchTap)
     this.el.sceneEl.canvas.addEventListener("hold", this._onTouchHold)
@@ -145,12 +136,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.removeEventListener("buttonchanged", this._enableHands)
-      hand.removeEventListener("gripdown", this._onGripDown)
-      hand.removeEventListener("gripup", this._onGripUp)
-      hand.removeEventListener("triggerdown", this._onTriggerDown)
-      hand.removeEventListener("triggerup", this._onTriggerUp)
-      hand.removeEventListener("buttondown", this._onButtonDown)
-      hand.removeEventListener("buttonup", this._onButtonUp)
+      hand.removeEventListener("buttonchanged", this._onButtonChanged)
     }
     this.el.sceneEl.canvas.removeEventListener("tap", this._onTouchTap)
     this.el.sceneEl.canvas.removeEventListener("hold", this._onTouchHold)
@@ -160,15 +146,66 @@ AFRAME.registerComponent("grabbing", {
   },
 
   tick: function (time, timeDelta) {
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) this.toggleGrab()
+        if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
+        if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
+        if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
+      }
+    }
+    this._grabBtn = false
+    this._useBtn0 = false
+    this._useBtn1 = false
+    this._useBtn2 = false
+    for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
+      gamepad = navigator.getGamepads()[i]
+      if (gamepad) {
+        this._grabBtn = this._grabBtn || gamepad.buttons[4].pressed || gamepad.buttons[5].pressed
+        this._useBtn0 = this._useBtn0 || gamepad.buttons[6].pressed || gamepad.buttons[7].pressed
+        this._useBtn1 = this._useBtn1 || gamepad.buttons[0].pressed
+        this._useBtn2 = this._useBtn2 || gamepad.buttons[1].pressed
+      }
+    }
+
+    let headPos = THREE.Vector3.temp()
+    let delta = THREE.Vector3.temp()
+    headPos.copy(this._head.hand.object3D.position)
+    this._head.hand.object3D.parent.localToWorld(headPos)
+
     for (let hand of this._hands) {
       let _hand = "_" + hand
+
+      if (this[_hand]._occlusionRay) {
+        this[_hand]._occlusionRay.object3D.position.copy(headPos)
+        this[_hand].hand.object3D.getWorldPosition(delta)
+        delta.sub(headPos)
+        let handDist = delta.length()
+        delta.normalize()
+        this[_hand]._occlusionRay.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
+        this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist + 0.0625)
+
+        let ray = this[_hand]._occlusionRay.components.raycaster
+        ray.refreshObjects()
+        let hit = ray.intersections[0]
+        if (hit) {
+          // this[_hand].glove.object3D.position.copy(hit.point)
+          let dist = delta.copy(hit.point).sub(headPos).length()
+          this[_hand].glove.object3D.position.copy(headPos).add(delta.normalize().multiplyScalar(dist - 0.0625))
+          this[_hand].glove.object3D.parent.worldToLocal(this[_hand].glove.object3D.position)
+        } else {
+          this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+        }
+      }
+
       if (this[_hand].grabbed) {
         if (!this[_hand].isPhysical)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
       } else if (this[_hand].ray) {
-        ray = this[_hand].ray.components.raycaster
+        let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
-        hit = ray.intersections[0]
+        let hit = ray.intersections[0]
         if (hit && hit.object.el.getAttribute("grabbable") != null) {
           if (this[_hand]._lastHit !== hit.object.el) {
             if (this[_hand]._lastHit)
@@ -194,9 +231,9 @@ AFRAME.registerComponent("grabbing", {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
     if (this[_hand].grabbed) this.drop(hand)
-    ray = this[_hand].ray.components.raycaster
+    let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
-    hit = ray.intersections[0]
+    let hit = ray.intersections[0]
     if (hit && hit.object.el.getAttribute("grabbable") != null) {
       this.dropObject(hit.object.el)
       this[_hand].grabbed = hit.object.el
@@ -296,6 +333,15 @@ AFRAME.registerComponent("grabbing", {
       let boxsize = 0.0625
       this[_hand].glove.ensure(".hitbox", "a-box", { class: "hitbox", visible: false, position: "0 0 0.03125", width: boxsize / 2, height: boxsize, depth: boxsize * 2 })
       this[_hand].glove.setAttribute("body", "type:kinematic;")
+
+      if (hand === "head") continue
+      this[_hand]._occlusionRay = this.el.sceneEl.ensure(".occlusion-ray." + hand, "a-entity", {
+        class: "occlusion-ray " + hand,
+        raycaster: {
+          objects: "[wall]",
+          autoRefresh: false
+        }
+      })
     }
     this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
@@ -315,7 +361,64 @@ AFRAME.registerComponent("grabbing", {
     })
     this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.glove.setAttribute("visible", true)
+    this._right.glove.setAttribute("visible", true)
     this.update()
+  },
+
+  _ensureGlove: function (el) {
+    let hand = el.getAttribute("side")
+    return el.ensure(".glove", "a-entity", {
+      "class": "glove",
+      "fingerflex": {
+        min: hand === "left" ? -10 : 10,
+        max: hand === "left" ? -90 : 90,
+      }
+    }, `<a-box class="palm" color="gray" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
+      depth="0.08">
+      <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
+        <a-entity class="thumb bend">
+          <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-entity class="bend" position="0 0 -0.02">
+              <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+              </a-box>
+            </a-entity>
+          </a-box>
+        </a-entity>
+      </a-entity>
+      <a-entity class="index bend" position="0 0.03 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="middle bend" position="0 0.01 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="ring bend" position="0 -0.01 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="little bend" position="0 -0.03 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+    </a-box>`)
   },
 
   _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
@@ -329,29 +432,77 @@ AFRAME.registerComponent("grabbing", {
   },
   _onTouchTap: function (e) { this.use() },
   _onTouchHold: function (e) { this.toggleGrab() },
-  _onGripDown: function (e) { this.grab(e.target.getAttribute("side")) },
-  _onGripUp: function (e) { this.drop(e.target.getAttribute("side")) },
-  _onTriggerDown: function (e) { this.useDown(e.target.getAttribute("side")) },
-  _onTriggerUp: function (e) { this.useUp(e.target.getAttribute("side")) },
-  _onButtonDown: function (e) {
-    let btn = e.detail.id - 3
-    if (btn < 1) return
-    let hand = "right"
-    if (e.target == this._left.hand) hand = "left"
-    this.useDown(hand, btn)
-  },
-  _onButtonUp: function (e) {
-    let btn = e.detail.id - 3
-    if (btn < 1) return
-    let hand = "right"
-    if (e.target == this._left.hand) hand = "left"
-    this.useUp(hand, btn)
+  _onButtonChanged: function (e) {
+    let hand = e.srcElement.getAttribute("tracked-controls").hand
+    let _hand = "_" + hand
+    let flex = 0
+    let finger = -1
+    if (e.detail.state.touched) flex = 0.5
+    if (e.detail.state.pressed) flex = 1
+    if (e.detail.state.value) flex = 0.5 + e.detail.state.value / 2
+    switch (e.detail.id) {
+      case 0: // Trigger
+        finger = 1
+        if (e.detail.state.pressed) this.useDown(hand)
+        else this.useUp(hand)
+        break
+      case 1: // Grip
+        finger = 5
+        if (e.detail.state.pressed) this.grab(hand)
+        else this.drop(hand)
+        break
+      case 4: // A/X
+        finger = 0
+        if (e.detail.state.pressed) this.useDown(hand, 1)
+        else this.useUp(hand, 1)
+        break
+      case 5: // B/Y
+        finger = 0
+        if (e.detail.state.pressed) this.useDown(hand, 2)
+        else this.useUp(hand, 2)
+        break
+    }
+    if (finger < 5) {
+      // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+    } else {
+      for (let finger = 2; finger < 5; finger++) {
+        // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      }
+    }
   },
 })
 
 require("./grabbing/grabbable")
+require("./grabbing/fingerflex")
 
-},{"./grabbing/grabbable":4}],4:[function(require,module,exports){
+},{"./grabbing/fingerflex":4,"./grabbing/grabbable":5}],4:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerComponent("fingerflex", {
+  schema: {
+    min: { type: "number", default: 10 },
+    max: { type: "number", default: 90 },
+  },
+
+  init: function () {
+    this._fingers = ["thumb", "index", "middle", "ring", "little"]
+  },
+
+  events: {
+    fingerflex: function (e) {
+      let degrees = this.data.min + e.detail.flex * (this.data.max - this.data.min)
+      let bend = this.el.querySelector(".bend." + this._fingers[e.detail.finger])
+      while (bend) {
+        bend.setAttribute("rotation", "y", degrees)
+        bend = bend.querySelector(".bend")
+      }
+    }
+  }
+})
+
+},{}],5:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbable", {
@@ -361,12 +512,11 @@ AFRAME.registerComponent("grabbable", {
   },
 
   init: function () {
-    // Do something when component's data is updated.
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   }
 })
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("include", {
@@ -399,7 +549,7 @@ AFRAME.registerComponent("include", {
   }
 })
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("injectplayer", {
@@ -414,7 +564,7 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -447,7 +597,6 @@ AFRAME.registerComponent("locomotion", {
     this._rightTouchCenter = new THREE.Vector2()
     this._rightTouchDir = new THREE.Vector2()
     this._teleporting = true
-    this._flyDir = 1
     this._bumpOverload = 0
     this._vertVelocity = 1
     this.currentFloorPosition = new THREE.Vector3()
@@ -668,21 +817,23 @@ AFRAME.registerComponent("locomotion", {
     let dist = delta.length()
     if (dist) {
       bumper.setAttribute("raycaster", "far", dist + 0.125)
-      bumper.setAttribute("raycaster", "direction", delta.normalize())
+      bumper.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
       // bumper.setAttribute("raycaster", "origin", delta.multiplyScalar(-0.25))
-      ray = bumper.components.raycaster
+      let ray = bumper.components.raycaster
       ray.refreshObjects()
-      hit = ray.intersections[0]
+      let hit = ray.intersections[0]
       if (hit) {
         matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
         delta
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
           .normalize()
-          .multiplyScalar(0.25 + dist / 2)
+          .multiplyScalar(dist + 0.125)
         let feety = this._legs.object3D.position.y
         this._move(delta)
-        this._legs.object3D.position.y = feety
+        bumper.object3D.position.add(delta)
+        if (bumper === this._headBumper) this._legBumper.object3D.position.copy(this._headBumper.object3D.position)
+        this._legs.object3D.position.y = Math.max(feety, this.headPos.y - 1.5)
         this._caution = 4
         this._bumpOverload++
         this._vertVelocity = Math.min(0, this._vertVelocity)
@@ -700,10 +851,10 @@ AFRAME.registerComponent("locomotion", {
     let stick = THREE.Vector2.temp()
 
     stick.set(0, 0)
-    if (this._keysDown["a"]) stick.x--
-    if (this._keysDown["d"]) stick.x++
-    if (this._keysDown["w"] || this._keysDown["ArrowUp"]) stick.y--
-    if (this._keysDown["s"] || this._keysDown["ArrowDown"]) stick.y++
+    if (this._keysDown["KeyA"]) stick.x--
+    if (this._keysDown["KeyD"]) stick.x++
+    if (this._keysDown["KeyW"] || this._keysDown["ArrowUp"]) stick.y--
+    if (this._keysDown["KeyS"] || this._keysDown["ArrowDown"]) stick.y++
     if (this._kbStick.length() > 0.1) this._kbStick.multiplyScalar((this._kbStick.length() - 0.1) / this._kbStick.length())
     else (this._kbStick.set(0, 0))
     this._kbStick.add(stick.multiplyScalar(0.2))
@@ -725,6 +876,7 @@ AFRAME.registerComponent("locomotion", {
     }
 
     if (bestStick.length() > 1) bestStick.normalize()
+    if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
   _applyMoveStick: function (seconds) {
@@ -758,8 +910,8 @@ AFRAME.registerComponent("locomotion", {
     stick.set(0, 0)
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
-    if (this._keysDown[" "]) stick.y--
-    if (this._keysDown["c"]) stick.y++
+    if (this._keysDown["Space"]) stick.y--
+    if (this._keysDown["KeyC"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     this._deadZone(stick.set(this._axes[2], this._axes[3]))
@@ -777,6 +929,7 @@ AFRAME.registerComponent("locomotion", {
     }
 
     if (bestStick.length() > 1) bestStick.normalize()
+    if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
   _applyAuxStick: function (seconds) {
@@ -810,86 +963,84 @@ AFRAME.registerComponent("locomotion", {
       this.centerPos.add(delta)
     }
 
-    // Crouching
-    if (Math.round(stick.y) > 0) {
-      if (this._godMode) {
-        this.el.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
-        this._legs.object3D.position.y += stick.y * this.data.speed * seconds * this._flyDir
-        this._crouching = true
-      } else if (!this._crouching) {
-        this._crouching = true
-        this.toggleCrouch()
-      }
+    // Levitating
+    if (this._godMode) {
+      this.el.object3D.position.y += -stick.y * this.data.speed * seconds
+      this._legs.object3D.position.y += -stick.y * this.data.speed * seconds
     } else {
-      if (this._crouching) {
-        if (this._flyDir > 0) this._flyDir = -0.125
-        else this._flyDir = 1
-      }
-      this._crouching = false
-    }
-
-    // Teleportation and jumping
-    if (Math.round(stick.y) < 0) {
-      if (!this._teleporting && this.data.teleportDistance) {
-        this._teleportCursor.setAttribute("visible", true)
-        this._teleporting = true
-      }
-      let quat = THREE.Quaternion.temp()
-      this._teleportCursor.object3D.getWorldQuaternion(quat)
-      this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
-      this._teleportCursor.object3D.quaternion.x = 0
-      this._teleportCursor.object3D.quaternion.z = 0
-      this._teleportCursor.object3D.quaternion.normalize()
-
-      ray = this._teleportBeam.components.raycaster
-      ray.refreshObjects()
-      hit = ray.intersections[0]
-      if (hit && hit.object.el.getAttribute("floor") != null) {
-        let straight = THREE.Vector3.temp()
-        let delta = THREE.Vector3.temp()
-        let matrix = THREE.Matrix3.temp()
-        delta.copy(hit.point).sub(this.feetPos)
-        if (delta.y > 1.5) delta.multiplyScalar(0)
-        if (delta.length() > this.data.teleportDistance) delta.normalize().multiplyScalar(this.data.teleportDistance)
-        delta.add(this.feetPos)
-        this._teleportCursor.object3D.position.copy(delta)
-        this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
-
-        matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
-        delta
-          .copy(hit.face.normal)
-          .applyMatrix3(matrix)
-          .normalize()
-        delta.applyQuaternion(quat.copy(this.el.object3D.quaternion).conjugate())
-        straight.set(0, 1, 0)
-        quat.setFromUnitVectors(straight, delta)
-        this._teleportCursor.object3D.quaternion.premultiply(quat)
+      // Crouching
+      if (Math.round(stick.y) > 0) {
+        if (!this._crouching) {
+          this._crouching = true
+          this.toggleCrouch()
+        }
       } else {
-        this._teleportCursor.object3D.position.copy(this.feetPos)
-        this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+        this._crouching = false
       }
-      // jump!
-      if (this.currentFloor && !this._jumping) {
-        this._vertVelocity = this.data.jumpForce
-        this._jumping = true
+
+      // Teleportation and jumping
+      if (Math.round(stick.y) < 0) {
+        if (!this._teleporting && this.data.teleportDistance) {
+          this._teleportCursor.setAttribute("visible", true)
+          this._teleporting = true
+        }
+        let quat = THREE.Quaternion.temp()
+        this._teleportCursor.object3D.getWorldQuaternion(quat)
+        this._teleportCursor.object3D.quaternion.multiply(quat.conjugate().normalize()).multiply(quat.copy(this.el.object3D.quaternion).multiply(this._camera.object3D.quaternion))
+        this._teleportCursor.object3D.quaternion.x = 0
+        this._teleportCursor.object3D.quaternion.z = 0
+        this._teleportCursor.object3D.quaternion.normalize()
+
+        ray = this._teleportBeam.components.raycaster
+        ray.refreshObjects()
+        hit = ray.intersections[0]
+        if (hit && hit.object.el.getAttribute("floor") != null) {
+          let straight = THREE.Vector3.temp()
+          let delta = THREE.Vector3.temp()
+          let matrix = THREE.Matrix3.temp()
+          delta.copy(hit.point).sub(this.feetPos)
+          if (delta.y > 1.5) delta.multiplyScalar(0)
+          if (delta.length() > this.data.teleportDistance) delta.normalize().multiplyScalar(this.data.teleportDistance)
+          delta.add(this.feetPos)
+          this._teleportCursor.object3D.position.copy(delta)
+          this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+
+          matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
+          delta
+            .copy(hit.face.normal)
+            .applyMatrix3(matrix)
+            .normalize()
+          delta.applyQuaternion(quat.copy(this.el.object3D.quaternion).conjugate())
+          straight.set(0, 1, 0)
+          quat.setFromUnitVectors(straight, delta)
+          this._teleportCursor.object3D.quaternion.premultiply(quat)
+        } else {
+          this._teleportCursor.object3D.position.copy(this.feetPos)
+          this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
+        }
+        // jump!
+        if (this.currentFloor && !this._jumping) {
+          this._vertVelocity = this.data.jumpForce
+          this._jumping = true
+        }
+      } else if (this._teleporting) {
+        let pos = THREE.Vector3.temp()
+        this._teleportCursor.object3D.getWorldPosition(pos)
+        this.teleport(pos)
+        this._teleportCursor.setAttribute("visible", false)
+        this._teleportCursor.setAttribute("position", "0 0 0")
+        this._teleporting = false
+      } else if (this._jumping) {
+        this._jumping = false
       }
-    } else if (this._teleporting) {
-      let pos = THREE.Vector3.temp()
-      this._teleportCursor.object3D.getWorldPosition(pos)
-      this.teleport(pos)
-      this._teleportCursor.setAttribute("visible", false)
-      this._teleportCursor.setAttribute("position", "0 0 0")
-      this._teleporting = false
-    } else if (this._jumping) {
-      this._jumping = false
     }
   },
 
   _callToggles() {
     let toggles = 0
 
-    if (this._keysDown["h"]) toggles = toggles | 1
-    if (this._keysDown["g"]) toggles = toggles | 2
+    if (this._keysDown["KeyH"]) toggles = toggles | 1
+    if (this._keysDown["KeyG"]) toggles = toggles | 2
     if (this._vrRightClick) toggles = toggles | 1
     if (this._vrLeftClick) toggles = toggles | 2
 
@@ -936,10 +1087,10 @@ AFRAME.registerComponent("locomotion", {
     return vec
   },
 
-  _onKeyDown(e) { this._keysDown[e.key] = true },
-  _onKeyUp(e) { this._keysDown[e.key] = false },
+  _onKeyDown(e) { this._keysDown[e.code] = true },
+  _onKeyUp(e) { this._keysDown[e.code] = false },
   _onAxisMove(e) {
-    if (e.srcElement.getAttribute("hand-controls").hand === "left") {
+    if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       this._axes[0] = e.detail.axis[2]
       this._axes[1] = e.detail.axis[3]
     } else {
@@ -959,7 +1110,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
   _onButtonChanged: function (e) {
-    if (e.srcElement.getAttribute("hand-controls").hand === "left") {
+    if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
       if (e.detail.id == 3) this._vrRightClick = e.detail.state.pressed
@@ -1038,7 +1189,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":8,"./locomotion/start":9,"./locomotion/wall":10}],8:[function(require,module,exports){
+},{"./locomotion/floor":9,"./locomotion/start":10,"./locomotion/wall":11}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1051,7 +1202,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1072,7 +1223,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1085,7 +1236,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -1190,6 +1341,9 @@ AFRAME.registerSystem("physics", {
           body.components.body.command(params)
         break
     }
+  },
+  eval: function (expr) {
+    this.worker.postMessage("world eval " + cmd.stringifyParam(expr))
   }
 })
 
@@ -1197,7 +1351,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":15,"./physics/body":12,"./physics/joint":13,"./physics/shape":14}],12:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":16,"./physics/body":13,"./physics/joint":14,"./physics/shape":15}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1306,16 +1460,6 @@ AFRAME.registerComponent("body", {
   },
 
   pause: function () {
-    if (this.data.autoShape) {
-      this.el.removeAttribute("shape")
-      if (this.el.firstElementChild) {
-        let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
-        if (els) els.forEach(el => {
-          el.removeAttribute("shape")
-        })
-      }
-    }
-
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -1377,11 +1521,15 @@ AFRAME.registerComponent("body", {
         this.el.emit(e.event, e)
         break
     }
+  },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 
 
-},{"../../libs/cmdCodec":15}],13:[function(require,module,exports){
+},{"../../libs/cmdCodec":16}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1406,7 +1554,7 @@ AFRAME.registerComponent("joint", {
     // spring: { type: "array" },
   },
 
-  init: function () {
+  play: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -1437,36 +1585,39 @@ AFRAME.registerComponent("joint", {
     //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
-  remove: function () {
+  pause: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
   },
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
+  }
 
 })
 
 
-},{"../../libs/cmdCodec":15}],14:[function(require,module,exports){
+},{"../../libs/cmdCodec":16}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
 
 AFRAME.registerComponent("shape", {
   // dependencies: ["body"],
-  multiple: true,
   schema: {
   },
 
-  init: function () {
+  play: function () {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
     this.body = this.el
     while (this.body && !this.body.matches("[body]")) this.body = this.body.parentElement
     if (!this.body) return this._retry = setTimeout(() => {
-      this.init()
+      this.play()
     }, 256)
     this.bodyId = this.body.components.body.id
 
@@ -1509,10 +1660,7 @@ AFRAME.registerComponent("shape", {
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
-  update: function () {
-  },
-
-  remove: function () {
+  pause: function () {
     clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
@@ -1520,11 +1668,16 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+  },
+
+  eval: function (expr) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }
 })
 
 
-},{"../../libs/cmdCodec":15}],15:[function(require,module,exports){
+},{"../../libs/cmdCodec":16}],16:[function(require,module,exports){
 module.exports = {
   parse: function (cmd) {
     let words = cmd.split(" ")
@@ -1545,7 +1698,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -1563,8 +1716,8 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],17:[function(require,module,exports){
-Element.prototype.ensure = function (selector, name = selector, attrs = {}) {
+},{}],18:[function(require,module,exports){
+Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
   if (!_childEl) {
@@ -1574,11 +1727,11 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}) {
       val = attrs[attr]
       _childEl.setAttribute(attr, val)
     }
-    // _childEl.flushToDOM()
+    _childEl.innerHTML = innerHTML
   }
   return _childEl
 }
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -1604,7 +1757,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -1698,22 +1851,20 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
   mappings: {
-    side: "hand-controls.hand",
-    color: "hand-controls.color",
-    model: "hand-controls.handModelStyle",
+    side: "tracked-controls.hand"
   }
 })
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {

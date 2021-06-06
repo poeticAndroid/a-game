@@ -7,7 +7,6 @@ AFRAME.registerComponent("grabbable", {
   },
 
   init: function () {
-    // Do something when component's data is updated.
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   }
 })
