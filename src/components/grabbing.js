@@ -28,8 +28,8 @@ AFRAME.registerComponent("grabbing", {
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
     this._head.glove = this._head.hand
-    this._left.glove = this.el.querySelector(".left.glove") || this._left.hand
-    this._right.glove = this.el.querySelector(".right.glove") || this._right.hand
+    this._left.glove = this._left.hand.querySelector(".glove") || this._left.hand
+    this._right.glove = this._right.hand.querySelector(".glove") || this._right.hand
 
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
@@ -135,13 +135,15 @@ AFRAME.registerComponent("grabbing", {
         let handDist = delta.length()
         delta.normalize()
         this[_hand]._occlusionRay.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
-        this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist)
+        this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist + 0.0625)
 
         let ray = this[_hand]._occlusionRay.components.raycaster
         ray.refreshObjects()
         let hit = ray.intersections[0]
         if (hit) {
-          this[_hand].glove.object3D.position.copy(hit.point)
+          // this[_hand].glove.object3D.position.copy(hit.point)
+          let dist = delta.copy(hit.point).sub(headPos).length()
+          this[_hand].glove.object3D.position.copy(headPos).add(delta.normalize().multiplyScalar(dist - 0.0625))
           this[_hand].glove.object3D.parent.worldToLocal(this[_hand].glove.object3D.position)
         } else {
           this[_hand].glove.copyWorldPosRot(this[_hand].hand)
@@ -233,7 +235,6 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.removeAttribute("joint__2")
     this[_hand].anchor.removeAttribute("joint__3")
     this[_hand].anchor.removeAttribute("animation")
-    this[_hand].hand.setAttribute("visible", false)
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
