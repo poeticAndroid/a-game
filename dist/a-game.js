@@ -2,8 +2,9 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.6.10",
+  "version": "0.6.11",
   "description": "game components for A-Frame",
+  "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
   "scripts": {
     "prepare": "npm run build",
@@ -58,7 +59,7 @@ require("./primitives/a-player")
 require("./primitives/a-hand")
 
 const pkg = require("../package")
-console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}`)
+console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
 },{"../package":1,"./components/grabbing":3,"./components/include":5,"./components/injectplayer":6,"./components/locomotion":7,"./components/physics":11,"./libs/copyWorldPosRot":16,"./libs/ensureElement":17,"./libs/pools":18,"./libs/touchGestures":19,"./primitives/a-hand":20,"./primitives/a-main":21,"./primitives/a-player":22}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
