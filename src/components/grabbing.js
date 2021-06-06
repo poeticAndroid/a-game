@@ -11,12 +11,7 @@ AFRAME.registerComponent("grabbing", {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
     this._onMouseUp = this._onMouseUp.bind(this)
-    this._onGripDown = this._onGripDown.bind(this)
-    this._onGripUp = this._onGripUp.bind(this)
-    this._onTriggerDown = this._onTriggerDown.bind(this)
-    this._onTriggerUp = this._onTriggerUp.bind(this)
-    this._onButtonDown = this._onButtonDown.bind(this)
-    this._onButtonUp = this._onButtonUp.bind(this)
+    this._onButtonChanged = this._onButtonChanged.bind(this)
     this._onTouchTap = this._onTouchTap.bind(this)
     this._onTouchHold = this._onTouchHold.bind(this)
 
@@ -28,8 +23,8 @@ AFRAME.registerComponent("grabbing", {
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
     this._head.glove = this._head.hand
-    this._left.glove = this._left.hand.querySelector(".glove") || this._left.hand
-    this._right.glove = this._right.hand.querySelector(".glove") || this._right.hand
+    this._left.glove = this._ensureGlove(this._left.hand)
+    this._right.glove = this._ensureGlove(this._right.hand)
 
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
@@ -65,12 +60,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.addEventListener("buttonchanged", this._enableHands)
-      hand.addEventListener("gripdown", this._onGripDown)
-      hand.addEventListener("gripup", this._onGripUp)
-      hand.addEventListener("triggerdown", this._onTriggerDown)
-      hand.addEventListener("triggerup", this._onTriggerUp)
-      hand.addEventListener("buttondown", this._onButtonDown)
-      hand.addEventListener("buttonup", this._onButtonUp)
+      hand.addEventListener("buttonchanged", this._onButtonChanged)
     }
     this.el.sceneEl.canvas.addEventListener("tap", this._onTouchTap)
     this.el.sceneEl.canvas.addEventListener("hold", this._onTouchHold)
@@ -82,12 +72,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.removeEventListener("buttonchanged", this._enableHands)
-      hand.removeEventListener("gripdown", this._onGripDown)
-      hand.removeEventListener("gripup", this._onGripUp)
-      hand.removeEventListener("triggerdown", this._onTriggerDown)
-      hand.removeEventListener("triggerup", this._onTriggerUp)
-      hand.removeEventListener("buttondown", this._onButtonDown)
-      hand.removeEventListener("buttonup", this._onButtonUp)
+      hand.removeEventListener("buttonchanged", this._onButtonChanged)
     }
     this.el.sceneEl.canvas.removeEventListener("tap", this._onTouchTap)
     this.el.sceneEl.canvas.removeEventListener("hold", this._onTouchHold)
@@ -312,7 +297,64 @@ AFRAME.registerComponent("grabbing", {
     })
     this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.glove.setAttribute("visible", true)
+    this._right.glove.setAttribute("visible", true)
     this.update()
+  },
+
+  _ensureGlove: function (el) {
+    let hand = el.getAttribute("side")
+    return el.ensure(".glove", "a-entity", {
+      "class": "glove",
+      "fingerflex": {
+        min: hand === "left" ? -10 : 10,
+        max: hand === "left" ? -90 : 90,
+      }
+    }, `<a-box class="palm" color="gray" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
+      depth="0.08">
+      <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
+        <a-entity class="thumb bend">
+          <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-entity class="bend" position="0 0 -0.02">
+              <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+              </a-box>
+            </a-entity>
+          </a-box>
+        </a-entity>
+      </a-entity>
+      <a-entity class="index bend" position="0 0.03 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="middle bend" position="0 0.01 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="ring bend" position="0 -0.01 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="little bend" position="0 -0.03 -0.04">
+        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+    </a-box>`)
   },
 
   _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
@@ -326,24 +368,45 @@ AFRAME.registerComponent("grabbing", {
   },
   _onTouchTap: function (e) { this.use() },
   _onTouchHold: function (e) { this.toggleGrab() },
-  _onGripDown: function (e) { this.grab(e.target.getAttribute("side")) },
-  _onGripUp: function (e) { this.drop(e.target.getAttribute("side")) },
-  _onTriggerDown: function (e) { this.useDown(e.target.getAttribute("side")) },
-  _onTriggerUp: function (e) { this.useUp(e.target.getAttribute("side")) },
-  _onButtonDown: function (e) {
-    let btn = e.detail.id - 3
-    if (btn < 1) return
-    let hand = "right"
-    if (e.target == this._left.hand) hand = "left"
-    this.useDown(hand, btn)
-  },
-  _onButtonUp: function (e) {
-    let btn = e.detail.id - 3
-    if (btn < 1) return
-    let hand = "right"
-    if (e.target == this._left.hand) hand = "left"
-    this.useUp(hand, btn)
+  _onButtonChanged: function (e) {
+    let hand = e.srcElement.getAttribute("tracked-controls").hand
+    let _hand = "_" + hand
+    let flex = 0
+    let finger = -1
+    if (e.detail.state.touched) flex = 0.5
+    if (e.detail.state.pressed) flex = 1
+    if (e.detail.state.value) flex = 0.5 + e.detail.state.value / 2
+    switch (e.detail.id) {
+      case 0: // Trigger
+        finger = 1
+        if (e.detail.state.pressed) this.useDown(hand)
+        else this.useUp(hand)
+        break
+      case 1: // Grip
+        finger = 5
+        if (e.detail.state.pressed) this.grab(hand)
+        else this.drop(hand)
+        break
+      case 4: // A/X
+        finger = 0
+        if (e.detail.state.pressed) this.useDown(hand, 1)
+        else this.useUp(hand, 1)
+        break
+      case 5: // B/Y
+        finger = 0
+        if (e.detail.state.pressed) this.useDown(hand, 2)
+        else this.useUp(hand, 2)
+        break
+    }
+    if (finger < 5) {
+      this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+    } else {
+      for (let finger = 2; finger < 5; finger++) {
+        this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
+      }
+    }
   },
 })
 
 require("./grabbing/grabbable")
+require("./grabbing/fingerflex")

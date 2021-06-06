@@ -18,69 +18,7 @@
     <a-main include="./scenes/demo.html">
       <a-box color="gray" floor width="32" height="0.25" depth="32"></a-box>
     </a-main>
-    <a-player locomotion no-grabbing>
-      <a-hand side="left">
-        <a-sphere radius="0.0625" class="right glove"></a-sphere>
-      </a-hand>
-      <!-- <a-hand side="right"> -->
-      <a-entity class="glove" position="0 1.5 -0.25" rotation="-90 -90 -90"
-        animation="property:rotation.y; to:90; dur:8000; dir:alternate; loop:true;">
-        <a-box color="gray" position="0 0 0.03" width="0.02" height="0.08" depth="0.08">
-          <a-entity position="0 0.04 0.02" rotation="45 0 45">
-            <a-entity class="thumb bend" rotation="0 10 0"
-              animation="property:rotation.y; to:90; dir:alternate; loop:true;">
-              <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-                <a-entity class="bend" position="0 0 -0.02" rotation="0 10 0"
-                  animation="property:rotation.y; to:90; dir:alternate; loop:true;">
-                  <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-                  </a-box>
-                </a-entity>
-              </a-box>
-            </a-entity>
-          </a-entity>
-          <a-entity class="index bend" position="0 0.03 -0.04" rotation="0 10 0"
-            animation="property:rotation.y; to:90; dir:alternate; loop:true;">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-              <a-entity class="bend" position="0 0 -0.02" rotation="0 10 0"
-                animation="property:rotation.y; to:90; dir:alternate; loop:true;">
-                <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-                </a-box>
-              </a-entity>
-            </a-box>
-          </a-entity>
-          <a-entity class="middle bend" position="0 0.01 -0.04" rotation="0 10 0"
-            animation="property:rotation.y; to:90; dir:alternate; loop:true; dur:1111;">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-              <a-entity class="bend" position="0 0 -0.02" rotation="0 10 0"
-                animation="property:rotation.y; to:90; dir:alternate; loop:true; dur:1111;">
-                <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-                </a-box>
-              </a-entity>
-            </a-box>
-          </a-entity>
-          <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="0 10 0"
-            animation="property:rotation.y; to:90; dir:alternate; loop:true; dur:2222;">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-              <a-entity class="bend" position="0 0 -0.02" rotation="0 10 0"
-                animation="property:rotation.y; to:90; dir:alternate; loop:true; dur:2222;">
-                <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-                </a-box>
-              </a-entity>
-            </a-box>
-          </a-entity>
-          <a-entity class="little bend" position="0 -0.03 -0.04" rotation="0 10 0"
-            animation="property:rotation.y; to:90; dir:alternate; loop:true; dur:3333;">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-              <a-entity class="bend" position="0 0 -0.02" rotation="0 10 0"
-                animation="property:rotation.y; to:90; dir:alternate; loop:true; dur:3333;">
-                <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-                </a-box>
-              </a-entity>
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <!-- </a-hand> -->
+    <a-player locomotion grabbing>
       <a-cylinder class="teleport-cursor" radius="0.5" height="0.0625" material="opacity:0.5;">
         <a-cone radius-top="0" radius-bottom="0.25" height="0.625" scale="1 1 0.125" rotation="-90 0 0"
           material="opacity:0.5;"></a-cone>

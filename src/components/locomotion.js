@@ -523,7 +523,7 @@ AFRAME.registerComponent("locomotion", {
   _onKeyDown(e) { this._keysDown[e.code] = true },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onAxisMove(e) {
-    if (e.srcElement.getAttribute("hand-controls").hand === "left") {
+    if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       this._axes[0] = e.detail.axis[2]
       this._axes[1] = e.detail.axis[3]
     } else {
@@ -543,7 +543,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
   _onButtonChanged: function (e) {
-    if (e.srcElement.getAttribute("hand-controls").hand === "left") {
+    if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
       if (e.detail.id == 3) this._vrRightClick = e.detail.state.pressed
