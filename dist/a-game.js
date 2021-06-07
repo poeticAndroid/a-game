@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -78,6 +78,8 @@ AFRAME.registerComponent("grabbing", {
     this._onButtonChanged = this._onButtonChanged.bind(this)
     this._onTouchTap = this._onTouchTap.bind(this)
     this._onTouchHold = this._onTouchHold.bind(this)
+
+    this._btnFlex = {}
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -171,6 +173,7 @@ AFRAME.registerComponent("grabbing", {
 
     let headPos = THREE.Vector3.temp()
     let delta = THREE.Vector3.temp()
+    let palmDelta = THREE.Vector3.temp()
     headPos.copy(this._head.hand.object3D.position)
     this._head.hand.object3D.parent.localToWorld(headPos)
 
@@ -178,13 +181,18 @@ AFRAME.registerComponent("grabbing", {
       let _hand = "_" + hand
 
       if (this[_hand]._occlusionRay) {
+        let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
+        this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+
         this[_hand]._occlusionRay.object3D.position.copy(headPos)
-        this[_hand].hand.object3D.getWorldPosition(delta)
+        palm.object3D.getWorldPosition(delta)
+        this[_hand].glove.object3D.getWorldPosition(palmDelta)
+        palmDelta.sub(delta)
         delta.sub(headPos)
         let handDist = delta.length()
         delta.normalize()
         this[_hand]._occlusionRay.setAttribute("raycaster", "direction", `${delta.x} ${delta.y} ${delta.z}`)
-        this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist + 0.0625)
+        this[_hand]._occlusionRay.setAttribute("raycaster", "far", handDist + 0.03125)
 
         let ray = this[_hand]._occlusionRay.components.raycaster
         ray.refreshObjects()
@@ -192,10 +200,8 @@ AFRAME.registerComponent("grabbing", {
         if (hit) {
           // this[_hand].glove.object3D.position.copy(hit.point)
           let dist = delta.copy(hit.point).sub(headPos).length()
-          this[_hand].glove.object3D.position.copy(headPos).add(delta.normalize().multiplyScalar(dist - 0.0625))
+          this[_hand].glove.object3D.position.copy(headPos).add(palmDelta).add(delta.normalize().multiplyScalar(dist - 0.03125))
           this[_hand].glove.object3D.parent.worldToLocal(this[_hand].glove.object3D.position)
-        } else {
-          this[_hand].glove.copyWorldPosRot(this[_hand].hand)
         }
       }
 
@@ -343,7 +349,8 @@ AFRAME.registerComponent("grabbing", {
         }
       })
     }
-    this._left.ray = this._left.glove.ensure(".grabbing-ray", "a-entity", {
+    let palm = this._left.glove.querySelector(".palm") || this._left.glove
+    this._left.ray = palm.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
       raycaster: {
         objects: "[wall], [grabbable]",
@@ -351,7 +358,8 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._right.ray = this._right.glove.ensure(".grabbing-ray", "a-entity", {
+    palm = this._right.glove.querySelector(".palm") || this._right.glove
+    this._right.ray = palm.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
       raycaster: {
         objects: "[wall], [grabbable]",
@@ -435,11 +443,12 @@ AFRAME.registerComponent("grabbing", {
   _onButtonChanged: function (e) {
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
-    let flex = 0
     let finger = -1
+    let flex = 0
     if (e.detail.state.touched) flex = 0.5
     if (e.detail.state.pressed) flex = 1
     if (e.detail.state.value) flex = 0.5 + e.detail.state.value / 2
+    this._btnFlex[hand + e.detail.id] = flex
     switch (e.detail.id) {
       case 0: // Trigger
         finger = 1
@@ -451,23 +460,27 @@ AFRAME.registerComponent("grabbing", {
         if (e.detail.state.pressed) this.grab(hand)
         else this.drop(hand)
         break
+      case 3: // Thumbstick
+        finger = 0
+        flex = Math.max(this._btnFlex[hand + 3] || 0, this._btnFlex[hand + 4] || 0, this._btnFlex[hand + 5] || 0)
+        break
       case 4: // A/X
         finger = 0
+        flex = Math.max(this._btnFlex[hand + 3] || 0, this._btnFlex[hand + 4] || 0, this._btnFlex[hand + 5] || 0)
         if (e.detail.state.pressed) this.useDown(hand, 1)
         else this.useUp(hand, 1)
         break
       case 5: // B/Y
         finger = 0
+        flex = Math.max(this._btnFlex[hand + 3] || 0, this._btnFlex[hand + 4] || 0, this._btnFlex[hand + 5] || 0)
         if (e.detail.state.pressed) this.useDown(hand, 2)
         else this.useUp(hand, 2)
         break
     }
     if (finger < 5) {
-      // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
       this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
     } else {
       for (let finger = 2; finger < 5; finger++) {
-        // this[_hand].glove.emit("fingerflex", { hand: hand, finger: finger, flex: flex })
         this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
       }
     }
@@ -488,16 +501,31 @@ AFRAME.registerComponent("fingerflex", {
 
   init: function () {
     this._fingers = ["thumb", "index", "middle", "ring", "little"]
+    this._currentFlex = [0, 0, 0, 0, 0]
+    this._targetFlex = [1.125, 0, 1.125, 1.125, 1.125]
   },
 
-  events: {
-    fingerflex: function (e) {
-      let degrees = this.data.min + e.detail.flex * (this.data.max - this.data.min)
-      let bend = this.el.querySelector(".bend." + this._fingers[e.detail.finger])
+  tick: function (time, timeDelta) {
+    for (let finger = 0; finger < 5; finger++) {
+      let name = this._fingers[finger]
+      let current = this._currentFlex[finger]
+      let target = this._targetFlex[finger]
+
+      current = Math.min(Math.max(current - 0.1, target), current + 0.1)
+      let degrees = this.data.min + current * (this.data.max - this.data.min)
+      let bend = this.el.querySelector(".bend." + name)
       while (bend) {
         bend.setAttribute("rotation", "y", degrees)
         bend = bend.querySelector(".bend")
       }
+
+      this._currentFlex[finger] = current
+    }
+  },
+
+  events: {
+    fingerflex: function (e) {
+      this._targetFlex[e.detail.finger] = e.detail.flex
     }
   }
 })
