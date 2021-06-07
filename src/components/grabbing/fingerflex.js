@@ -22,7 +22,9 @@ AFRAME.registerComponent("fingerflex", {
       let degrees = this.data.min + current * (this.data.max - this.data.min)
       let bend = this.el.querySelector(".bend." + name)
       while (bend) {
-        bend.setAttribute("rotation", "y", degrees)
+        let rot = bend.getAttribute("rotation")
+        rot.y = degrees
+        bend.setAttribute("rotation", rot)
         bend = bend.querySelector(".bend")
       }
 

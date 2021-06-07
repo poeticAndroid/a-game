@@ -330,7 +330,7 @@ AFRAME.registerComponent("grabbing", {
           </a-box>
         </a-entity>
       </a-entity>
-      <a-entity class="index bend" position="0 0.03 -0.04">
+      <a-entity class="index bend" position="0 0.03 -0.04" rotation="3 0 0">
         <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
             <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
@@ -338,7 +338,7 @@ AFRAME.registerComponent("grabbing", {
           </a-entity>
         </a-box>
       </a-entity>
-      <a-entity class="middle bend" position="0 0.01 -0.04">
+      <a-entity class="middle bend" position="0 0.01 -0.04" rotation="1 0 0">
         <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
             <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
@@ -346,7 +346,7 @@ AFRAME.registerComponent("grabbing", {
           </a-entity>
         </a-box>
       </a-entity>
-      <a-entity class="ring bend" position="0 -0.01 -0.04">
+      <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="-1 0 0">
         <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
             <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
@@ -354,7 +354,7 @@ AFRAME.registerComponent("grabbing", {
           </a-entity>
         </a-box>
       </a-entity>
-      <a-entity class="little bend" position="0 -0.03 -0.04">
+      <a-entity class="little bend" position="0 -0.03 -0.04" rotation="-3 0 0">
         <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
             <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
