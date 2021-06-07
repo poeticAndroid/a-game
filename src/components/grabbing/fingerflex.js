@@ -18,7 +18,7 @@ AFRAME.registerComponent("fingerflex", {
       let current = this._currentFlex[finger]
       let target = this._targetFlex[finger]
 
-      current = Math.min(Math.max(current - 0.1, target), current + 0.1)
+      current = current + Math.random() * Math.random() * (target - current)
       let degrees = this.data.min + current * (this.data.max - this.data.min)
       let bend = this.el.querySelector(".bend." + name)
       while (bend) {

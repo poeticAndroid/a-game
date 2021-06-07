@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -511,7 +511,7 @@ AFRAME.registerComponent("fingerflex", {
       let current = this._currentFlex[finger]
       let target = this._targetFlex[finger]
 
-      current = Math.min(Math.max(current - 0.1, target), current + 0.1)
+      current = current + Math.random() * Math.random() * (target - current)
       let degrees = this.data.min + current * (this.data.max - this.data.min)
       let bend = this.el.querySelector(".bend." + name)
       while (bend) {
