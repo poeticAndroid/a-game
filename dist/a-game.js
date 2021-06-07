@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -245,6 +245,7 @@ AFRAME.registerComponent("grabbing", {
       this.dropObject(hit.object.el)
       this[_hand].grabbed = hit.object.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
+      this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {
         this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
         this[_hand].isPhysical = true
@@ -1562,6 +1563,16 @@ AFRAME.registerComponent("body", {
   eval: function (expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
+  },
+
+  commit: function () {
+    let worker = this.el.sceneEl.systems.physics.worker
+    let pos = THREE.Vector3.temp()
+    let quat = THREE.Quaternion.temp()
+    this.el.object3D.getWorldPosition(pos)
+    worker.postMessage("world body " + this.id + " position " + cmd.stringifyParam(pos))
+    this.el.object3D.getWorldQuaternion(quat)
+    worker.postMessage("world body " + this.id + " quaternion " + cmd.stringifyParam(quat))
   }
 })
 

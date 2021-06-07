@@ -171,6 +171,16 @@ AFRAME.registerComponent("body", {
   eval: function (expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
+  },
+
+  commit: function () {
+    let worker = this.el.sceneEl.systems.physics.worker
+    let pos = THREE.Vector3.temp()
+    let quat = THREE.Quaternion.temp()
+    this.el.object3D.getWorldPosition(pos)
+    worker.postMessage("world body " + this.id + " position " + cmd.stringifyParam(pos))
+    this.el.object3D.getWorldQuaternion(quat)
+    worker.postMessage("world body " + this.id + " quaternion " + cmd.stringifyParam(quat))
   }
 })
 

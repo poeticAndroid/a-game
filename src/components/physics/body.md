@@ -34,5 +34,6 @@ If `autoShape` is `true`, `shape` components will be added to all applicable des
 | Method           | Description                                                                                     |
 | ---------------- | ----------------------------------------------------------------------------------------------- |
 | eval(expression) | Evaluate an expression in the worker, where `world` and `body` refer to their native instances. |
+| commit()         | Commit current position and orientation to the physics world.                                   |
 
 Note: the `eval` method depends on the specific physics engine that the worker is based on..

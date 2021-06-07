@@ -181,6 +181,7 @@ AFRAME.registerComponent("grabbing", {
       this.dropObject(hit.object.el)
       this[_hand].grabbed = hit.object.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
+      this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {
         this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
         this[_hand].isPhysical = true
