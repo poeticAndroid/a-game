@@ -25,23 +25,11 @@ AFRAME.registerComponent("editor", {
 
     this.load = this.load.bind(this)
     this.save = this.save.bind(this)
-    this._grab = this._grab.bind(this)
-    this._useDown = this._useDown.bind(this)
-    this._useUp = this._useUp.bind(this)
-    this.el.addEventListener("grab", this._grab)
-    this.el.addEventListener("usedown", this._useDown)
-    this.el.addEventListener("useup", this._useUp)
     if (this.el.sceneEl.hasLoaded) {
       this.load()
     } else {
       this.el.sceneEl.addEventListener("loaded", this.load)
     }
-  },
-
-  remove: function () {
-    this.el.removeEventListener("grab", this._grab)
-    this.el.removeEventListener("usedown", this._useDown)
-    this.el.removeEventListener("useup", this._useUp)
   },
 
   update: function () {
@@ -50,13 +38,6 @@ AFRAME.registerComponent("editor", {
       this.el.setAttribute("grabbable", {
         physics: false,
         freeOrientation: false
-      })
-    if (!this.el.getAttribute("raycaster"))
-      this.el.setAttribute("raycaster", {
-        objects: ".editable, .editable *",
-        far: 1,
-        autoRefresh: false,
-        showLine: true
       })
   },
 
@@ -248,74 +229,86 @@ AFRAME.registerComponent("editor", {
     while (this._history.length > len) this._history.pop()
   },
 
-  _grab: function (e) {
-    this.save()
-    this._grabbed = true
-    setTimeout(() => {
-      this._selecting = false
-      this._grabbed = []
-      this._undoBtn = 0
-      this._history = []
-    }, 256)
-  },
+  events: {
+    grab: function (e) {
+      this.save()
+      this._grabbed = true
+      setTimeout(() => {
+        this._selecting = false
+        this._grabbed = []
+        this._undoBtn = 0
+        this._history = []
+      }, 256)
+      if (!this.el.getAttribute("raycaster"))
+        this.el.setAttribute("raycaster", {
+          objects: ".editable, .editable *",
+          far: 1,
+          autoRefresh: false,
+          showLine: true
+        })
+    },
+    drop: function (e) {
+      this.el.removeAttribute("raycaster")
+    },
 
-  _useDown: function (e) {
-    if (e.detail.button) this._undoBtn++
-    if (this._undoBtn > 1) {
-      if (this._grabbed.length) this.save()
-      this._selecting = false
-      this._grabbed = []
-    } else {
-      this._selecting = this._grabbed.length === 0
-    }
-  },
-  _useUp: function (e) {
-    if (this._selecting) {
-      for (let i = 0; i < this._grabbed.length; i++) {
-        let grab = this._grabbed[i]
-        let anch = this._anchors[i]
-        if (anch && anch.copyWorldPosRot) {
-          anch.copyWorldPosRot(grab)
+    usedown: function (e) {
+      if (e.detail.button) this._undoBtn++
+      if (this._undoBtn > 1) {
+        if (this._grabbed.length) this.save()
+        this._selecting = false
+        this._grabbed = []
+      } else {
+        this._selecting = this._grabbed.length === 0
+      }
+    },
+    useup: function (e) {
+      if (this._selecting) {
+        for (let i = 0; i < this._grabbed.length; i++) {
+          let grab = this._grabbed[i]
+          let anch = this._anchors[i]
+          if (anch && anch.copyWorldPosRot) {
+            anch.copyWorldPosRot(grab)
+          }
         }
       }
-    }
-    if (this._undoBtn > 1) this.undo()
-    if (this._undoBtn > 0) this._undoBtn--
+      if (this._undoBtn > 1) this.undo()
+      if (this._undoBtn > 0) this._undoBtn--
 
-    if (this._grabbed.length) {
-      switch (e.detail.button) {
-        case 1:
-          for (let i = 0; i < this._grabbed.length; i++) {
-            let grab = this._grabbed[i]
-            let j = this.findEntity(grab)
-            let html = grab.outerHTML
-            if (j != null) {
-              html = this._map[j].src.outerHTML
-            } else {
-              html = html.replace(/\ velocity\=\"\"/gi, "")
+      if (this._grabbed.length) {
+        switch (e.detail.button) {
+          case 1:
+            for (let i = 0; i < this._grabbed.length; i++) {
+              let grab = this._grabbed[i]
+              let j = this.findEntity(grab)
+              let html = grab.outerHTML
+              if (j != null) {
+                html = this._map[j].src.outerHTML
+              } else {
+                html = html.replace(/\ velocity\=\"\"/gi, "")
+              }
+              let e = this._map.length
+              this.addEntity(html)
+              let m = this._map[e]
+              grab.emit("place")
+              this._grabbed[i] = m.world
             }
-            let e = this._map.length
-            this.addEntity(html)
-            let m = this._map[e]
-            grab.emit("place")
-            this._grabbed[i] = m.world
-          }
-          break
-        case 2:
-          let grab
-          while ((grab = this._grabbed.pop())) {
-            this.removeEntity(grab)
-          }
-          break
-        default:
-          if (!this._selecting) this._place()
+            break
+          case 2:
+            let grab
+            while ((grab = this._grabbed.pop())) {
+              this.removeEntity(grab)
+            }
+            break
+          default:
+            if (!this._selecting) this._place()
+        }
+        clearTimeout(this._saveTO)
+        this._saveTO = setTimeout(this.save, 1024)
       }
-      clearTimeout(this._saveTO)
-      this._saveTO = setTimeout(this.save, 1024)
-    }
-    this._selecting = false
-    let ray = this.el.components.raycaster
-    ray.refreshObjects()
+      this._selecting = false
+      let ray = this.el.components.raycaster
+      ray.refreshObjects()
+    },
   },
 
   _place: function () {

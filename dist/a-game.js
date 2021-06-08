@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -237,7 +237,7 @@ AFRAME.registerComponent("grabbing", {
   grab: function (hand = "head") {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
-    if (this[_hand].grabbed) this.drop(hand)
+    if (this[_hand].grabbed) return
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]

@@ -173,7 +173,7 @@ AFRAME.registerComponent("grabbing", {
   grab: function (hand = "head") {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
-    if (this[_hand].grabbed) this.drop(hand)
+    if (this[_hand].grabbed) return
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
