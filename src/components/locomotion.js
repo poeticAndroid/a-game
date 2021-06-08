@@ -268,13 +268,14 @@ AFRAME.registerComponent("locomotion", {
         let feety = this._legs.object3D.position.y
         this._move(delta)
         bumper.object3D.position.add(delta)
-        if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
         if (this._legs.object3D.position.y !== feety) {
+          if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
           clearTimeout(this._crouchResetTO)
           this._crouchResetTO = setTimeout(() => {
             this.toggleCrouch(true)
           }, 4096)
         }
+        this._legs.object3D.position.add(delta)
         this._legs.object3D.position.y = Math.max(feety, this.headPos.y - 1.5)
         this._caution = 4
         this._bumpOverload++

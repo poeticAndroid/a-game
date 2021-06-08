@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -864,13 +864,14 @@ AFRAME.registerComponent("locomotion", {
         let feety = this._legs.object3D.position.y
         this._move(delta)
         bumper.object3D.position.add(delta)
-        if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
         if (this._legs.object3D.position.y !== feety) {
+          if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
           clearTimeout(this._crouchResetTO)
           this._crouchResetTO = setTimeout(() => {
             this.toggleCrouch(true)
           }, 4096)
         }
+        this._legs.object3D.position.add(delta)
         this._legs.object3D.position.y = Math.max(feety, this.headPos.y - 1.5)
         this._caution = 4
         this._bumpOverload++
