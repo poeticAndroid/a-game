@@ -1,8 +1,9 @@
 <?php
-  file_put_contents("./scenes/wip.html", $_POST["body"]);
+  $file = "./scenes/wip.html";
+  file_put_contents($file, $_POST["body"]);
 ?>
 <h1>File saved!</h1>
-<pre>./scenes/wip.html</pre>
+<pre><?php echo($file); ?></pre>
 <script>
   setTimeout(() => {
     history.back()

@@ -50,13 +50,55 @@ AFRAME.registerComponent("tile", {
   tick: function () {
     if (!this._editor) return this.el.removeAttribute("tile")
     this._gridSize.copy(this._editor.components.editor.data.gridSize)
-    let width = 0, height = 0
+    let width = parseFloat(this.el.getAttribute("width")) || 1
+    let height = parseFloat(this.el.getAttribute("height")) || 1
+    let delta = THREE.Vector3.temp()
+    let pos = THREE.Vector3.temp().set(0, 0, 0)
     for (let handle of this._handles) {
-      if (handle.axis.x)
-        this.el.setAttribute("width", width += Math.abs(Math.round(handle.object3D.position.x / this._gridSize.x) * this._gridSize.x))
-      if (handle.axis.y)
-        this.el.setAttribute("height", height += Math.abs(handle.axis.y * Math.round(handle.object3D.position.y / this._gridSize.y) * this._gridSize.y))
+      delta.set(
+        handle.axis.x * (parseFloat(this.el.getAttribute("width")) || 1) / 2,
+        handle.axis.y * (parseFloat(this.el.getAttribute("height")) || 1) / 2,
+        0
+      ).sub(handle.object3D.position).negate()
+
+      if (handle.axis.x > 0 && delta.x > Math.abs(this._gridSize.x) * 2) {
+        this.el.setAttribute("width", width + this._gridSize.x * 2)
+        pos.x += Math.abs(this._gridSize.x) * 1
+      }
+      if (handle.axis.x > 0 && delta.x < Math.abs(this._gridSize.x) * -2) {
+        this.el.setAttribute("width", width + this._gridSize.x * -2)
+        pos.x += Math.abs(this._gridSize.x) * -1
+      }
+      if (handle.axis.x < 0 && delta.x > Math.abs(this._gridSize.x) * 2) {
+        this.el.setAttribute("width", width + this._gridSize.x * -2)
+        pos.x += Math.abs(this._gridSize.x) * 1
+      }
+      if (handle.axis.x < 0 && delta.x < Math.abs(this._gridSize.x) * -2) {
+        this.el.setAttribute("width", width + this._gridSize.x * 2)
+        pos.x += Math.abs(this._gridSize.x) * -1
+      }
+
+      if (handle.axis.y > 0 && delta.y > Math.abs(this._gridSize.y) * 2) {
+        this.el.setAttribute("height", height + this._gridSize.y * 2)
+        pos.y += Math.abs(this._gridSize.y) * 1
+      }
+      if (handle.axis.y > 0 && delta.y < Math.abs(this._gridSize.y) * -2) {
+        this.el.setAttribute("height", height + this._gridSize.y * -2)
+        pos.y += Math.abs(this._gridSize.y) * -1
+      }
+      if (handle.axis.y < 0 && delta.y > Math.abs(this._gridSize.y) * 2) {
+        this.el.setAttribute("height", height + this._gridSize.y * -2)
+        pos.y += Math.abs(this._gridSize.y) * 1
+      }
+      if (handle.axis.y < 0 && delta.y < Math.abs(this._gridSize.y) * -2) {
+        this.el.setAttribute("height", height + this._gridSize.y * 2)
+        pos.y += Math.abs(this._gridSize.y) * -1
+      }
     }
+    this.el.object3D.localToWorld(pos)
+    this.el.object3D.parent.worldToLocal(pos)
+    this.el.object3D.position.copy(pos)
+
     for (let handle of this._handles) {
       handle.object3D.quaternion.set(0, 0, 0, 1)
       handle.object3D.position.set(
@@ -91,6 +133,7 @@ AFRAME.registerComponent("tile", {
     pair.src.setAttribute("width", "" + width)
     pair.src.setAttribute("height", "" + height)
     pair.src.setAttribute("material", AFRAME.utils.styleParser.stringify(material))
+    pair.src.setAttribute("position", AFRAME.utils.coordinates.stringify(this.el.object3D.position))
     let html = pair.src.outerHTML
     this._editor.components.editor.addEntity(html)
     setTimeout(() => {
