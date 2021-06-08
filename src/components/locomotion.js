@@ -87,6 +87,7 @@ AFRAME.registerComponent("locomotion", {
     this._teleportCursor = this.el.ensure(".teleport-cursor", "a-cylinder", {
       class: "teleport-cursor", radius: 0.5, height: 0.0625, material: "opacity:0.5;"
     })
+    this._teleportCursor.setAttribute("visible", false)
   },
 
   update: function (oldData) {

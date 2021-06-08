@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.4",
+  "version": "0.9.5",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -684,6 +684,7 @@ AFRAME.registerComponent("locomotion", {
     this._teleportCursor = this.el.ensure(".teleport-cursor", "a-cylinder", {
       class: "teleport-cursor", radius: 0.5, height: 0.0625, material: "opacity:0.5;"
     })
+    this._teleportCursor.setAttribute("visible", false)
   },
 
   update: function (oldData) {
