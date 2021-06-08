@@ -14,7 +14,8 @@
 
 <body>
   <p>
-    <button id="loadBtn">💾 Load</button>
+    <button id="loadBtn">📂 Load</button>
+    <button id="saveBtn">💾 Save</button>
     <button id="copyBtn">📋 Copy</button>
     <button id="editBtn">✍ Edit</button>
     <button id="runBtn">👟 Run</button>
@@ -25,9 +26,9 @@
     <input id="rotxzTxt" title="XZ" type="number" min="0" value="2" /><input id="rotyTxt" title="Y" type="number"
       min="0" value="4" />
   </p>
-  <p>
-    <textarea autofocus></textarea>
-  </p>
+  <form id="saveFrm" action="save.php" method="POST">
+    <textarea name="body" autofocus></textarea>
+  </form>
   <script src="editor.js"></script>
 
   <script src="/live.js"></script>
