@@ -9,7 +9,7 @@ AFRAME.registerComponent("fingerflex", {
   init: function () {
     this._fingers = ["thumb", "index", "middle", "ring", "little"]
     this._currentFlex = [0, 0, 0, 0, 0]
-    this._targetFlex = [1.125, 1.125, 1.125, 1.125, 1.125]
+    this._targetFlex = [0, 0, 0, 0, 0]
   },
 
   tick: function (time, timeDelta) {

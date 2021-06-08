@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.6",
+  "version": "0.9.8",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -502,7 +502,7 @@ AFRAME.registerComponent("fingerflex", {
   init: function () {
     this._fingers = ["thumb", "index", "middle", "ring", "little"]
     this._currentFlex = [0, 0, 0, 0, 0]
-    this._targetFlex = [1.125, 1.125, 1.125, 1.125, 1.125]
+    this._targetFlex = [0, 0, 0, 0, 0]
   },
 
   tick: function (time, timeDelta) {

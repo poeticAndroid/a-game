@@ -35,7 +35,7 @@ This makes it possible to move around the using the following controls.
 | Method               | Description                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | teleport(pos, force) | Teleport to given position. if `force` is `true`, player will pass through walls/floors along the way. |
-| toggleCrouch()       | Toggle crouch mode.                                                                                    |
+| toggleCrouch(reset)  | Toggle crouch mode. if `reset` is `true`, player height will be reset to default.                      |
 
 ## Related components
 

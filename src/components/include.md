@@ -3,7 +3,7 @@
 Component for including external files into the scene.
 
 ```html
-<a-entity include="scenes/level1.html" id="world"></a-entity>
+<a-main include="scenes/level1.html"></a-main>
 ```
 
 Any attributes except the `include` attribute will be added to the root of the included content.
