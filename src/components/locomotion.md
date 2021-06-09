@@ -14,10 +14,10 @@ This makes it possible to move around the using the following controls.
 | --------------------------------------- | ---------------------- | ------- | --------------------------- |
 | Move                                    | Left stick             | WASD    | Left side swipe             |
 | Rotate                                  | Right stick left/right | Arrows  | Right side swipe left/right |
-| Teleport/jump                           | Right stick up         | Space   | Right side swipe up         |
+| Teleport                                | Right stick up         | Q       | Right side swipe up         |
+| Jump                                    | Y or Click right stick | Space   |
 | Crouch                                  | Right stick down       | C       | Right side swipe down       |
-| Toggle quantized movement (or God mode) | Click left stick       | G       |
-| Toggle quantized rotation               | Click right stick      | H       |
+| Toggle god mode (if enabled)            | Click left stick       | G       |
 
 ## Properties
 
@@ -36,6 +36,7 @@ This makes it possible to move around the using the following controls.
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | teleport(pos, force) | Teleport to given position. if `force` is `true`, player will pass through walls/floors along the way. |
 | toggleCrouch(reset)  | Toggle crouch mode. if `reset` is `true`, player height will be reset to default.                      |
+| jump()               | Make the player jump if possible.                                                                      |
 
 ## Related components
 

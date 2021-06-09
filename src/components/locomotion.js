@@ -6,7 +6,7 @@ AFRAME.registerComponent("locomotion", {
     speed: { type: "number", default: 4 },
     rotationSpeed: { type: "number", default: 1 },
     teleportDistance: { type: "number", default: 5 },
-    jumpForce: { type: "number", default: 0 },
+    jumpForce: { type: "number", default: 4 },
     gravity: { type: "number", default: 10 },
     godMode: { type: "boolean", default: false }
   },
@@ -38,7 +38,7 @@ AFRAME.registerComponent("locomotion", {
     this.headDir = new THREE.Vector3()
     this.feetPos = new THREE.Vector3()
 
-    this._config = JSON.parse(localStorage.getItem("a-game.locomotion")) || {
+    this._config = {
       quantizeMovement: false,
       quantizeRotation: false,
       quantizeMovementVR: !!(this.el.sceneEl.isMobile),
@@ -91,7 +91,7 @@ AFRAME.registerComponent("locomotion", {
   },
 
   update: function (oldData) {
-    if (this.data.jumpForce) this.data.teleportDistance = 0
+    // if (this.data.jumpForce) this.data.teleportDistance = 0
     this._godMode = this.data.godMode
   },
 
@@ -140,7 +140,7 @@ AFRAME.registerComponent("locomotion", {
     this._legs.object3D.getWorldPosition(this.feetPos)
     this.feetPos.y -= 0.5
 
-    this._applyToggles(timeDelta)
+    this._applyButtons(timeDelta)
     this._applyMoveStick(timeDelta)
     this._applyAuxStick(timeDelta)
 
@@ -210,6 +210,13 @@ AFRAME.registerComponent("locomotion", {
     if (force) {
       this._legBumper.object3D.position.copy(this._legs.object3D.position)
       this._headBumper.object3D.position.copy(this._legs.object3D.position)
+    }
+  },
+
+  jump: function () {
+    // jump!
+    if (this.currentFloor) {
+      this._vertVelocity = this.data.jumpForce
     }
   },
 
@@ -290,7 +297,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _callMoveStick() {
+  _callMoveStick: function () {
     let bestStick = THREE.Vector2.temp().set(0, 0)
     let stick = THREE.Vector2.temp()
 
@@ -347,14 +354,14 @@ AFRAME.registerComponent("locomotion", {
     this._move(delta)
   },
 
-  _callAuxStick() {
+  _callAuxStick: function () {
     let bestStick = THREE.Vector2.temp().set(0, 0)
     let stick = THREE.Vector2.temp()
 
     stick.set(0, 0)
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
-    if (this._keysDown["Space"]) stick.y--
+    if (this._keysDown["KeyQ"]) stick.y--
     if (this._keysDown["KeyC"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
@@ -462,11 +469,6 @@ AFRAME.registerComponent("locomotion", {
           this._teleportCursor.object3D.position.copy(this.feetPos)
           this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
         }
-        // jump!
-        if (this.currentFloor && !this._jumping) {
-          this._vertVelocity = this.data.jumpForce
-          this._jumping = true
-        }
       } else if (this._teleporting) {
         let pos = THREE.Vector3.temp()
         this._teleportCursor.object3D.getWorldPosition(pos)
@@ -474,47 +476,47 @@ AFRAME.registerComponent("locomotion", {
         this._teleportCursor.setAttribute("visible", false)
         this._teleportCursor.setAttribute("position", "0 0 0")
         this._teleporting = false
-      } else if (this._jumping) {
-        this._jumping = false
       }
     }
   },
 
-  _callToggles() {
-    let toggles = 0
+  _callButtons: function () {
+    let buttons = 0
 
-    if (this._keysDown["KeyH"]) toggles = toggles | 1
-    if (this._keysDown["KeyG"]) toggles = toggles | 2
-    if (this._vrRightClick) toggles = toggles | 1
-    if (this._vrLeftClick) toggles = toggles | 2
+    if (this._keysDown["Space"]) buttons = buttons | 1
+    if (this._keysDown["KeyG"]) buttons = buttons | 2
+    if (this._vrRightClick) buttons = buttons | 1
+    if (this._vrLeftClick) buttons = buttons | 2
 
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[11].pressed) toggles = toggles | 1
-        if (gamepad.buttons[10].pressed) toggles = toggles | 2
+        if (gamepad.buttons[3].pressed) buttons = buttons | 1
+        if (gamepad.buttons[11].pressed) buttons = buttons | 1
+        if (gamepad.buttons[10].pressed) buttons = buttons | 2
       }
     }
 
-    return toggles
+    return buttons
   },
-  _applyToggles: function () {
-    let toggles = this._callToggles()
-    if (toggles) {
+  _applyButtons: function () {
+    let buttons = this._callButtons()
+    if (buttons) {
       if (!this._toggling) {
-        if (toggles & 1) this.quantizeRotation = !this.quantizeRotation
-        if (toggles & 2) {
+        // if (buttons & 1) this.quantizeRotation = !this.quantizeRotation
+        if (buttons & 1) this.jump()
+        if (buttons & 2) {
           if (this.data.godMode) this._godMode = !this._godMode
-          else this.quantizeMovement = !this.quantizeMovement
+          // else this.quantizeMovement = !this.quantizeMovement
         }
-        if (this.isVR) {
-          this._config.quantizeMovementVR = this.quantizeMovement
-          this._config.quantizeRotationVR = this.quantizeRotation
-        } else {
-          this._config.quantizeMovement = this.quantizeMovement
-          this._config.quantizeRotation = this.quantizeRotation
-        }
-        localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
+        // if (this.isVR) {
+        //   this._config.quantizeMovementVR = this.quantizeMovement
+        //   this._config.quantizeRotationVR = this.quantizeRotation
+        // } else {
+        //   this._config.quantizeMovement = this.quantizeMovement
+        //   this._config.quantizeRotation = this.quantizeRotation
+        // }
+        // localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
       }
       this._toggling = true
     } else {
