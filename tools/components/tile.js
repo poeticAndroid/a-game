@@ -5,7 +5,7 @@ AFRAME.registerComponent("tile", {
     tileSize: { type: "vec2", default: { x: 1, y: 1 } },
   },
 
-  init: function () {
+  init() {
     this.showHandles = this.showHandles.bind(this)
     this.hideHandles = this.hideHandles.bind(this)
 
@@ -47,7 +47,7 @@ AFRAME.registerComponent("tile", {
     })
   },
 
-  tick: function () {
+  tick() {
     if (!this._editor) return this.el.removeAttribute("tile")
     this._gridSize.copy(this._editor.components.editor.data.gridSize)
     let width = parseFloat(this.el.getAttribute("width")) || 1
@@ -109,13 +109,13 @@ AFRAME.registerComponent("tile", {
     }
   },
 
-  showHandles: function () {
+  showHandles() {
     for (let handle of this._handles) {
       handle.setAttribute("visible", true)
     }
     this.tick()
   },
-  hideHandles: function () {
+  hideHandles() {
     for (let handle of this._handles) {
       handle.setAttribute("visible", false)
     }

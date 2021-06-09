@@ -6,7 +6,7 @@ AFRAME.registerComponent("grabbable", {
     physics: { type: "boolean", default: true }
   },
 
-  init: function () {
+  init() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   }
 })

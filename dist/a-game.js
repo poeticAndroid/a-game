@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.11",
+  "version": "0.9.12",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -70,7 +70,7 @@ AFRAME.registerComponent("grabbing", {
     grabDistance: { type: "number", default: 1 }
   },
 
-  init: function () {
+  init() {
     this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
@@ -113,7 +113,7 @@ AFRAME.registerComponent("grabbing", {
     this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].ray)
@@ -121,7 +121,7 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
@@ -133,7 +133,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.addEventListener("hold", this._onTouchHold)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
@@ -145,10 +145,10 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.removeEventListener("hold", this._onTouchHold)
   },
 
-  remove: function () {
+  remove() {
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
@@ -229,12 +229,12 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  toggleGrab: function (hand = "head") {
+  toggleGrab(hand = "head") {
     let _hand = "_" + hand
     if (this[_hand].grabbed) this.drop(hand)
     else this.grab(hand)
   },
-  grab: function (hand = "head") {
+  grab(hand = "head") {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
     if (this[_hand].grabbed) return
@@ -288,7 +288,7 @@ AFRAME.registerComponent("grabbing", {
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
     }
   },
-  drop: function (hand = "head") {
+  drop(hand = "head") {
     let _hand = "_" + hand
     if (this.sticky) return
     this[_hand].anchor.removeAttribute("joint__grab")
@@ -301,30 +301,30 @@ AFRAME.registerComponent("grabbing", {
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
-  dropObject: function (el) {
+  dropObject(el) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].grabbed === el) this.drop(hand)
     }
   },
-  use: function (hand = "head", button = 0) {
+  use(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.useDown(hand, button)
     setTimeout(() => {
       this.useUp(hand, button)
     }, 32)
   },
-  useDown: function (hand = "head", button = 0) {
+  useDown(hand = "head", button = 0) {
     let _hand = "_" + hand
     // if (!this[_hand].grabbed) return this.grab(hand)
     this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
-  useUp: function (hand = "head", button = 0) {
+  useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
 
-  emit: function (eventtype, glove, grabbed, e = {}) {
+  emit(eventtype, glove, grabbed, e = {}) {
     e.grabbing = this.el
     e.grabbedElement = grabbed
     e.gloveElement = glove
@@ -335,7 +335,7 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
-  _enableHands: function () {
+  _enableHands() {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -378,7 +378,7 @@ AFRAME.registerComponent("grabbing", {
     this.update()
   },
 
-  _ensureGlove: function (el) {
+  _ensureGlove(el) {
     let hand = el.getAttribute("side")
     let color = el.getAttribute("color") || "lightblue"
     return el.ensure(".glove", "a-entity", {
@@ -434,18 +434,18 @@ AFRAME.registerComponent("grabbing", {
     </a-box>`)
   },
 
-  _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
-  _onMouseDown: function (e) {
+  _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
+  _onMouseDown(e) {
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onMouseUp: function (e) {
+  _onMouseUp(e) {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap: function (e) { this.use() },
-  _onTouchHold: function (e) { this.toggleGrab() },
-  _onButtonChanged: function (e) {
+  _onTouchTap(e) { this.use() },
+  _onTouchHold(e) { this.toggleGrab() },
+  _onButtonChanged(e) {
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1
@@ -505,13 +505,13 @@ AFRAME.registerComponent("fingerflex", {
     max: { type: "number", default: 90 },
   },
 
-  init: function () {
+  init() {
     this._fingers = ["thumb", "index", "middle", "ring", "little"]
     this._currentFlex = [0, 0, 0, 0, 0]
     this._targetFlex = [0, 0, 0, 0, 0]
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (let finger = 0; finger < 5; finger++) {
       let name = this._fingers[finger]
       let current = this._currentFlex[finger]
@@ -532,7 +532,7 @@ AFRAME.registerComponent("fingerflex", {
   },
 
   events: {
-    fingerflex: function (e) {
+    fingerflex(e) {
       this._targetFlex[e.detail.finger] = e.detail.flex
     }
   }
@@ -547,7 +547,7 @@ AFRAME.registerComponent("grabbable", {
     physics: { type: "boolean", default: true }
   },
 
-  init: function () {
+  init() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   }
 })
@@ -590,7 +590,7 @@ AFRAME.registerComponent("include", {
 
 AFRAME.registerComponent("injectplayer", {
 
-  init: function () {
+  init() {
     this.el.ensure("a-camera", "a-camera", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }
@@ -614,7 +614,7 @@ AFRAME.registerComponent("locomotion", {
     godMode: { type: "boolean", default: false }
   },
 
-  init: function () {
+  init() {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onKeyUp = this._onKeyUp.bind(this)
     this._onAxisMove = this._onAxisMove.bind(this)
@@ -693,12 +693,12 @@ AFRAME.registerComponent("locomotion", {
     this._teleportCursor.setAttribute("visible", false)
   },
 
-  update: function (oldData) {
+  update(oldData) {
     // if (this.data.jumpForce) this.data.teleportDistance = 0
     this._godMode = this.data.godMode
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     document.addEventListener("keyup", this._onKeyUp)
     this._leftHand.addEventListener("axismove", this._onAxisMove)
@@ -712,7 +712,7 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.addEventListener("exit-vr", this._onExitVR)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     document.removeEventListener("keyup", this._onKeyUp)
     this._leftHand.removeEventListener("axismove", this._onAxisMove)
@@ -726,13 +726,13 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.removeEventListener("exit-vr", this._onExitVR)
   },
 
-  remove: function () {
+  remove() {
     this.el.sceneEl.removeChild(this._legs)
     this.el.sceneEl.removeChild(this._legBumper)
     this.el.sceneEl.removeChild(this._headBumper)
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     timeDelta /= 1000
     this.el.object3D.getWorldPosition(this.centerPos)
     this.headPos.copy(this._camera.object3D.position)
@@ -803,7 +803,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  teleport: function (pos, force) {
+  teleport(pos, force) {
     let delta = THREE.Vector3.temp()
     delta.copy(pos).sub(this.feetPos)
     this._move(delta)
@@ -816,14 +816,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  jump: function () {
+  jump() {
     // jump!
     if (this.currentFloor) {
       this._vertVelocity = this.data.jumpForce
     }
   },
 
-  toggleCrouch: function (reset) {
+  toggleCrouch(reset) {
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
     clearTimeout(this._crouchResetTO)
@@ -848,14 +848,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _move: function (delta) {
+  _move(delta) {
     this.el.object3D.position.add(delta)
     this.centerPos.add(delta)
     this.headPos.add(delta)
     this._legs.object3D.position.y += delta.y
     this.feetPos.y += delta.y
   },
-  _bump: function (pos, bumper) {
+  _bump(pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
     delta.copy(pos)
@@ -900,7 +900,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _callMoveStick: function () {
+  _callMoveStick() {
     let bestStick = THREE.Vector2.temp().set(0, 0)
     let stick = THREE.Vector2.temp()
 
@@ -933,7 +933,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
-  _applyMoveStick: function (seconds) {
+  _applyMoveStick(seconds) {
     let stick = this._callMoveStick()
     stick.multiplyScalar(this.data.speed)
     stick.multiplyScalar(seconds)
@@ -957,7 +957,7 @@ AFRAME.registerComponent("locomotion", {
     this._move(delta)
   },
 
-  _callAuxStick: function () {
+  _callAuxStick() {
     let bestStick = THREE.Vector2.temp().set(0, 0)
     let stick = THREE.Vector2.temp()
 
@@ -986,7 +986,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
-  _applyAuxStick: function (seconds) {
+  _applyAuxStick(seconds) {
     let stick = this._callAuxStick()
     let rotation = 0
 
@@ -1083,7 +1083,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _callButtons: function () {
+  _callButtons() {
     let buttons = 0
 
     if (this._keysDown["Space"]) buttons = buttons | 1
@@ -1102,7 +1102,7 @@ AFRAME.registerComponent("locomotion", {
 
     return buttons
   },
-  _applyButtons: function () {
+  _applyButtons() {
     let buttons = this._callButtons()
     if (buttons) {
       if (!this._toggling) {
@@ -1158,7 +1158,7 @@ AFRAME.registerComponent("locomotion", {
       this._handEnabled = true
     }
   },
-  _onButtonChanged: function (e) {
+  _onButtonChanged(e) {
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
@@ -1166,7 +1166,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onTouchStart: function (e) {
+  _onTouchStart(e) {
     let vw = this.el.sceneEl.canvas.clientWidth
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -1181,7 +1181,7 @@ AFRAME.registerComponent("locomotion", {
     }
     e.preventDefault()
   },
-  _onTouchMove: function (e) {
+  _onTouchMove(e) {
     let stickRadius = 32
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -1208,7 +1208,7 @@ AFRAME.registerComponent("locomotion", {
     }
     e.preventDefault()
   },
-  _onTouchEnd: function (e) {
+  _onTouchEnd(e) {
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j];
       if (this._leftTouchId === touchEvent.identifier) {
@@ -1222,12 +1222,12 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onEnterVR: function (e) {
+  _onEnterVR(e) {
     this.isVR = true
     this.quantizeMovement = this._config.quantizeMovementVR
     this.quantizeRotation = this._config.quantizeRotationVR
   },
-  _onExitVR: function (e) {
+  _onExitVR(e) {
     this.isVR = false
     this.quantizeMovement = this._config.quantizeMovement
     this.quantizeRotation = this._config.quantizeRotation
@@ -1246,7 +1246,7 @@ AFRAME.registerComponent("floor", {
     physics: { type: "boolean", default: true }
   },
 
-  update: function () {
+  update() {
     this.el.setAttribute("wall", this.data)
   }
 })
@@ -1256,7 +1256,7 @@ AFRAME.registerComponent("floor", {
 
 AFRAME.registerComponent("start", {
 
-  init: function () {
+  init() {
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
     if (!loco) return setTimeout(() => { this.init() }, 256)
     let pos = new THREE.Vector3()
@@ -1280,7 +1280,7 @@ AFRAME.registerComponent("wall", {
     physics: { type: "boolean", default: true }
   },
 
-  update: function () {
+  update() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:static")
   }
 })
@@ -1299,7 +1299,7 @@ AFRAME.registerSystem("physics", {
     debug: { type: "boolean", default: false }
   },
 
-  update: function () {
+  update() {
     if (this.data.workerUrl) {
       if (!this.worker) {
         if (this.data.workerUrl.includes("//")) {
@@ -1322,14 +1322,14 @@ AFRAME.registerSystem("physics", {
     }
   },
 
-  remove: function () {
+  remove() {
     this.worker && this.worker.terminate()
     this.worker = null
     this.bodies = []
     this.movingBodies = []
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     if (!this.worker) return
     if (this.buffers.length < 2) return
     let buffer = this.buffers.shift()
@@ -1362,7 +1362,7 @@ AFRAME.registerSystem("physics", {
     this.worker.postMessage(buffer, [buffer.buffer])
   },
 
-  onMessage: function (e) {
+  onMessage(e) {
     if (typeof e.data === "string") {
       let command = cmd.parse(e.data)
       switch (command.shift()) {
@@ -1378,7 +1378,7 @@ AFRAME.registerSystem("physics", {
     }
   },
 
-  command: function (params) {
+  command(params) {
     if (typeof params[0] === "number") {
       params.shift()
     }
@@ -1391,7 +1391,7 @@ AFRAME.registerSystem("physics", {
         break
     }
   },
-  eval: function (expr) {
+  eval(expr) {
     this.worker.postMessage("world eval " + cmd.stringifyParam(expr))
   }
 })
@@ -1418,7 +1418,7 @@ AFRAME.registerComponent("body", {
     autoShape: { type: "boolean", default: true },
   },
 
-  init: function () {
+  init() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -1475,14 +1475,14 @@ AFRAME.registerComponent("body", {
     this._initiated = true
   },
 
-  play: function () {
+  play() {
     if (!this._initiated) {
       this.init()
       this.update({})
     }
   },
 
-  update: function (oldData) {
+  update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     if (this.data.type !== oldData.type)
@@ -1501,14 +1501,14 @@ AFRAME.registerComponent("body", {
     })
   },
 
-  sleep: function () {
+  sleep() {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     worker.postMessage("world body " + this.id + " sleeping = true")
     this.sleeping = true
   },
 
-  pause: function () {
+  pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -1520,7 +1520,7 @@ AFRAME.registerComponent("body", {
     this._initiated = false
   },
 
-  tick: function () {
+  tick() {
     let worker = this.el.sceneEl.systems.physics.worker
     let buffer = this.el.sceneEl.systems.physics.buffers[0]
     if (!worker) return
@@ -1553,7 +1553,7 @@ AFRAME.registerComponent("body", {
     }
   },
 
-  command: function (params) {
+  command(params) {
     switch (params.shift()) {
       case "emits":
         let e = params.shift()
@@ -1571,12 +1571,12 @@ AFRAME.registerComponent("body", {
         break
     }
   },
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   },
 
-  commit: function () {
+  commit() {
     let worker = this.el.sceneEl.systems.physics.worker
     let pos = THREE.Vector3.temp()
     let quat = THREE.Quaternion.temp()
@@ -1613,7 +1613,7 @@ AFRAME.registerComponent("joint", {
     // spring: { type: "array" },
   },
 
-  play: function () {
+  play() {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -1637,21 +1637,21 @@ AFRAME.registerComponent("joint", {
     })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     // if (this.data.type !== oldData.type)
     //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
-  pause: function () {
+  pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
   },
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
   }
@@ -1669,7 +1669,7 @@ AFRAME.registerComponent("shape", {
   schema: {
   },
 
-  play: function () {
+  play() {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
@@ -1719,7 +1719,7 @@ AFRAME.registerComponent("shape", {
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
-  pause: function () {
+  pause() {
     clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
@@ -1729,7 +1729,7 @@ AFRAME.registerComponent("shape", {
     shapes[this.id] = null
   },
 
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }
@@ -1738,7 +1738,7 @@ AFRAME.registerComponent("shape", {
 
 },{"../../libs/cmdCodec":16}],16:[function(require,module,exports){
 module.exports = {
-  parse: function (cmd) {
+  parse(cmd) {
     let words = cmd.split(" ")
     let args = []
     for (let word of words) {
@@ -1753,7 +1753,7 @@ module.exports = {
     }
     return args
   },
-  stringifyParam: function (val) {
+  stringifyParam(val) {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }

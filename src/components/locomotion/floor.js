@@ -5,7 +5,7 @@ AFRAME.registerComponent("floor", {
     physics: { type: "boolean", default: true }
   },
 
-  update: function () {
+  update() {
     this.el.setAttribute("wall", this.data)
   }
 })

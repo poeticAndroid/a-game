@@ -7,7 +7,7 @@ AFRAME.registerComponent("editor", {
     rotationSteps: { type: "vec3", default: { x: 8, y: 8, z: 8 } }
   },
 
-  init: function () {
+  init() {
     this._map = []
     this._div = document.body.ensure("template")
     this._src = this._parseHTML('<a-main>\n</a-main>')
@@ -32,7 +32,7 @@ AFRAME.registerComponent("editor", {
     }
   },
 
-  update: function () {
+  update() {
     this._angularSize.set(360, 360, 360).divide(this.data.rotationSteps)
     if (!this.el.getAttribute("grabbable"))
       this.el.setAttribute("grabbable", {
@@ -41,7 +41,7 @@ AFRAME.registerComponent("editor", {
       })
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     if (this._selecting) {
       let ray = this.el.components.raycaster
       ray.refreshObjects()
@@ -95,7 +95,7 @@ AFRAME.registerComponent("editor", {
     }
   },
 
-  addEntity: function (srcEl) {
+  addEntity(srcEl) {
     if (typeof srcEl === "string") {
       srcEl = this._parseHTML(srcEl)
     }
@@ -120,7 +120,7 @@ AFRAME.registerComponent("editor", {
       el: srcEl
     })
   },
-  findEntity: function (el) {
+  findEntity(el) {
     let index = null
     if (typeof el === "object") {
       for (let i = 0; i < this._map.length; i++) {
@@ -130,10 +130,10 @@ AFRAME.registerComponent("editor", {
     }
     return index
   },
-  getPair: function (el) {
+  getPair(el) {
     return this._map[this.findEntity(el)]
   },
-  removeEntity: function (el) {
+  removeEntity(el) {
     let index = el
     if (typeof el === "object") {
       for (let i = 0; i < this._map.length; i++) {
@@ -153,7 +153,7 @@ AFRAME.registerComponent("editor", {
     }
   },
 
-  load: function () {
+  load() {
     if (!this.el.sceneEl.querySelector("a-assets")) {
       let to = setTimeout(this.load, 256)
       return
@@ -169,7 +169,7 @@ AFRAME.registerComponent("editor", {
       }
     }
   },
-  save: function () {
+  save() {
     for (let i = 0; i < this._map.length; i++) {
       let m = this._map[i]
       let oldHtml = m.src.outerHTML
@@ -196,7 +196,7 @@ AFRAME.registerComponent("editor", {
     localStorage.setItem("wip-scene", this._src.outerHTML.replace(/=""/g, "").trim())
   },
 
-  undo: function () {
+  undo() {
     if (this._history.length == 0) return
     let action = this._history.pop()
     console.log("Undoing...", this._history.length, action)
@@ -230,7 +230,7 @@ AFRAME.registerComponent("editor", {
   },
 
   events: {
-    grab: function (e) {
+    grab(e) {
       this.save()
       this._grabbed = true
       setTimeout(() => {
@@ -247,11 +247,11 @@ AFRAME.registerComponent("editor", {
           showLine: true
         })
     },
-    drop: function (e) {
+    drop(e) {
       this.el.removeAttribute("raycaster")
     },
 
-    usedown: function (e) {
+    usedown(e) {
       if (e.detail.button) this._undoBtn++
       if (this._undoBtn > 1) {
         if (this._grabbed.length) this.save()
@@ -261,7 +261,7 @@ AFRAME.registerComponent("editor", {
         this._selecting = this._grabbed.length === 0
       }
     },
-    useup: function (e) {
+    useup(e) {
       if (this._selecting) {
         for (let i = 0; i < this._grabbed.length; i++) {
           let grab = this._grabbed[i]
@@ -311,14 +311,14 @@ AFRAME.registerComponent("editor", {
     },
   },
 
-  _place: function () {
+  _place() {
     let grab
     while ((grab = this._grabbed.pop())) {
       grab.emit("place")
     }
   },
 
-  _snap: function (el) {
+  _snap(el) {
     let rot = THREE.Vector3.temp()
     el.object3D.position
       .divide(this.data.gridSize)
@@ -332,7 +332,7 @@ AFRAME.registerComponent("editor", {
     el.setAttribute("rotation", AFRAME.utils.coordinates.stringify(rot))
   },
 
-  _parseHTML: function (html) {
+  _parseHTML(html) {
     this._div.innerHTML = html.trim()
     return document.importNode(this._div.content, true).firstChild
   }

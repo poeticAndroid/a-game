@@ -11,7 +11,7 @@ AFRAME.registerComponent("locomotion", {
     godMode: { type: "boolean", default: false }
   },
 
-  init: function () {
+  init() {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onKeyUp = this._onKeyUp.bind(this)
     this._onAxisMove = this._onAxisMove.bind(this)
@@ -90,12 +90,12 @@ AFRAME.registerComponent("locomotion", {
     this._teleportCursor.setAttribute("visible", false)
   },
 
-  update: function (oldData) {
+  update(oldData) {
     // if (this.data.jumpForce) this.data.teleportDistance = 0
     this._godMode = this.data.godMode
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     document.addEventListener("keyup", this._onKeyUp)
     this._leftHand.addEventListener("axismove", this._onAxisMove)
@@ -109,7 +109,7 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.addEventListener("exit-vr", this._onExitVR)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     document.removeEventListener("keyup", this._onKeyUp)
     this._leftHand.removeEventListener("axismove", this._onAxisMove)
@@ -123,13 +123,13 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.removeEventListener("exit-vr", this._onExitVR)
   },
 
-  remove: function () {
+  remove() {
     this.el.sceneEl.removeChild(this._legs)
     this.el.sceneEl.removeChild(this._legBumper)
     this.el.sceneEl.removeChild(this._headBumper)
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     timeDelta /= 1000
     this.el.object3D.getWorldPosition(this.centerPos)
     this.headPos.copy(this._camera.object3D.position)
@@ -200,7 +200,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  teleport: function (pos, force) {
+  teleport(pos, force) {
     let delta = THREE.Vector3.temp()
     delta.copy(pos).sub(this.feetPos)
     this._move(delta)
@@ -213,14 +213,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  jump: function () {
+  jump() {
     // jump!
     if (this.currentFloor) {
       this._vertVelocity = this.data.jumpForce
     }
   },
 
-  toggleCrouch: function (reset) {
+  toggleCrouch(reset) {
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
     clearTimeout(this._crouchResetTO)
@@ -245,14 +245,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _move: function (delta) {
+  _move(delta) {
     this.el.object3D.position.add(delta)
     this.centerPos.add(delta)
     this.headPos.add(delta)
     this._legs.object3D.position.y += delta.y
     this.feetPos.y += delta.y
   },
-  _bump: function (pos, bumper) {
+  _bump(pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
     delta.copy(pos)
@@ -297,7 +297,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _callMoveStick: function () {
+  _callMoveStick() {
     let bestStick = THREE.Vector2.temp().set(0, 0)
     let stick = THREE.Vector2.temp()
 
@@ -330,7 +330,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
-  _applyMoveStick: function (seconds) {
+  _applyMoveStick(seconds) {
     let stick = this._callMoveStick()
     stick.multiplyScalar(this.data.speed)
     stick.multiplyScalar(seconds)
@@ -354,7 +354,7 @@ AFRAME.registerComponent("locomotion", {
     this._move(delta)
   },
 
-  _callAuxStick: function () {
+  _callAuxStick() {
     let bestStick = THREE.Vector2.temp().set(0, 0)
     let stick = THREE.Vector2.temp()
 
@@ -383,7 +383,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
-  _applyAuxStick: function (seconds) {
+  _applyAuxStick(seconds) {
     let stick = this._callAuxStick()
     let rotation = 0
 
@@ -480,7 +480,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _callButtons: function () {
+  _callButtons() {
     let buttons = 0
 
     if (this._keysDown["Space"]) buttons = buttons | 1
@@ -499,7 +499,7 @@ AFRAME.registerComponent("locomotion", {
 
     return buttons
   },
-  _applyButtons: function () {
+  _applyButtons() {
     let buttons = this._callButtons()
     if (buttons) {
       if (!this._toggling) {
@@ -555,7 +555,7 @@ AFRAME.registerComponent("locomotion", {
       this._handEnabled = true
     }
   },
-  _onButtonChanged: function (e) {
+  _onButtonChanged(e) {
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
@@ -563,7 +563,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onTouchStart: function (e) {
+  _onTouchStart(e) {
     let vw = this.el.sceneEl.canvas.clientWidth
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -578,7 +578,7 @@ AFRAME.registerComponent("locomotion", {
     }
     e.preventDefault()
   },
-  _onTouchMove: function (e) {
+  _onTouchMove(e) {
     let stickRadius = 32
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -605,7 +605,7 @@ AFRAME.registerComponent("locomotion", {
     }
     e.preventDefault()
   },
-  _onTouchEnd: function (e) {
+  _onTouchEnd(e) {
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j];
       if (this._leftTouchId === touchEvent.identifier) {
@@ -619,12 +619,12 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onEnterVR: function (e) {
+  _onEnterVR(e) {
     this.isVR = true
     this.quantizeMovement = this._config.quantizeMovementVR
     this.quantizeRotation = this._config.quantizeRotationVR
   },
-  _onExitVR: function (e) {
+  _onExitVR(e) {
     this.isVR = false
     this.quantizeMovement = this._config.quantizeMovement
     this.quantizeRotation = this._config.quantizeRotation

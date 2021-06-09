@@ -6,7 +6,7 @@ AFRAME.registerComponent("grabbing", {
     grabDistance: { type: "number", default: 1 }
   },
 
-  init: function () {
+  init() {
     this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
@@ -49,7 +49,7 @@ AFRAME.registerComponent("grabbing", {
     this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].ray)
@@ -57,7 +57,7 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
@@ -69,7 +69,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.addEventListener("hold", this._onTouchHold)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
@@ -81,10 +81,10 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.removeEventListener("hold", this._onTouchHold)
   },
 
-  remove: function () {
+  remove() {
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
@@ -165,12 +165,12 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  toggleGrab: function (hand = "head") {
+  toggleGrab(hand = "head") {
     let _hand = "_" + hand
     if (this[_hand].grabbed) this.drop(hand)
     else this.grab(hand)
   },
-  grab: function (hand = "head") {
+  grab(hand = "head") {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
     if (this[_hand].grabbed) return
@@ -224,7 +224,7 @@ AFRAME.registerComponent("grabbing", {
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
     }
   },
-  drop: function (hand = "head") {
+  drop(hand = "head") {
     let _hand = "_" + hand
     if (this.sticky) return
     this[_hand].anchor.removeAttribute("joint__grab")
@@ -237,30 +237,30 @@ AFRAME.registerComponent("grabbing", {
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
-  dropObject: function (el) {
+  dropObject(el) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].grabbed === el) this.drop(hand)
     }
   },
-  use: function (hand = "head", button = 0) {
+  use(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.useDown(hand, button)
     setTimeout(() => {
       this.useUp(hand, button)
     }, 32)
   },
-  useDown: function (hand = "head", button = 0) {
+  useDown(hand = "head", button = 0) {
     let _hand = "_" + hand
     // if (!this[_hand].grabbed) return this.grab(hand)
     this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
-  useUp: function (hand = "head", button = 0) {
+  useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
 
-  emit: function (eventtype, glove, grabbed, e = {}) {
+  emit(eventtype, glove, grabbed, e = {}) {
     e.grabbing = this.el
     e.grabbedElement = grabbed
     e.gloveElement = glove
@@ -271,7 +271,7 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
-  _enableHands: function () {
+  _enableHands() {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -314,7 +314,7 @@ AFRAME.registerComponent("grabbing", {
     this.update()
   },
 
-  _ensureGlove: function (el) {
+  _ensureGlove(el) {
     let hand = el.getAttribute("side")
     let color = el.getAttribute("color") || "lightblue"
     return el.ensure(".glove", "a-entity", {
@@ -370,18 +370,18 @@ AFRAME.registerComponent("grabbing", {
     </a-box>`)
   },
 
-  _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
-  _onMouseDown: function (e) {
+  _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
+  _onMouseDown(e) {
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onMouseUp: function (e) {
+  _onMouseUp(e) {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap: function (e) { this.use() },
-  _onTouchHold: function (e) { this.toggleGrab() },
-  _onButtonChanged: function (e) {
+  _onTouchTap(e) { this.use() },
+  _onTouchHold(e) { this.toggleGrab() },
+  _onButtonChanged(e) {
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1

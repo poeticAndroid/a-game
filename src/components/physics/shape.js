@@ -7,7 +7,7 @@ AFRAME.registerComponent("shape", {
   schema: {
   },
 
-  play: function () {
+  play() {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
@@ -57,7 +57,7 @@ AFRAME.registerComponent("shape", {
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
-  pause: function () {
+  pause() {
     clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
@@ -67,7 +67,7 @@ AFRAME.registerComponent("shape", {
     shapes[this.id] = null
   },
 
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }

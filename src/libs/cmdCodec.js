@@ -1,5 +1,5 @@
 module.exports = {
-  parse: function (cmd) {
+  parse(cmd) {
     let words = cmd.split(" ")
     let args = []
     for (let word of words) {
@@ -14,7 +14,7 @@ module.exports = {
     }
     return args
   },
-  stringifyParam: function (val) {
+  stringifyParam(val) {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }

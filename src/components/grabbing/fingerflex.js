@@ -6,13 +6,13 @@ AFRAME.registerComponent("fingerflex", {
     max: { type: "number", default: 90 },
   },
 
-  init: function () {
+  init() {
     this._fingers = ["thumb", "index", "middle", "ring", "little"]
     this._currentFlex = [0, 0, 0, 0, 0]
     this._targetFlex = [0, 0, 0, 0, 0]
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (let finger = 0; finger < 5; finger++) {
       let name = this._fingers[finger]
       let current = this._currentFlex[finger]
@@ -33,7 +33,7 @@ AFRAME.registerComponent("fingerflex", {
   },
 
   events: {
-    fingerflex: function (e) {
+    fingerflex(e) {
       this._targetFlex[e.detail.finger] = e.detail.flex
     }
   }
