@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -238,6 +238,7 @@ AFRAME.registerComponent("grabbing", {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
     if (this[_hand].grabbed) return
+    this.sticky = true
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
@@ -278,6 +279,9 @@ AFRAME.registerComponent("grabbing", {
           dur: 256
         })
       }
+      setTimeout(() => {
+        this.sticky = false
+      }, 256)
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
@@ -286,8 +290,10 @@ AFRAME.registerComponent("grabbing", {
   },
   drop: function (hand = "head") {
     let _hand = "_" + hand
+    if (this.sticky) return
     this[_hand].anchor.removeAttribute("joint__grab")
-    this[_hand].anchor.removeAttribute("animation")
+    this[_hand].anchor.removeAttribute("animation__rot")
+    this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -310,7 +316,7 @@ AFRAME.registerComponent("grabbing", {
   },
   useDown: function (hand = "head", button = 0) {
     let _hand = "_" + hand
-    if (!this[_hand].grabbed) return this.grab(hand)
+    // if (!this[_hand].grabbed) return this.grab(hand)
     this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
   useUp: function (hand = "head", button = 0) {
