@@ -44,6 +44,7 @@ AFRAME.registerComponent("editor", {
   tick(time, timeDelta) {
     if (this._selecting) {
       let ray = this.el.components.raycaster
+      if (!ray) return
       ray.refreshObjects()
       let int = ray.intersections[0]
       if (int) {
@@ -57,7 +58,7 @@ AFRAME.registerComponent("editor", {
         this._worldAnchor.copyWorldPosRot(grab)
         if (this._grabbed.indexOf(grab) < 0) {
           this._grabbed.push(grab)
-          grab.pause()
+          // grab.pause()
           let oldScale = JSON.parse(JSON.stringify(grab.getAttribute("scale")))
           let newScale = JSON.parse(JSON.stringify(oldScale))
           newScale.x *= 1.1
@@ -82,17 +83,94 @@ AFRAME.registerComponent("editor", {
         let anch = this._anchors[i]
         if (grab && grab.copyWorldPosRot) {
           grab.copyWorldPosRot(anch)
-          // if (grab.body) {
-          //   grab.body.sleep()
-          //   grab.body.velocity.set(0, 0, 0)
-          //   grab.body.angularVelocity.set(0, 0, 0)
-          // }
         }
       }
 
       this._worldAnchor.copyWorldPosRot(this._anchor)
       this._snap(this._worldAnchor)
     }
+  },
+
+  events: {
+    grab(e) {
+      this.save()
+      this._grabbed = true
+      setTimeout(() => {
+        this._selecting = false
+        this._grabbed = []
+        this._undoBtn = 0
+        this._history = []
+      }, 256)
+      if (!this.el.getAttribute("raycaster"))
+        this.el.setAttribute("raycaster", {
+          objects: ".editable, .editable *",
+          far: 2,
+          autoRefresh: false,
+          showLine: true
+        })
+    },
+    drop(e) {
+      this.el.removeAttribute("raycaster")
+    },
+
+    usedown(e) {
+      if (e.detail.button) this._undoBtn++
+      if (this._undoBtn > 1) {
+        if (this._grabbed.length) this.save()
+        this._selecting = false
+        this._grabbed = []
+      } else {
+        this._selecting = this._grabbed.length === 0
+      }
+    },
+    useup(e) {
+      if (this._selecting) {
+        for (let i = 0; i < this._grabbed.length; i++) {
+          let grab = this._grabbed[i]
+          let anch = this._anchors[i]
+          if (anch && anch.copyWorldPosRot) {
+            anch.copyWorldPosRot(grab)
+          }
+        }
+      }
+      if (this._undoBtn > 1) this.undo()
+      if (this._undoBtn > 0) this._undoBtn--
+
+      if (this._grabbed.length) {
+        switch (e.detail.button) {
+          case 1:
+            for (let i = 0; i < this._grabbed.length; i++) {
+              let grab = this._grabbed[i]
+              let j = this.findEntity(grab)
+              let html = grab.outerHTML
+              if (j != null) {
+                html = this._map[j].src.outerHTML
+              } else {
+                html = html.replace(/\ velocity\=\"\"/gi, "")
+              }
+              let e = this._map.length
+              this.addEntity(html)
+              let m = this._map[e]
+              grab.emit("place")
+              this._grabbed[i] = m.world
+            }
+            break
+          case 2:
+            let grab
+            while ((grab = this._grabbed.pop())) {
+              this.removeEntity(grab)
+            }
+            break
+          default:
+            if (!this._selecting) this._place()
+        }
+      }
+      this._selecting = false
+      let ray = this.el.components.raycaster
+      ray.refreshObjects()
+      clearTimeout(this._saveTO)
+      this._saveTO = setTimeout(this.save, 1024)
+    },
   },
 
   addEntity(srcEl) {
@@ -119,6 +197,8 @@ AFRAME.registerComponent("editor", {
       cmd: "remove",
       el: srcEl
     })
+    clearTimeout(this._saveTO)
+    this._saveTO = setTimeout(this.save, 1024)
   },
   findEntity(el) {
     let index = null
@@ -227,88 +307,6 @@ AFRAME.registerComponent("editor", {
         break
     }
     while (this._history.length > len) this._history.pop()
-  },
-
-  events: {
-    grab(e) {
-      this.save()
-      this._grabbed = true
-      setTimeout(() => {
-        this._selecting = false
-        this._grabbed = []
-        this._undoBtn = 0
-        this._history = []
-      }, 256)
-      if (!this.el.getAttribute("raycaster"))
-        this.el.setAttribute("raycaster", {
-          objects: ".editable, .editable *",
-          far: 1,
-          autoRefresh: false,
-          showLine: true
-        })
-    },
-    drop(e) {
-      this.el.removeAttribute("raycaster")
-    },
-
-    usedown(e) {
-      if (e.detail.button) this._undoBtn++
-      if (this._undoBtn > 1) {
-        if (this._grabbed.length) this.save()
-        this._selecting = false
-        this._grabbed = []
-      } else {
-        this._selecting = this._grabbed.length === 0
-      }
-    },
-    useup(e) {
-      if (this._selecting) {
-        for (let i = 0; i < this._grabbed.length; i++) {
-          let grab = this._grabbed[i]
-          let anch = this._anchors[i]
-          if (anch && anch.copyWorldPosRot) {
-            anch.copyWorldPosRot(grab)
-          }
-        }
-      }
-      if (this._undoBtn > 1) this.undo()
-      if (this._undoBtn > 0) this._undoBtn--
-
-      if (this._grabbed.length) {
-        switch (e.detail.button) {
-          case 1:
-            for (let i = 0; i < this._grabbed.length; i++) {
-              let grab = this._grabbed[i]
-              let j = this.findEntity(grab)
-              let html = grab.outerHTML
-              if (j != null) {
-                html = this._map[j].src.outerHTML
-              } else {
-                html = html.replace(/\ velocity\=\"\"/gi, "")
-              }
-              let e = this._map.length
-              this.addEntity(html)
-              let m = this._map[e]
-              grab.emit("place")
-              this._grabbed[i] = m.world
-            }
-            break
-          case 2:
-            let grab
-            while ((grab = this._grabbed.pop())) {
-              this.removeEntity(grab)
-            }
-            break
-          default:
-            if (!this._selecting) this._place()
-        }
-        clearTimeout(this._saveTO)
-        this._saveTO = setTimeout(this.save, 1024)
-      }
-      this._selecting = false
-      let ray = this.el.components.raycaster
-      ray.refreshObjects()
-    },
   },
 
   _place() {
