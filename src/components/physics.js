@@ -11,7 +11,7 @@ AFRAME.registerSystem("physics", {
     debug: { type: "boolean", default: false }
   },
 
-  update: function () {
+  update() {
     if (this.data.workerUrl) {
       if (!this.worker) {
         if (this.data.workerUrl.includes("//")) {
@@ -34,14 +34,14 @@ AFRAME.registerSystem("physics", {
     }
   },
 
-  remove: function () {
+  remove() {
     this.worker && this.worker.terminate()
     this.worker = null
     this.bodies = []
     this.movingBodies = []
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     if (!this.worker) return
     if (this.buffers.length < 2) return
     let buffer = this.buffers.shift()
@@ -74,7 +74,7 @@ AFRAME.registerSystem("physics", {
     this.worker.postMessage(buffer, [buffer.buffer])
   },
 
-  onMessage: function (e) {
+  onMessage(e) {
     if (typeof e.data === "string") {
       let command = cmd.parse(e.data)
       switch (command.shift()) {
@@ -90,7 +90,7 @@ AFRAME.registerSystem("physics", {
     }
   },
 
-  command: function (params) {
+  command(params) {
     if (typeof params[0] === "number") {
       params.shift()
     }
@@ -103,7 +103,7 @@ AFRAME.registerSystem("physics", {
         break
     }
   },
-  eval: function (expr) {
+  eval(expr) {
     this.worker.postMessage("world eval " + cmd.stringifyParam(expr))
   }
 })

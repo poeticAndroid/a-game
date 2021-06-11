@@ -23,6 +23,12 @@ loadBtn.addEventListener("click", () => {
   }
 })
 
+let saveBtn = document.querySelector("#saveBtn")
+saveBtn.addEventListener("click", () => {
+  let saveFrm = document.querySelector("#saveFrm")
+  saveFrm.submit()
+})
+
 let copyBtn = document.querySelector("#copyBtn")
 copyBtn.addEventListener("click", () => {
   navigator.clipboard.writeText(txt.value)

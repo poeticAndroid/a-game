@@ -5,7 +5,7 @@ AFRAME.registerComponent("wall", {
     physics: { type: "boolean", default: true }
   },
 
-  update: function () {
+  update() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:static")
   }
 })

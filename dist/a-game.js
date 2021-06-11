@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -70,7 +70,7 @@ AFRAME.registerComponent("grabbing", {
     grabDistance: { type: "number", default: 1 }
   },
 
-  init: function () {
+  init() {
     this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
@@ -113,7 +113,7 @@ AFRAME.registerComponent("grabbing", {
     this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].ray)
@@ -121,7 +121,7 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
@@ -133,7 +133,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.addEventListener("hold", this._onTouchHold)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
@@ -145,10 +145,10 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.removeEventListener("hold", this._onTouchHold)
   },
 
-  remove: function () {
+  remove() {
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
@@ -229,15 +229,15 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  toggleGrab: function (hand = "head") {
+  toggleGrab(hand = "head") {
     let _hand = "_" + hand
     if (this[_hand].grabbed) this.drop(hand)
     else this.grab(hand)
   },
-  grab: function (hand = "head") {
+  grab(hand = "head") {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
-    if (this[_hand].grabbed) this.drop(hand)
+    if (this[_hand].grabbed) return
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
@@ -282,12 +282,18 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.sticky = true
+      setTimeout(() => {
+        this.sticky = false
+      }, 256)
     }
   },
-  drop: function (hand = "head") {
+  drop(hand = "head") {
     let _hand = "_" + hand
+    if (this.sticky) return
     this[_hand].anchor.removeAttribute("joint__grab")
-    this[_hand].anchor.removeAttribute("animation")
+    this[_hand].anchor.removeAttribute("animation__rot")
+    this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -295,30 +301,30 @@ AFRAME.registerComponent("grabbing", {
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
-  dropObject: function (el) {
+  dropObject(el) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].grabbed === el) this.drop(hand)
     }
   },
-  use: function (hand = "head", button = 0) {
+  use(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.useDown(hand, button)
     setTimeout(() => {
       this.useUp(hand, button)
     }, 32)
   },
-  useDown: function (hand = "head", button = 0) {
+  useDown(hand = "head", button = 0) {
     let _hand = "_" + hand
-    if (!this[_hand].grabbed) return this.grab(hand)
+    // if (!this[_hand].grabbed) return this.grab(hand)
     this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
-  useUp: function (hand = "head", button = 0) {
+  useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
 
-  emit: function (eventtype, glove, grabbed, e = {}) {
+  emit(eventtype, glove, grabbed, e = {}) {
     e.grabbing = this.el
     e.grabbedElement = grabbed
     e.gloveElement = glove
@@ -329,7 +335,7 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
-  _enableHands: function () {
+  _enableHands() {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -372,54 +378,55 @@ AFRAME.registerComponent("grabbing", {
     this.update()
   },
 
-  _ensureGlove: function (el) {
+  _ensureGlove(el) {
     let hand = el.getAttribute("side")
+    let color = el.getAttribute("color") || "lightblue"
     return el.ensure(".glove", "a-entity", {
       "class": "glove",
       "fingerflex": {
         min: hand === "left" ? -10 : 10,
         max: hand === "left" ? -90 : 90,
       }
-    }, `<a-box class="palm" color="gray" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
+    }, `<a-box class="palm" color="${color}" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
       depth="0.08">
       <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
         <a-entity class="thumb bend">
-          <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             <a-entity class="bend" position="0 0 -0.02">
-              <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+              <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
               </a-box>
             </a-entity>
           </a-box>
         </a-entity>
       </a-entity>
       <a-entity class="index bend" position="0 0.03 -0.04" rotation="3 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
       </a-entity>
       <a-entity class="middle bend" position="0 0.01 -0.04" rotation="1 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
       </a-entity>
       <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="-1 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
       </a-entity>
       <a-entity class="little bend" position="0 -0.03 -0.04" rotation="-3 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
@@ -427,18 +434,18 @@ AFRAME.registerComponent("grabbing", {
     </a-box>`)
   },
 
-  _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
-  _onMouseDown: function (e) {
+  _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
+  _onMouseDown(e) {
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onMouseUp: function (e) {
+  _onMouseUp(e) {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap: function (e) { this.use() },
-  _onTouchHold: function (e) { this.toggleGrab() },
-  _onButtonChanged: function (e) {
+  _onTouchTap(e) { this.use() },
+  _onTouchHold(e) { this.toggleGrab() },
+  _onButtonChanged(e) {
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1
@@ -498,13 +505,13 @@ AFRAME.registerComponent("fingerflex", {
     max: { type: "number", default: 90 },
   },
 
-  init: function () {
+  init() {
     this._fingers = ["thumb", "index", "middle", "ring", "little"]
     this._currentFlex = [0, 0, 0, 0, 0]
-    this._targetFlex = [1.125, 0, 1.125, 1.125, 1.125]
+    this._targetFlex = [0, 0, 0, 0, 0]
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (let finger = 0; finger < 5; finger++) {
       let name = this._fingers[finger]
       let current = this._currentFlex[finger]
@@ -525,7 +532,7 @@ AFRAME.registerComponent("fingerflex", {
   },
 
   events: {
-    fingerflex: function (e) {
+    fingerflex(e) {
       this._targetFlex[e.detail.finger] = e.detail.flex
     }
   }
@@ -540,7 +547,7 @@ AFRAME.registerComponent("grabbable", {
     physics: { type: "boolean", default: true }
   },
 
-  init: function () {
+  init() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   }
 })
@@ -583,7 +590,7 @@ AFRAME.registerComponent("include", {
 
 AFRAME.registerComponent("injectplayer", {
 
-  init: function () {
+  init() {
     this.el.ensure("a-camera", "a-camera", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }
@@ -602,12 +609,12 @@ AFRAME.registerComponent("locomotion", {
     speed: { type: "number", default: 4 },
     rotationSpeed: { type: "number", default: 1 },
     teleportDistance: { type: "number", default: 5 },
-    jumpForce: { type: "number", default: 0 },
+    jumpForce: { type: "number", default: 4 },
     gravity: { type: "number", default: 10 },
     godMode: { type: "boolean", default: false }
   },
 
-  init: function () {
+  init() {
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onKeyUp = this._onKeyUp.bind(this)
     this._onAxisMove = this._onAxisMove.bind(this)
@@ -634,7 +641,7 @@ AFRAME.registerComponent("locomotion", {
     this.headDir = new THREE.Vector3()
     this.feetPos = new THREE.Vector3()
 
-    this._config = JSON.parse(localStorage.getItem("a-game.locomotion")) || {
+    this._config = {
       quantizeMovement: false,
       quantizeRotation: false,
       quantizeMovementVR: !!(this.el.sceneEl.isMobile),
@@ -683,14 +690,15 @@ AFRAME.registerComponent("locomotion", {
     this._teleportCursor = this.el.ensure(".teleport-cursor", "a-cylinder", {
       class: "teleport-cursor", radius: 0.5, height: 0.0625, material: "opacity:0.5;"
     })
+    this._teleportCursor.setAttribute("visible", false)
   },
 
-  update: function (oldData) {
-    if (this.data.jumpForce) this.data.teleportDistance = 0
+  update(oldData) {
+    // if (this.data.jumpForce) this.data.teleportDistance = 0
     this._godMode = this.data.godMode
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     document.addEventListener("keyup", this._onKeyUp)
     this._leftHand.addEventListener("axismove", this._onAxisMove)
@@ -704,7 +712,7 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.addEventListener("exit-vr", this._onExitVR)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     document.removeEventListener("keyup", this._onKeyUp)
     this._leftHand.removeEventListener("axismove", this._onAxisMove)
@@ -718,13 +726,13 @@ AFRAME.registerComponent("locomotion", {
     this.el.sceneEl.removeEventListener("exit-vr", this._onExitVR)
   },
 
-  remove: function () {
+  remove() {
     this.el.sceneEl.removeChild(this._legs)
     this.el.sceneEl.removeChild(this._legBumper)
     this.el.sceneEl.removeChild(this._headBumper)
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     timeDelta /= 1000
     this.el.object3D.getWorldPosition(this.centerPos)
     this.headPos.copy(this._camera.object3D.position)
@@ -735,7 +743,7 @@ AFRAME.registerComponent("locomotion", {
     this._legs.object3D.getWorldPosition(this.feetPos)
     this.feetPos.y -= 0.5
 
-    this._applyToggles(timeDelta)
+    this._applyButtons(timeDelta)
     this._applyMoveStick(timeDelta)
     this._applyAuxStick(timeDelta)
 
@@ -795,7 +803,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  teleport: function (pos, force) {
+  teleport(pos, force) {
     let delta = THREE.Vector3.temp()
     delta.copy(pos).sub(this.feetPos)
     this._move(delta)
@@ -808,7 +816,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  toggleCrouch: function (reset) {
+  jump() {
+    // jump!
+    if (this.currentFloor) {
+      this._vertVelocity = this.data.jumpForce
+    }
+  },
+
+  toggleCrouch(reset) {
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
     clearTimeout(this._crouchResetTO)
@@ -833,14 +848,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _move: function (delta) {
+  _move(delta) {
     this.el.object3D.position.add(delta)
     this.centerPos.add(delta)
     this.headPos.add(delta)
     this._legs.object3D.position.y += delta.y
     this.feetPos.y += delta.y
   },
-  _bump: function (pos, bumper) {
+  _bump(pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
     delta.copy(pos)
@@ -864,13 +879,14 @@ AFRAME.registerComponent("locomotion", {
         let feety = this._legs.object3D.position.y
         this._move(delta)
         bumper.object3D.position.add(delta)
-        if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
         if (this._legs.object3D.position.y !== feety) {
+          if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
           clearTimeout(this._crouchResetTO)
           this._crouchResetTO = setTimeout(() => {
             this.toggleCrouch(true)
           }, 4096)
         }
+        this._legs.object3D.position.add(delta)
         this._legs.object3D.position.y = Math.max(feety, this.headPos.y - 1.5)
         this._caution = 4
         this._bumpOverload++
@@ -917,7 +933,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
-  _applyMoveStick: function (seconds) {
+  _applyMoveStick(seconds) {
     let stick = this._callMoveStick()
     stick.multiplyScalar(this.data.speed)
     stick.multiplyScalar(seconds)
@@ -948,7 +964,7 @@ AFRAME.registerComponent("locomotion", {
     stick.set(0, 0)
     if (this._keysDown["ArrowLeft"]) stick.x--
     if (this._keysDown["ArrowRight"]) stick.x++
-    if (this._keysDown["Space"]) stick.y--
+    if (this._keysDown["KeyQ"]) stick.y--
     if (this._keysDown["KeyC"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
@@ -970,7 +986,7 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["ShiftLeft"] || this._keysDown["ShiftRight"]) bestStick.multiplyScalar(0.25)
     return bestStick
   },
-  _applyAuxStick: function (seconds) {
+  _applyAuxStick(seconds) {
     let stick = this._callAuxStick()
     let rotation = 0
 
@@ -1056,11 +1072,6 @@ AFRAME.registerComponent("locomotion", {
           this._teleportCursor.object3D.position.copy(this.feetPos)
           this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
         }
-        // jump!
-        if (this.currentFloor && !this._jumping) {
-          this._vertVelocity = this.data.jumpForce
-          this._jumping = true
-        }
       } else if (this._teleporting) {
         let pos = THREE.Vector3.temp()
         this._teleportCursor.object3D.getWorldPosition(pos)
@@ -1068,47 +1079,47 @@ AFRAME.registerComponent("locomotion", {
         this._teleportCursor.setAttribute("visible", false)
         this._teleportCursor.setAttribute("position", "0 0 0")
         this._teleporting = false
-      } else if (this._jumping) {
-        this._jumping = false
       }
     }
   },
 
-  _callToggles() {
-    let toggles = 0
+  _callButtons() {
+    let buttons = 0
 
-    if (this._keysDown["KeyH"]) toggles = toggles | 1
-    if (this._keysDown["KeyG"]) toggles = toggles | 2
-    if (this._vrRightClick) toggles = toggles | 1
-    if (this._vrLeftClick) toggles = toggles | 2
+    if (this._keysDown["Space"]) buttons = buttons | 1
+    if (this._keysDown["KeyG"]) buttons = buttons | 2
+    if (this._vrRightClick) buttons = buttons | 1
+    if (this._vrLeftClick) buttons = buttons | 2
 
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[11].pressed) toggles = toggles | 1
-        if (gamepad.buttons[10].pressed) toggles = toggles | 2
+        if (gamepad.buttons[3].pressed) buttons = buttons | 1
+        if (gamepad.buttons[11].pressed) buttons = buttons | 1
+        if (gamepad.buttons[10].pressed) buttons = buttons | 2
       }
     }
 
-    return toggles
+    return buttons
   },
-  _applyToggles: function () {
-    let toggles = this._callToggles()
-    if (toggles) {
+  _applyButtons() {
+    let buttons = this._callButtons()
+    if (buttons) {
       if (!this._toggling) {
-        if (toggles & 1) this.quantizeRotation = !this.quantizeRotation
-        if (toggles & 2) {
+        // if (buttons & 1) this.quantizeRotation = !this.quantizeRotation
+        if (buttons & 1) this.jump()
+        if (buttons & 2) {
           if (this.data.godMode) this._godMode = !this._godMode
-          else this.quantizeMovement = !this.quantizeMovement
+          // else this.quantizeMovement = !this.quantizeMovement
         }
-        if (this.isVR) {
-          this._config.quantizeMovementVR = this.quantizeMovement
-          this._config.quantizeRotationVR = this.quantizeRotation
-        } else {
-          this._config.quantizeMovement = this.quantizeMovement
-          this._config.quantizeRotation = this.quantizeRotation
-        }
-        localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
+        // if (this.isVR) {
+        //   this._config.quantizeMovementVR = this.quantizeMovement
+        //   this._config.quantizeRotationVR = this.quantizeRotation
+        // } else {
+        //   this._config.quantizeMovement = this.quantizeMovement
+        //   this._config.quantizeRotation = this.quantizeRotation
+        // }
+        // localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
       }
       this._toggling = true
     } else {
@@ -1147,7 +1158,7 @@ AFRAME.registerComponent("locomotion", {
       this._handEnabled = true
     }
   },
-  _onButtonChanged: function (e) {
+  _onButtonChanged(e) {
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
@@ -1155,7 +1166,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onTouchStart: function (e) {
+  _onTouchStart(e) {
     let vw = this.el.sceneEl.canvas.clientWidth
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -1170,7 +1181,7 @@ AFRAME.registerComponent("locomotion", {
     }
     e.preventDefault()
   },
-  _onTouchMove: function (e) {
+  _onTouchMove(e) {
     let stickRadius = 32
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -1197,7 +1208,7 @@ AFRAME.registerComponent("locomotion", {
     }
     e.preventDefault()
   },
-  _onTouchEnd: function (e) {
+  _onTouchEnd(e) {
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j];
       if (this._leftTouchId === touchEvent.identifier) {
@@ -1211,12 +1222,12 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _onEnterVR: function (e) {
+  _onEnterVR(e) {
     this.isVR = true
     this.quantizeMovement = this._config.quantizeMovementVR
     this.quantizeRotation = this._config.quantizeRotationVR
   },
-  _onExitVR: function (e) {
+  _onExitVR(e) {
     this.isVR = false
     this.quantizeMovement = this._config.quantizeMovement
     this.quantizeRotation = this._config.quantizeRotation
@@ -1235,7 +1246,7 @@ AFRAME.registerComponent("floor", {
     physics: { type: "boolean", default: true }
   },
 
-  update: function () {
+  update() {
     this.el.setAttribute("wall", this.data)
   }
 })
@@ -1245,7 +1256,7 @@ AFRAME.registerComponent("floor", {
 
 AFRAME.registerComponent("start", {
 
-  init: function () {
+  init() {
     let loco = this.el.sceneEl.querySelector("[locomotion]").components.locomotion
     if (!loco) return setTimeout(() => { this.init() }, 256)
     let pos = new THREE.Vector3()
@@ -1269,7 +1280,7 @@ AFRAME.registerComponent("wall", {
     physics: { type: "boolean", default: true }
   },
 
-  update: function () {
+  update() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:static")
   }
 })
@@ -1288,7 +1299,7 @@ AFRAME.registerSystem("physics", {
     debug: { type: "boolean", default: false }
   },
 
-  update: function () {
+  update() {
     if (this.data.workerUrl) {
       if (!this.worker) {
         if (this.data.workerUrl.includes("//")) {
@@ -1311,14 +1322,14 @@ AFRAME.registerSystem("physics", {
     }
   },
 
-  remove: function () {
+  remove() {
     this.worker && this.worker.terminate()
     this.worker = null
     this.bodies = []
     this.movingBodies = []
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     if (!this.worker) return
     if (this.buffers.length < 2) return
     let buffer = this.buffers.shift()
@@ -1351,7 +1362,7 @@ AFRAME.registerSystem("physics", {
     this.worker.postMessage(buffer, [buffer.buffer])
   },
 
-  onMessage: function (e) {
+  onMessage(e) {
     if (typeof e.data === "string") {
       let command = cmd.parse(e.data)
       switch (command.shift()) {
@@ -1367,7 +1378,7 @@ AFRAME.registerSystem("physics", {
     }
   },
 
-  command: function (params) {
+  command(params) {
     if (typeof params[0] === "number") {
       params.shift()
     }
@@ -1380,7 +1391,7 @@ AFRAME.registerSystem("physics", {
         break
     }
   },
-  eval: function (expr) {
+  eval(expr) {
     this.worker.postMessage("world eval " + cmd.stringifyParam(expr))
   }
 })
@@ -1407,7 +1418,7 @@ AFRAME.registerComponent("body", {
     autoShape: { type: "boolean", default: true },
   },
 
-  init: function () {
+  init() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -1464,14 +1475,14 @@ AFRAME.registerComponent("body", {
     this._initiated = true
   },
 
-  play: function () {
+  play() {
     if (!this._initiated) {
       this.init()
       this.update({})
     }
   },
 
-  update: function (oldData) {
+  update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     if (this.data.type !== oldData.type)
@@ -1490,14 +1501,14 @@ AFRAME.registerComponent("body", {
     })
   },
 
-  sleep: function () {
+  sleep() {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     worker.postMessage("world body " + this.id + " sleeping = true")
     this.sleeping = true
   },
 
-  pause: function () {
+  pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -1509,7 +1520,7 @@ AFRAME.registerComponent("body", {
     this._initiated = false
   },
 
-  tick: function () {
+  tick() {
     let worker = this.el.sceneEl.systems.physics.worker
     let buffer = this.el.sceneEl.systems.physics.buffers[0]
     if (!worker) return
@@ -1542,7 +1553,7 @@ AFRAME.registerComponent("body", {
     }
   },
 
-  command: function (params) {
+  command(params) {
     switch (params.shift()) {
       case "emits":
         let e = params.shift()
@@ -1560,12 +1571,12 @@ AFRAME.registerComponent("body", {
         break
     }
   },
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   },
 
-  commit: function () {
+  commit() {
     let worker = this.el.sceneEl.systems.physics.worker
     let pos = THREE.Vector3.temp()
     let quat = THREE.Quaternion.temp()
@@ -1602,7 +1613,7 @@ AFRAME.registerComponent("joint", {
     // spring: { type: "array" },
   },
 
-  play: function () {
+  play() {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -1626,21 +1637,21 @@ AFRAME.registerComponent("joint", {
     })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     // if (this.data.type !== oldData.type)
     //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
-  pause: function () {
+  pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
   },
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
   }
@@ -1658,7 +1669,7 @@ AFRAME.registerComponent("shape", {
   schema: {
   },
 
-  play: function () {
+  play() {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
@@ -1708,7 +1719,7 @@ AFRAME.registerComponent("shape", {
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },
 
-  pause: function () {
+  pause() {
     clearTimeout(this._retry)
     if (!this.body) return
     let worker = this.el.sceneEl.systems.physics.worker
@@ -1718,7 +1729,7 @@ AFRAME.registerComponent("shape", {
     shapes[this.id] = null
   },
 
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " eval " + cmd.stringifyParam(expr))
   }
@@ -1727,7 +1738,7 @@ AFRAME.registerComponent("shape", {
 
 },{"../../libs/cmdCodec":16}],16:[function(require,module,exports){
 module.exports = {
-  parse: function (cmd) {
+  parse(cmd) {
     let words = cmd.split(" ")
     let args = []
     for (let word of words) {
@@ -1742,7 +1753,7 @@ module.exports = {
     }
     return args
   },
-  stringifyParam: function (val) {
+  stringifyParam(val) {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }

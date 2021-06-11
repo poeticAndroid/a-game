@@ -22,7 +22,7 @@ AFRAME.registerComponent("joint", {
     // spring: { type: "array" },
   },
 
-  play: function () {
+  play() {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -46,21 +46,21 @@ AFRAME.registerComponent("joint", {
     })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     // if (this.data.type !== oldData.type)
     //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
-  pause: function () {
+  pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
   },
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
   }

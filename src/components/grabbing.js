@@ -6,7 +6,7 @@ AFRAME.registerComponent("grabbing", {
     grabDistance: { type: "number", default: 1 }
   },
 
-  init: function () {
+  init() {
     this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
@@ -49,7 +49,7 @@ AFRAME.registerComponent("grabbing", {
     this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
   },
 
-  update: function (oldData) {
+  update(oldData) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].ray)
@@ -57,7 +57,7 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  play: function () {
+  play() {
     document.addEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
@@ -69,7 +69,7 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.addEventListener("hold", this._onTouchHold)
   },
 
-  pause: function () {
+  pause() {
     document.removeEventListener("keydown", this._onKeyDown)
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
@@ -81,10 +81,10 @@ AFRAME.registerComponent("grabbing", {
     this.el.sceneEl.canvas.removeEventListener("hold", this._onTouchHold)
   },
 
-  remove: function () {
+  remove() {
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
@@ -165,15 +165,15 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  toggleGrab: function (hand = "head") {
+  toggleGrab(hand = "head") {
     let _hand = "_" + hand
     if (this[_hand].grabbed) this.drop(hand)
     else this.grab(hand)
   },
-  grab: function (hand = "head") {
+  grab(hand = "head") {
     let _hand = "_" + hand
     if (!this[_hand].ray) return
-    if (this[_hand].grabbed) this.drop(hand)
+    if (this[_hand].grabbed) return
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
@@ -218,12 +218,18 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.sticky = true
+      setTimeout(() => {
+        this.sticky = false
+      }, 256)
     }
   },
-  drop: function (hand = "head") {
+  drop(hand = "head") {
     let _hand = "_" + hand
+    if (this.sticky) return
     this[_hand].anchor.removeAttribute("joint__grab")
-    this[_hand].anchor.removeAttribute("animation")
+    this[_hand].anchor.removeAttribute("animation__rot")
+    this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -231,30 +237,30 @@ AFRAME.registerComponent("grabbing", {
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this[_hand].grabbed = null
   },
-  dropObject: function (el) {
+  dropObject(el) {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       if (this[_hand].grabbed === el) this.drop(hand)
     }
   },
-  use: function (hand = "head", button = 0) {
+  use(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.useDown(hand, button)
     setTimeout(() => {
       this.useUp(hand, button)
     }, 32)
   },
-  useDown: function (hand = "head", button = 0) {
+  useDown(hand = "head", button = 0) {
     let _hand = "_" + hand
-    if (!this[_hand].grabbed) return this.grab(hand)
+    // if (!this[_hand].grabbed) return this.grab(hand)
     this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
-  useUp: function (hand = "head", button = 0) {
+  useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
 
-  emit: function (eventtype, glove, grabbed, e = {}) {
+  emit(eventtype, glove, grabbed, e = {}) {
     e.grabbing = this.el
     e.grabbedElement = grabbed
     e.gloveElement = glove
@@ -265,7 +271,7 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
-  _enableHands: function () {
+  _enableHands() {
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -308,54 +314,55 @@ AFRAME.registerComponent("grabbing", {
     this.update()
   },
 
-  _ensureGlove: function (el) {
+  _ensureGlove(el) {
     let hand = el.getAttribute("side")
+    let color = el.getAttribute("color") || "lightblue"
     return el.ensure(".glove", "a-entity", {
       "class": "glove",
       "fingerflex": {
         min: hand === "left" ? -10 : 10,
         max: hand === "left" ? -90 : 90,
       }
-    }, `<a-box class="palm" color="gray" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
+    }, `<a-box class="palm" color="${color}" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
       depth="0.08">
       <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
         <a-entity class="thumb bend">
-          <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             <a-entity class="bend" position="0 0 -0.02">
-              <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+              <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
               </a-box>
             </a-entity>
           </a-box>
         </a-entity>
       </a-entity>
       <a-entity class="index bend" position="0 0.03 -0.04" rotation="3 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
       </a-entity>
       <a-entity class="middle bend" position="0 0.01 -0.04" rotation="1 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
       </a-entity>
       <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="-1 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
       </a-entity>
       <a-entity class="little bend" position="0 -0.03 -0.04" rotation="-3 0 0">
-        <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
           <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="gray" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
             </a-box>
           </a-entity>
         </a-box>
@@ -363,18 +370,18 @@ AFRAME.registerComponent("grabbing", {
     </a-box>`)
   },
 
-  _onKeyDown: function (e) { if (e.key === "e") this.toggleGrab() },
-  _onMouseDown: function (e) {
+  _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
+  _onMouseDown(e) {
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onMouseUp: function (e) {
+  _onMouseUp(e) {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap: function (e) { this.use() },
-  _onTouchHold: function (e) { this.toggleGrab() },
-  _onButtonChanged: function (e) {
+  _onTouchTap(e) { this.use() },
+  _onTouchHold(e) { this.toggleGrab() },
+  _onButtonChanged(e) {
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1

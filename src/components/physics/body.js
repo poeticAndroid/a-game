@@ -15,7 +15,7 @@ AFRAME.registerComponent("body", {
     autoShape: { type: "boolean", default: true },
   },
 
-  init: function () {
+  init() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -72,14 +72,14 @@ AFRAME.registerComponent("body", {
     this._initiated = true
   },
 
-  play: function () {
+  play() {
     if (!this._initiated) {
       this.init()
       this.update({})
     }
   },
 
-  update: function (oldData) {
+  update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     if (this.data.type !== oldData.type)
@@ -98,14 +98,14 @@ AFRAME.registerComponent("body", {
     })
   },
 
-  sleep: function () {
+  sleep() {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
     worker.postMessage("world body " + this.id + " sleeping = true")
     this.sleeping = true
   },
 
-  pause: function () {
+  pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
@@ -117,7 +117,7 @@ AFRAME.registerComponent("body", {
     this._initiated = false
   },
 
-  tick: function () {
+  tick() {
     let worker = this.el.sceneEl.systems.physics.worker
     let buffer = this.el.sceneEl.systems.physics.buffers[0]
     if (!worker) return
@@ -150,7 +150,7 @@ AFRAME.registerComponent("body", {
     }
   },
 
-  command: function (params) {
+  command(params) {
     switch (params.shift()) {
       case "emits":
         let e = params.shift()
@@ -168,12 +168,12 @@ AFRAME.registerComponent("body", {
         break
     }
   },
-  eval: function (expr) {
+  eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
     worker.postMessage("world body " + this.id + " eval " + cmd.stringifyParam(expr))
   },
 
-  commit: function () {
+  commit() {
     let worker = this.el.sceneEl.systems.physics.worker
     let pos = THREE.Vector3.temp()
     let quat = THREE.Quaternion.temp()

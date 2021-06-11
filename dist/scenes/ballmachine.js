@@ -1,7 +1,7 @@
 AFRAME.registerComponent("ball-spewer", {
   schema: { type: "string" },
 
-  init: function () {
+  init() {
     setTimeout(() => {
       this.el.removeAttribute("ball-spewer")
       setTimeout(() => {
@@ -10,7 +10,7 @@ AFRAME.registerComponent("ball-spewer", {
     }, 16000)
   },
 
-  tick: function () {
+  tick() {
     let div = document.createElement("div")
     div.innerHTML = '<a-sphere body="type:dynamic;emitsWith:1;" position="0 8 -8" radius="0.25" deadvoid grabbable ></a-sphere>'
     let ball = div.firstElementChild
@@ -36,7 +36,7 @@ AFRAME.registerComponent("ball-spewer", {
 AFRAME.registerComponent("deadvoid", {
   schema: { type: "string" },
 
-  tick: function () {
+  tick() {
     if (this.el.object3D.position.y < -8)
       this.el.parentElement.removeChild(this.el)
   }

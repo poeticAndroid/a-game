@@ -20,18 +20,18 @@ A way to connect bodies together..
 
 ## Properties
 
-| Property  | Description                         | Default  |
-| --------- | ----------------------------------- | -------- |
-| type      | `distance`, `hinge` or `point`      | point    |
-| body1     | first body to join                  | this one |
-| body2     | second body to join                 | null     |
-| pivot1    | pivot point of first body           | 0 0 0    |
-| pivot2    | pivot point of second body          | 0 0 0    |
-| axis1     | axis of first body                  | 0 1 0    |
-| axis2     | axis of second body                 | 0 1 0    |
-| min       | minimum distance between bodies     | 0        |
-| max       | maximum distance between bodies     | 1        |
-| collision | connected bodies allowed to collide | true     |
+| Property  | Description                            | Default  |
+| --------- | -------------------------------------- | -------- |
+| type      | `distance`, `hinge`, `lock` or `point` | point    |
+| body1     | first body to join                     | this one |
+| body2     | second body to join                    | null     |
+| pivot1    | pivot point of first body              | 0 0 0    |
+| pivot2    | pivot point of second body             | 0 0 0    |
+| axis1     | axis of first body                     | 0 1 0    |
+| axis2     | axis of second body                    | 0 1 0    |
+| min       | minimum distance between bodies        | 0        |
+| max       | maximum distance between bodies        | 1        |
+| collision | connected bodies allowed to collide    | true     |
 
 
 ## Methods

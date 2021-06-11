@@ -7,7 +7,7 @@ AFRAME.registerComponent("editor", {
     rotationSteps: { type: "vec3", default: { x: 8, y: 8, z: 8 } }
   },
 
-  init: function () {
+  init() {
     this._map = []
     this._div = document.body.ensure("template")
     this._src = this._parseHTML('<a-main>\n</a-main>')
@@ -25,12 +25,6 @@ AFRAME.registerComponent("editor", {
 
     this.load = this.load.bind(this)
     this.save = this.save.bind(this)
-    this._grab = this._grab.bind(this)
-    this._useDown = this._useDown.bind(this)
-    this._useUp = this._useUp.bind(this)
-    this.el.addEventListener("grab", this._grab)
-    this.el.addEventListener("usedown", this._useDown)
-    this.el.addEventListener("useup", this._useUp)
     if (this.el.sceneEl.hasLoaded) {
       this.load()
     } else {
@@ -38,31 +32,19 @@ AFRAME.registerComponent("editor", {
     }
   },
 
-  remove: function () {
-    this.el.removeEventListener("grab", this._grab)
-    this.el.removeEventListener("usedown", this._useDown)
-    this.el.removeEventListener("useup", this._useUp)
-  },
-
-  update: function () {
+  update() {
     this._angularSize.set(360, 360, 360).divide(this.data.rotationSteps)
     if (!this.el.getAttribute("grabbable"))
       this.el.setAttribute("grabbable", {
         physics: false,
         freeOrientation: false
       })
-    if (!this.el.getAttribute("raycaster"))
-      this.el.setAttribute("raycaster", {
-        objects: ".editable, .editable *",
-        far: 1,
-        autoRefresh: false,
-        showLine: true
-      })
   },
 
-  tick: function (time, timeDelta) {
+  tick(time, timeDelta) {
     if (this._selecting) {
       let ray = this.el.components.raycaster
+      if (!ray) return
       ray.refreshObjects()
       let int = ray.intersections[0]
       if (int) {
@@ -76,7 +58,7 @@ AFRAME.registerComponent("editor", {
         this._worldAnchor.copyWorldPosRot(grab)
         if (this._grabbed.indexOf(grab) < 0) {
           this._grabbed.push(grab)
-          grab.pause()
+          // grab.pause()
           let oldScale = JSON.parse(JSON.stringify(grab.getAttribute("scale")))
           let newScale = JSON.parse(JSON.stringify(oldScale))
           newScale.x *= 1.1
@@ -101,11 +83,6 @@ AFRAME.registerComponent("editor", {
         let anch = this._anchors[i]
         if (grab && grab.copyWorldPosRot) {
           grab.copyWorldPosRot(anch)
-          // if (grab.body) {
-          //   grab.body.sleep()
-          //   grab.body.velocity.set(0, 0, 0)
-          //   grab.body.angularVelocity.set(0, 0, 0)
-          // }
         }
       }
 
@@ -114,7 +91,89 @@ AFRAME.registerComponent("editor", {
     }
   },
 
-  addEntity: function (srcEl) {
+  events: {
+    grab(e) {
+      this.save()
+      this._grabbed = true
+      setTimeout(() => {
+        this._selecting = false
+        this._grabbed = []
+        this._undoBtn = 0
+        this._history = []
+      }, 256)
+      if (!this.el.getAttribute("raycaster"))
+        this.el.setAttribute("raycaster", {
+          objects: ".editable, .editable *",
+          far: 2,
+          autoRefresh: false,
+          showLine: true
+        })
+    },
+    drop(e) {
+      this.el.removeAttribute("raycaster")
+    },
+
+    usedown(e) {
+      if (e.detail.button) this._undoBtn++
+      if (this._undoBtn > 1) {
+        if (this._grabbed.length) this.save()
+        this._selecting = false
+        this._grabbed = []
+      } else {
+        this._selecting = this._grabbed.length === 0
+      }
+    },
+    useup(e) {
+      if (this._selecting) {
+        for (let i = 0; i < this._grabbed.length; i++) {
+          let grab = this._grabbed[i]
+          let anch = this._anchors[i]
+          if (anch && anch.copyWorldPosRot) {
+            anch.copyWorldPosRot(grab)
+          }
+        }
+      }
+      if (this._undoBtn > 1) this.undo()
+      if (this._undoBtn > 0) this._undoBtn--
+
+      if (this._grabbed.length) {
+        switch (e.detail.button) {
+          case 1:
+            for (let i = 0; i < this._grabbed.length; i++) {
+              let grab = this._grabbed[i]
+              let j = this.findEntity(grab)
+              let html = grab.outerHTML
+              if (j != null) {
+                html = this._map[j].src.outerHTML
+              } else {
+                html = html.replace(/\ velocity\=\"\"/gi, "")
+              }
+              let e = this._map.length
+              this.addEntity(html)
+              let m = this._map[e]
+              grab.emit("place")
+              this._grabbed[i] = m.world
+            }
+            break
+          case 2:
+            let grab
+            while ((grab = this._grabbed.pop())) {
+              this.removeEntity(grab)
+            }
+            break
+          default:
+            if (!this._selecting) this._place()
+        }
+      }
+      this._selecting = false
+      let ray = this.el.components.raycaster
+      ray.refreshObjects()
+      clearTimeout(this._saveTO)
+      this._saveTO = setTimeout(this.save, 1024)
+    },
+  },
+
+  addEntity(srcEl) {
     if (typeof srcEl === "string") {
       srcEl = this._parseHTML(srcEl)
     }
@@ -138,8 +197,10 @@ AFRAME.registerComponent("editor", {
       cmd: "remove",
       el: srcEl
     })
+    clearTimeout(this._saveTO)
+    this._saveTO = setTimeout(this.save, 1024)
   },
-  findEntity: function (el) {
+  findEntity(el) {
     let index = null
     if (typeof el === "object") {
       for (let i = 0; i < this._map.length; i++) {
@@ -149,10 +210,10 @@ AFRAME.registerComponent("editor", {
     }
     return index
   },
-  getPair: function (el) {
+  getPair(el) {
     return this._map[this.findEntity(el)]
   },
-  removeEntity: function (el) {
+  removeEntity(el) {
     let index = el
     if (typeof el === "object") {
       for (let i = 0; i < this._map.length; i++) {
@@ -172,7 +233,7 @@ AFRAME.registerComponent("editor", {
     }
   },
 
-  load: function () {
+  load() {
     if (!this.el.sceneEl.querySelector("a-assets")) {
       let to = setTimeout(this.load, 256)
       return
@@ -188,7 +249,7 @@ AFRAME.registerComponent("editor", {
       }
     }
   },
-  save: function () {
+  save() {
     for (let i = 0; i < this._map.length; i++) {
       let m = this._map[i]
       let oldHtml = m.src.outerHTML
@@ -215,7 +276,7 @@ AFRAME.registerComponent("editor", {
     localStorage.setItem("wip-scene", this._src.outerHTML.replace(/=""/g, "").trim())
   },
 
-  undo: function () {
+  undo() {
     if (this._history.length == 0) return
     let action = this._history.pop()
     console.log("Undoing...", this._history.length, action)
@@ -248,84 +309,14 @@ AFRAME.registerComponent("editor", {
     while (this._history.length > len) this._history.pop()
   },
 
-  _grab: function (e) {
-    this.save()
-    this._grabbed = true
-    setTimeout(() => {
-      this._selecting = false
-      this._grabbed = []
-      this._undoBtn = 0
-      this._history = []
-    }, 256)
-  },
-
-  _useDown: function (e) {
-    if (e.detail.button) this._undoBtn++
-    if (this._undoBtn > 1) {
-      if (this._grabbed.length) this.save()
-      this._selecting = false
-      this._grabbed = []
-    } else {
-      this._selecting = this._grabbed.length === 0
-    }
-  },
-  _useUp: function (e) {
-    if (this._selecting) {
-      for (let i = 0; i < this._grabbed.length; i++) {
-        let grab = this._grabbed[i]
-        let anch = this._anchors[i]
-        if (anch && anch.copyWorldPosRot) {
-          anch.copyWorldPosRot(grab)
-        }
-      }
-    }
-    if (this._undoBtn > 1) this.undo()
-    if (this._undoBtn > 0) this._undoBtn--
-
-    if (this._grabbed.length) {
-      switch (e.detail.button) {
-        case 1:
-          for (let i = 0; i < this._grabbed.length; i++) {
-            let grab = this._grabbed[i]
-            let j = this.findEntity(grab)
-            let html = grab.outerHTML
-            if (j != null) {
-              html = this._map[j].src.outerHTML
-            } else {
-              html = html.replace(/\ velocity\=\"\"/gi, "")
-            }
-            let e = this._map.length
-            this.addEntity(html)
-            let m = this._map[e]
-            grab.emit("place")
-            this._grabbed[i] = m.world
-          }
-          break
-        case 2:
-          let grab
-          while ((grab = this._grabbed.pop())) {
-            this.removeEntity(grab)
-          }
-          break
-        default:
-          if (!this._selecting) this._place()
-      }
-      clearTimeout(this._saveTO)
-      this._saveTO = setTimeout(this.save, 1024)
-    }
-    this._selecting = false
-    let ray = this.el.components.raycaster
-    ray.refreshObjects()
-  },
-
-  _place: function () {
+  _place() {
     let grab
     while ((grab = this._grabbed.pop())) {
       grab.emit("place")
     }
   },
 
-  _snap: function (el) {
+  _snap(el) {
     let rot = THREE.Vector3.temp()
     el.object3D.position
       .divide(this.data.gridSize)
@@ -339,7 +330,7 @@ AFRAME.registerComponent("editor", {
     el.setAttribute("rotation", AFRAME.utils.coordinates.stringify(rot))
   },
 
-  _parseHTML: function (html) {
+  _parseHTML(html) {
     this._div.innerHTML = html.trim()
     return document.importNode(this._div.content, true).firstChild
   }

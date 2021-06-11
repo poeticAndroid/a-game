@@ -21,6 +21,6 @@ Add the `editor` component to an entity that represents your tool.
 | ---------------- | -------------------------------- |
 | addEntity(html)  | Add an entity to the scene.      |
 | findEntity(el)   | Return index of entity.          |
-| removeEntity(el) | Remove an entity to the scene.   |
+| removeEntity(el) | Remove an entity from the scene. |
 | load()           | Load scene from localStorage.    |
 | save()           | Save scene to localStorage.      |
