@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -751,8 +751,9 @@ AFRAME.registerComponent("locomotion", {
     let head2toe = THREE.Vector3.temp()
       .copy(this.headPos).sub(this.feetPos)
     head2toe.y = 0
-    if (head2toe.length() > 0.5) {
-      head2toe.multiplyScalar(0.1)
+    if (head2toe.length() > 0.5 || !this.currentFloor) {
+      if (this.currentFloor)
+        head2toe.multiplyScalar(0.1)
       this._legs.object3D.position.add(head2toe)
       this.feetPos.add(head2toe)
     }
@@ -1106,20 +1107,8 @@ AFRAME.registerComponent("locomotion", {
     let buttons = this._callButtons()
     if (buttons) {
       if (!this._toggling) {
-        // if (buttons & 1) this.quantizeRotation = !this.quantizeRotation
         if (buttons & 1) this.jump()
-        if (buttons & 2) {
-          if (this.data.godMode) this._godMode = !this._godMode
-          // else this.quantizeMovement = !this.quantizeMovement
-        }
-        // if (this.isVR) {
-        //   this._config.quantizeMovementVR = this.quantizeMovement
-        //   this._config.quantizeRotationVR = this.quantizeRotation
-        // } else {
-        //   this._config.quantizeMovement = this.quantizeMovement
-        //   this._config.quantizeRotation = this.quantizeRotation
-        // }
-        // localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
+        if (this.data.godMode && buttons & 2) this._godMode = !this._godMode
       }
       this._toggling = true
     } else {
