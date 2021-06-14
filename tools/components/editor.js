@@ -3,8 +3,8 @@
 AFRAME.registerComponent("editor", {
   // dependencies: ["grabbable"],
   schema: {
-    gridSize: { type: "vec3", default: { x: 0.5, y: 0.5, z: 0.5 } },
-    rotationSteps: { type: "vec3", default: { x: 8, y: 8, z: 8 } }
+    gridDensity: { type: "int", default: 3 },
+    rotDensity: { type: "int", default: 3 }
   },
 
   init() {
@@ -30,15 +30,16 @@ AFRAME.registerComponent("editor", {
     } else {
       this.el.sceneEl.addEventListener("loaded", this.load)
     }
-  },
-
-  update() {
-    this._angularSize.set(360, 360, 360).divide(this.data.rotationSteps)
     if (!this.el.getAttribute("grabbable"))
       this.el.setAttribute("grabbable", {
         physics: false,
         freeOrientation: false
       })
+  },
+
+  update() {
+    this.gridSize = 1 / Math.pow(2, this.data.gridDensity)
+    this.rotSize = 1 / Math.pow(2, this.data.rotDensity)
   },
 
   tick(time, timeDelta) {
@@ -317,17 +318,14 @@ AFRAME.registerComponent("editor", {
   },
 
   _snap(el) {
-    let rot = THREE.Vector3.temp()
-    el.object3D.position
-      .divide(this.data.gridSize)
-      .round()
-      .multiply(this.data.gridSize)
-    rot
-      .copy(el.getAttribute("rotation"))
-      .divide(this._angularSize)
-      .round()
-      .multiply(this._angularSize)
-    el.setAttribute("rotation", AFRAME.utils.coordinates.stringify(rot))
+    el.object3D.position.x = Math.round(el.object3D.position.x / this.gridSize) * this.gridSize
+    el.object3D.position.y = Math.round(el.object3D.position.y / this.gridSize) * this.gridSize
+    el.object3D.position.z = Math.round(el.object3D.position.z / this.gridSize) * this.gridSize
+    el.object3D.quaternion.x = Math.round(el.object3D.quaternion.x / this.rotSize) * this.rotSize
+    el.object3D.quaternion.y = Math.round(el.object3D.quaternion.y / this.rotSize) * this.rotSize
+    el.object3D.quaternion.z = Math.round(el.object3D.quaternion.z / this.rotSize) * this.rotSize
+    el.object3D.quaternion.w = Math.round(el.object3D.quaternion.w / this.rotSize) * this.rotSize
+    el.object3D.quaternion.normalize()
   },
 
   _parseHTML(html) {
