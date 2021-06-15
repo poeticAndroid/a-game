@@ -12,7 +12,8 @@ AFRAME.registerComponent("tile", {
 
     this._editor = this.el.sceneEl.querySelector("[editor]")
     this._gridSize = new THREE.Vector3(1, 1, 1)
-    this._gridSize.multiplyScalar(this._editor.components.editor.gridSize)
+    if (this._editor)
+      this._gridSize.multiplyScalar(this._editor.components.editor.gridSize)
     this._handles = []
 
     this.el.addEventListener("place", this.place)
@@ -139,6 +140,7 @@ AFRAME.registerComponent("tile", {
     for (let handle of this._handles) {
       handle.setAttribute("visible", false)
     }
+    this._editor.components.editor.snap(this.el)
     if (!this._changed) return
     let pair = this._editor.components.editor.getPair(this.el)
     if (!pair) return

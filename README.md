@@ -11,10 +11,10 @@ Essential game components for [A-Frame](https://aframe.io/)!
   <body>
     <a-scene physics>
       <a-entity include="./scenes/_assets.html"></a-entity>
+      <a-player locomotion grabbing></a-player>
       <a-main include="./scenes/main.html">
         <a-box floor color="gray" width="32" height="0.25" depth="32"></a-box>
       </a-main>
-      <a-player locomotion grabbing></a-player>
     </a-scene>
   </body>
 </html>

@@ -88,7 +88,7 @@ AFRAME.registerComponent("editor", {
       }
 
       this._worldAnchor.copyWorldPosRot(this._anchor)
-      this._snap(this._worldAnchor)
+      this.snap(this._worldAnchor)
     }
   },
 
@@ -176,6 +176,21 @@ AFRAME.registerComponent("editor", {
 
   addEntity(srcEl) {
     if (typeof srcEl === "string") {
+      if (srcEl.indexOf(` id="`) > 0) {
+        let p1 = srcEl.indexOf(` id="`) + 5
+        let p2 = srcEl.indexOf(`"`, p1)
+        while (p1 > 4 && p2 > 0) {
+          let id = srcEl.substring(p1, p2)
+          let idParts = id.split("-")
+          let num = 1
+          while (document.getElementById(idParts[0] + "-" + num)) num++
+          let newId = idParts[0] + "-" + num
+          console.log(id, newId)
+          srcEl = srcEl.replaceAll(id, newId)
+          p1 = srcEl.indexOf(` id="`, p2) + 5
+          p2 = srcEl.indexOf(`"`, p1)
+        }
+      }
       srcEl = this._parseHTML(srcEl)
     }
     // srcEl = srcEl.cloneNode(true)
@@ -198,6 +213,9 @@ AFRAME.registerComponent("editor", {
       cmd: "remove",
       el: srcEl
     })
+    setTimeout(() => {
+      this.snap(worldEl)
+    }, 256)
     clearTimeout(this._saveTO)
     this._saveTO = setTimeout(this.save, 1024)
   },
@@ -310,14 +328,8 @@ AFRAME.registerComponent("editor", {
     while (this._history.length > len) this._history.pop()
   },
 
-  _place() {
-    let grab
-    while ((grab = this._grabbed.pop())) {
-      grab.emit("place")
-    }
-  },
-
-  _snap(el) {
+  snap(el) {
+    if (!el.object3D) return
     el.object3D.position.x = Math.round(el.object3D.position.x / this.gridSize) * this.gridSize
     el.object3D.position.y = Math.round(el.object3D.position.y / this.gridSize) * this.gridSize
     el.object3D.position.z = Math.round(el.object3D.position.z / this.gridSize) * this.gridSize
@@ -326,6 +338,13 @@ AFRAME.registerComponent("editor", {
     el.object3D.quaternion.z = Math.round(el.object3D.quaternion.z / this.rotSize) * this.rotSize
     el.object3D.quaternion.w = Math.round(el.object3D.quaternion.w / this.rotSize) * this.rotSize
     el.object3D.quaternion.normalize()
+  },
+
+  _place() {
+    let grab
+    while ((grab = this._grabbed.pop())) {
+      grab.emit("place")
+    }
   },
 
   _parseHTML(html) {
