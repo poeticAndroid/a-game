@@ -506,6 +506,7 @@ AFRAME.registerComponent("locomotion", {
       if (!this._toggling) {
         if (buttons & 1) this.jump()
         if (this.data.godMode && buttons & 2) this._godMode = !this._godMode
+        if (this._godMode) this._vertVelocity = 0
       }
       this._toggling = true
     } else {

@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.10.4",
+  "version": "0.10.5",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -146,6 +146,15 @@ AFRAME.registerComponent("grabbing", {
   },
 
   remove() {
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      this.drop(hand)
+      this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+      let flex = 0.25
+      for (let finger = 0; finger < 5; finger++) {
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      }
+    }
   },
 
   tick(time, timeDelta) {
@@ -1109,6 +1118,7 @@ AFRAME.registerComponent("locomotion", {
       if (!this._toggling) {
         if (buttons & 1) this.jump()
         if (this.data.godMode && buttons & 2) this._godMode = !this._godMode
+        if (this._godMode) this._vertVelocity = 0
       }
       this._toggling = true
     } else {
