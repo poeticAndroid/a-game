@@ -110,6 +110,7 @@ function bodyCommand(params) {
         position: new CANNON.Vec3().copy(params[0].position),
         quaternion: new CANNON.Quaternion().copy(params[0].quaternion),
       })
+      body.material = new CANNON.Material()
       body._id_ = id
       body._mid_ = params[0].mid
       if (body._mid_ !== null)
@@ -135,6 +136,12 @@ function bodyCommand(params) {
     case "mass":
       body.mass = body.type === CANNON.Body.STATIC ? 0 : params[0]
       body.updateMassProperties()
+      break
+    case "friction":
+      body.material.friction = params[0]
+      break
+    case "restitution":
+      body.material.restitution = params[0]
       break
     case "belongsTo":
       body.collisionFilterGroup = params[0]
@@ -233,6 +240,7 @@ function shapeCommand(body, params) {
         case "cylinder": shape = new CANNON.Cylinder(params[0].size.x / 2, params[0].size.x / 2, params[0].size.y, 16); quat.mult(cyloff, quat); break
         default: shape = new CANNON.Box(new CANNON.Vec3().copy(params[0].size).scale(0.5))
       }
+      shape.material = body.material
       shape._id_ = id
       body.addShape(body._shapes_[id] = shape, (new CANNON.Vec3()).copy(params[0].position), quat)
       body.updateMassProperties()

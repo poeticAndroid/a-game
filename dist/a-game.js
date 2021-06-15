@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.10.3",
+  "version": "0.10.4",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -1398,8 +1398,10 @@ AFRAME.registerComponent("body", {
   dependencies: ["position", "rotation", "scale"],
 
   schema: {
-    type: { type: "string", default: "static" },
+    type: { type: "string", default: "dynamic" },
     mass: { type: "number", default: 1 },
+    friction: { type: "number", default: 0.3 },
+    restitution: { type: "number", default: 0.3 },
     belongsTo: { type: "int", default: 1 },
     collidesWith: { type: "int", default: 1 },
     emitsWith: { type: "int", default: 0 },
@@ -1478,6 +1480,10 @@ AFRAME.registerComponent("body", {
       worker.postMessage("world body " + this.id + " type = " + cmd.stringifyParam(this.data.type))
     if (this.data.mass !== oldData.mass)
       worker.postMessage("world body " + this.id + " mass = " + cmd.stringifyParam(this.data.mass))
+    if (this.data.friction !== oldData.friction)
+      worker.postMessage("world body " + this.id + " friction = " + cmd.stringifyParam(this.data.friction))
+    if (this.data.restitution !== oldData.restitution)
+      worker.postMessage("world body " + this.id + " restitution = " + cmd.stringifyParam(this.data.restitution))
     if (this.data.belongsTo !== oldData.belongsTo)
       worker.postMessage("world body " + this.id + " belongsTo = " + cmd.stringifyParam(this.data.belongsTo))
     if (this.data.collidesWith !== oldData.collidesWith)
