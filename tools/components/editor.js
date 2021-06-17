@@ -213,9 +213,6 @@ AFRAME.registerComponent("editor", {
       cmd: "remove",
       el: srcEl
     })
-    setTimeout(() => {
-      this.snap(worldEl)
-    }, 256)
     clearTimeout(this._saveTO)
     this._saveTO = setTimeout(this.save, 1024)
   },
