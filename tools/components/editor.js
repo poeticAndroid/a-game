@@ -33,7 +33,7 @@ AFRAME.registerComponent("editor", {
     if (!this.el.getAttribute("grabbable"))
       this.el.setAttribute("grabbable", {
         physics: false,
-        freeOrientation: false
+        fixed: true
       })
   },
 
@@ -185,7 +185,6 @@ AFRAME.registerComponent("editor", {
           let num = 1
           while (document.getElementById(idParts[0] + "-" + num)) num++
           let newId = idParts[0] + "-" + num
-          console.log(id, newId)
           srcEl = srcEl.replaceAll(id, newId)
           p1 = srcEl.indexOf(` id="`, p2) + 5
           p2 = srcEl.indexOf(`"`, p1)

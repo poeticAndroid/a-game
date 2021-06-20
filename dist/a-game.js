@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.10.6",
+  "version": "0.10.7",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -266,24 +266,33 @@ AFRAME.registerComponent("grabbing", {
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
       else delta -= 0.0625
-      if (this[_hand].grabbed.components.grabbable.data.freeOrientation) {
-        this[_hand].anchor.setAttribute("animation__pos", {
-          property: "object3D.position.z",
-          to: this[_hand].anchor.object3D.position.z + delta,
-          dur: 256
-        })
-      } else {
-        this[_hand].anchor.setAttribute("animation__pos", {
-          property: "position",
-          to: { x: 0, y: 0, z: -0.09375 },
-          dur: 256
-        })
+      if (this[_hand].grabbed.components.grabbable.data.fixed) {
+        let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
+        let pos = new THREE.Vector3()
+        pos.copy(this[_hand].grabbed.components.grabbable.data.fixedPosition)
+        if (hand === "left") pos.x *= -1
+        if (hand === "head") pos.x = 0
+        palm.object3D.localToWorld(pos)
+        setTimeout(() => {
+          this[_hand].anchor.object3D.parent.worldToLocal(pos)
+          this[_hand].anchor.setAttribute("animation__pos", {
+            property: "position",
+            to: { x: pos.x, y: pos.y, z: pos.z },
+            dur: 256
+          })
+        }, 32)
         let rot = { x: 0, y: 0, z: 0 }
         if (hand === "left") rot.y = 45
         if (hand === "right") rot.y = -45
         this[_hand].anchor.setAttribute("animation__rot", {
           property: "rotation",
           to: rot,
+          dur: 256
+        })
+      } else {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "object3D.position.z",
+          to: this[_hand].anchor.object3D.position.z + delta,
           dur: 256
         })
       }
@@ -552,8 +561,9 @@ AFRAME.registerComponent("fingerflex", {
 
 AFRAME.registerComponent("grabbable", {
   schema: {
-    freeOrientation: { type: "boolean", default: true },
-    physics: { type: "boolean", default: true }
+    physics: { type: "boolean", default: true },
+    fixed: { type: "boolean", default: false },
+    fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
 
   init() {

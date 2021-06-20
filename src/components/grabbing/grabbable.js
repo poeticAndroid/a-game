@@ -2,8 +2,9 @@
 
 AFRAME.registerComponent("grabbable", {
   schema: {
-    freeOrientation: { type: "boolean", default: true },
-    physics: { type: "boolean", default: true }
+    physics: { type: "boolean", default: true },
+    fixed: { type: "boolean", default: false },
+    fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
 
   init() {
