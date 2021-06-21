@@ -11,7 +11,9 @@ AFRAME.registerComponent("tile", {
     this.place = this.place.bind(this)
 
     this._editor = this.el.sceneEl.querySelector("[editor]")
-    this._gridSize = new THREE.Vector3()
+    this._gridSize = new THREE.Vector3(1, 1, 1)
+    if (this._editor)
+      this._gridSize.multiplyScalar(this._editor.components.editor.gridSize)
     this._handles = []
 
     this.el.addEventListener("place", this.place)
@@ -19,7 +21,6 @@ AFRAME.registerComponent("tile", {
 
   tick() {
     if (!this._editor) return this.el.removeAttribute("tile")
-    this._gridSize.copy(this._editor.components.editor.data.gridSize)
     let width = parseFloat(this.el.getAttribute("width")) || 1
     let height = parseFloat(this.el.getAttribute("height")) || 1
     let delta = THREE.Vector3.temp()
@@ -107,14 +108,10 @@ AFRAME.registerComponent("tile", {
         this._handles.push(handle =
           this.el.ensure(".handle" + (this._handles.length), "a-box", {
             class: "editable handle" + (this._handles.length),
-            scale: "0.125 0.125 " + ((parseFloat(this.el.getAttribute("depth")) || 1) + 0.0625),
+            width: 0.125,
+            height: 0.125,
+            depth: (parseFloat(this.el.getAttribute("depth")) || 1) + 0.0625,
             grabbable: { physics: false },
-            visible: false,
-            position: {
-              x: x * (parseFloat(this.el.getAttribute("width")) || 1) / 2,
-              y: y * (parseFloat(this.el.getAttribute("height")) || 1) / 2,
-              z: 0
-            }
           }))
         handle.axis = { x: x, y: y }
         handle.addEventListener("grab", (e) => {
@@ -122,6 +119,14 @@ AFRAME.registerComponent("tile", {
           this.el.play()
         })
       }
+    }
+    for (let handle of this._handles) {
+      handle.object3D.quaternion.set(0, 0, 0, 1)
+      handle.object3D.position.set(
+        handle.axis.x * (parseFloat(this.el.getAttribute("width")) || 1) / 2,
+        handle.axis.y * (parseFloat(this.el.getAttribute("height")) || 1) / 2,
+        0
+      )
     }
   },
   showHandles() {
@@ -135,6 +140,7 @@ AFRAME.registerComponent("tile", {
     for (let handle of this._handles) {
       handle.setAttribute("visible", false)
     }
+    this._editor.components.editor.snap(this.el)
     if (!this._changed) return
     let pair = this._editor.components.editor.getPair(this.el)
     if (!pair) return

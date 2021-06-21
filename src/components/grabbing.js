@@ -82,6 +82,15 @@ AFRAME.registerComponent("grabbing", {
   },
 
   remove() {
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      this.drop(hand)
+      this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+      let flex = 0.25
+      for (let finger = 0; finger < 5; finger++) {
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      }
+    }
   },
 
   tick(time, timeDelta) {
@@ -193,16 +202,16 @@ AFRAME.registerComponent("grabbing", {
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
       else delta -= 0.0625
-      if (this[_hand].grabbed.components.grabbable.data.freeOrientation) {
-        this[_hand].anchor.setAttribute("animation__pos", {
-          property: "object3D.position.z",
-          to: this[_hand].anchor.object3D.position.z + delta,
-          dur: 256
-        })
-      } else {
+      if (this[_hand].grabbed.components.grabbable.data.fixed) {
+        let pos = THREE.Vector3.temp().copy(this[_hand].grabbed.components.grabbable.data.fixedPosition)
+        if (hand === "left") pos.x *= -1
+        if (hand === "head") pos.x = 0
+        let quat = THREE.Quaternion.temp().copy(this[_hand].ray.object3D.quaternion).conjugate()
+        pos.applyQuaternion(quat)
+        pos.z += -0.09375
         this[_hand].anchor.setAttribute("animation__pos", {
           property: "position",
-          to: { x: 0, y: 0, z: -0.09375 },
+          to: { x: pos.x, y: pos.y, z: pos.z },
           dur: 256
         })
         let rot = { x: 0, y: 0, z: 0 }
@@ -211,6 +220,12 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].anchor.setAttribute("animation__rot", {
           property: "rotation",
           to: rot,
+          dur: 256
+        })
+      } else {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "object3D.position.z",
+          to: this[_hand].anchor.object3D.position.z + delta,
           dur: 256
         })
       }

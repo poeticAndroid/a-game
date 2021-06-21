@@ -3,8 +3,8 @@
 AFRAME.registerComponent("editor", {
   // dependencies: ["grabbable"],
   schema: {
-    gridSize: { type: "vec3", default: { x: 0.5, y: 0.5, z: 0.5 } },
-    rotationSteps: { type: "vec3", default: { x: 8, y: 8, z: 8 } }
+    gridDensity: { type: "int", default: 3 },
+    rotDensity: { type: "int", default: 3 }
   },
 
   init() {
@@ -30,15 +30,16 @@ AFRAME.registerComponent("editor", {
     } else {
       this.el.sceneEl.addEventListener("loaded", this.load)
     }
-  },
-
-  update() {
-    this._angularSize.set(360, 360, 360).divide(this.data.rotationSteps)
     if (!this.el.getAttribute("grabbable"))
       this.el.setAttribute("grabbable", {
         physics: false,
-        freeOrientation: false
+        fixed: true
       })
+  },
+
+  update() {
+    this.gridSize = 1 / Math.pow(2, this.data.gridDensity)
+    this.rotSize = 1 / Math.pow(2, this.data.rotDensity)
   },
 
   tick(time, timeDelta) {
@@ -87,7 +88,7 @@ AFRAME.registerComponent("editor", {
       }
 
       this._worldAnchor.copyWorldPosRot(this._anchor)
-      this._snap(this._worldAnchor)
+      this.snap(this._worldAnchor)
     }
   },
 
@@ -175,6 +176,20 @@ AFRAME.registerComponent("editor", {
 
   addEntity(srcEl) {
     if (typeof srcEl === "string") {
+      if (srcEl.indexOf(` id="`) > 0) {
+        let p1 = srcEl.indexOf(` id="`) + 5
+        let p2 = srcEl.indexOf(`"`, p1)
+        while (p1 > 4 && p2 > 0) {
+          let id = srcEl.substring(p1, p2)
+          let idParts = id.split("-")
+          let num = 1
+          while (document.getElementById(idParts[0] + "-" + num)) num++
+          let newId = idParts[0] + "-" + num
+          srcEl = srcEl.replaceAll(id, newId)
+          p1 = srcEl.indexOf(` id="`, p2) + 5
+          p2 = srcEl.indexOf(`"`, p1)
+        }
+      }
       srcEl = this._parseHTML(srcEl)
     }
     // srcEl = srcEl.cloneNode(true)
@@ -309,25 +324,23 @@ AFRAME.registerComponent("editor", {
     while (this._history.length > len) this._history.pop()
   },
 
+  snap(el) {
+    if (!el.object3D) return
+    el.object3D.position.x = Math.round(el.object3D.position.x / this.gridSize) * this.gridSize
+    el.object3D.position.y = Math.round(el.object3D.position.y / this.gridSize) * this.gridSize
+    el.object3D.position.z = Math.round(el.object3D.position.z / this.gridSize) * this.gridSize
+    el.object3D.quaternion.x = Math.round(el.object3D.quaternion.x / this.rotSize) * this.rotSize
+    el.object3D.quaternion.y = Math.round(el.object3D.quaternion.y / this.rotSize) * this.rotSize
+    el.object3D.quaternion.z = Math.round(el.object3D.quaternion.z / this.rotSize) * this.rotSize
+    el.object3D.quaternion.w = Math.round(el.object3D.quaternion.w / this.rotSize) * this.rotSize
+    el.object3D.quaternion.normalize()
+  },
+
   _place() {
     let grab
     while ((grab = this._grabbed.pop())) {
       grab.emit("place")
     }
-  },
-
-  _snap(el) {
-    let rot = THREE.Vector3.temp()
-    el.object3D.position
-      .divide(this.data.gridSize)
-      .round()
-      .multiply(this.data.gridSize)
-    rot
-      .copy(el.getAttribute("rotation"))
-      .divide(this._angularSize)
-      .round()
-      .multiply(this._angularSize)
-    el.setAttribute("rotation", AFRAME.utils.coordinates.stringify(rot))
   },
 
   _parseHTML(html) {

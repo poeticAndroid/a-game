@@ -36,16 +36,13 @@ copyBtn.addEventListener("click", () => {
 
 let editBtn = document.querySelector("#editBtn")
 editBtn.addEventListener("click", () => {
-  let gridXZ = 1 / Math.pow(2, parseFloat(document.querySelector("#densxzTxt").value))
-  let gridY = 1 / Math.pow(2, parseFloat(document.querySelector("#densyTxt").value))
-  let rotXZ = Math.pow(2, parseFloat(document.querySelector("#rotxzTxt").value))
-  let rotY = Math.pow(2, parseFloat(document.querySelector("#rotyTxt").value))
   document.body.innerHTML = `
     <a-scene physics="workerUrl:../dist/cannonWorker.js">
       <a-entity include="scenes/_assets.html"></a-entity>
+      <a-player locomotion="godMode:true" grabbing>
+      <a-gltf-model src="https://cdn.glitch.com/e956e2ed-f877-4602-a395-a2e234731117%2Fguncil.glb" grabbable="physics:false;fixed:true;fixedPosition:0 0.125 0;" position="0 1.5 -0.5" editor="gridDensity: ${document.querySelector("#densTxt").value};rotDensity: ${document.querySelector("#rotTxt").value};"></a-gltf-model>
+      </a-player>
       <a-main></a-main>
-      <a-player locomotion="godMode:true" grabbing></a-player>
-      <a-gltf-model src="https://cdn.glitch.com/e956e2ed-f877-4602-a395-a2e234731117%2Fguncil.glb" position="0 1.5 -0.5" editor="gridSize: ${gridXZ} ${gridY} ${gridXZ};rotationSteps: ${rotXZ} ${rotY} ${rotXZ};"></a-gltf-model>
     </a-scene>
   `
 })
@@ -55,8 +52,8 @@ runBtn.addEventListener("click", () => {
   document.body.innerHTML = `
     <a-scene physics="workerUrl:../dist/cannonWorker.js">
       <a-entity include="scenes/_assets.html"></a-entity>
-      <a-main></a-main>
       <a-player locomotion grabbing></a-player>
+      <a-main></a-main>
     </a-scene>
   `
   runWhenReady()
@@ -64,7 +61,7 @@ runBtn.addEventListener("click", () => {
 
 async function load(url) {
   txt.blur()
-  let html = await (await fetch(url)).text()
+  let html = await (await fetch(url + "?now=" + Date.now())).text()
   localStorage.setItem("wip-scene", html.trim())
   txt.focus()
 }

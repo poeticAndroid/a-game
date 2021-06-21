@@ -8,10 +8,11 @@ Add the `grabbable` component to any object you want the player to be able to pi
 
 ### Properties
 
-| Property        | Description                                                                                          | Default |
-| --------------- | ---------------------------------------------------------------------------------------------------- | ------- |
-| freeOrientation | When enabled grabbed object keep their orientation, otherwise it resets to same orientation as hand. | true    |
-| physics         | Whether or not to add physics components automatically.                                              | true    |
+| Property      | Description                                                                | Default |
+| ------------- | -------------------------------------------------------------------------- | ------- |
+| physics       | Whether or not to add physics components automatically.                    | true    |
+| fixed         | If `true` the object will have a fixed position and rotation when grabbed. | false   |
+| fixedPosition | Relative position in hand, if `fixed` is `true`.                           | 0 0 0   |
 
 ### Events
 

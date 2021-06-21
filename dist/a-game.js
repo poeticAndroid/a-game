@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -146,6 +146,15 @@ AFRAME.registerComponent("grabbing", {
   },
 
   remove() {
+    for (let hand of this._hands) {
+      let _hand = "_" + hand
+      this.drop(hand)
+      this[_hand].glove.copyWorldPosRot(this[_hand].hand)
+      let flex = 0.25
+      for (let finger = 0; finger < 5; finger++) {
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      }
+    }
   },
 
   tick(time, timeDelta) {
@@ -257,16 +266,16 @@ AFRAME.registerComponent("grabbing", {
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
       else delta -= 0.0625
-      if (this[_hand].grabbed.components.grabbable.data.freeOrientation) {
-        this[_hand].anchor.setAttribute("animation__pos", {
-          property: "object3D.position.z",
-          to: this[_hand].anchor.object3D.position.z + delta,
-          dur: 256
-        })
-      } else {
+      if (this[_hand].grabbed.components.grabbable.data.fixed) {
+        let pos = THREE.Vector3.temp().copy(this[_hand].grabbed.components.grabbable.data.fixedPosition)
+        if (hand === "left") pos.x *= -1
+        if (hand === "head") pos.x = 0
+        let quat = THREE.Quaternion.temp().copy(this[_hand].ray.object3D.quaternion).conjugate()
+        pos.applyQuaternion(quat)
+        pos.z += -0.09375
         this[_hand].anchor.setAttribute("animation__pos", {
           property: "position",
-          to: { x: 0, y: 0, z: -0.09375 },
+          to: { x: pos.x, y: pos.y, z: pos.z },
           dur: 256
         })
         let rot = { x: 0, y: 0, z: 0 }
@@ -275,6 +284,12 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].anchor.setAttribute("animation__rot", {
           property: "rotation",
           to: rot,
+          dur: 256
+        })
+      } else {
+        this[_hand].anchor.setAttribute("animation__pos", {
+          property: "object3D.position.z",
+          to: this[_hand].anchor.object3D.position.z + delta,
           dur: 256
         })
       }
@@ -543,8 +558,9 @@ AFRAME.registerComponent("fingerflex", {
 
 AFRAME.registerComponent("grabbable", {
   schema: {
-    freeOrientation: { type: "boolean", default: true },
-    physics: { type: "boolean", default: true }
+    physics: { type: "boolean", default: true },
+    fixed: { type: "boolean", default: false },
+    fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
 
   init() {
@@ -751,8 +767,9 @@ AFRAME.registerComponent("locomotion", {
     let head2toe = THREE.Vector3.temp()
       .copy(this.headPos).sub(this.feetPos)
     head2toe.y = 0
-    if (head2toe.length() > 0.5) {
-      head2toe.multiplyScalar(0.1)
+    if (head2toe.length() > 0.5 || !this.currentFloor) {
+      if (this.currentFloor)
+        head2toe.multiplyScalar(0.1)
       this._legs.object3D.position.add(head2toe)
       this.feetPos.add(head2toe)
     }
@@ -1106,20 +1123,9 @@ AFRAME.registerComponent("locomotion", {
     let buttons = this._callButtons()
     if (buttons) {
       if (!this._toggling) {
-        // if (buttons & 1) this.quantizeRotation = !this.quantizeRotation
         if (buttons & 1) this.jump()
-        if (buttons & 2) {
-          if (this.data.godMode) this._godMode = !this._godMode
-          // else this.quantizeMovement = !this.quantizeMovement
-        }
-        // if (this.isVR) {
-        //   this._config.quantizeMovementVR = this.quantizeMovement
-        //   this._config.quantizeRotationVR = this.quantizeRotation
-        // } else {
-        //   this._config.quantizeMovement = this.quantizeMovement
-        //   this._config.quantizeRotation = this.quantizeRotation
-        // }
-        // localStorage.setItem("a-game.locomotion", JSON.stringify(this._config))
+        if (this.data.godMode && buttons & 2) this._godMode = !this._godMode
+        if (this._godMode) this._vertVelocity = 0
       }
       this._toggling = true
     } else {
@@ -1409,8 +1415,10 @@ AFRAME.registerComponent("body", {
   dependencies: ["position", "rotation", "scale"],
 
   schema: {
-    type: { type: "string", default: "static" },
+    type: { type: "string", default: "dynamic" },
     mass: { type: "number", default: 1 },
+    friction: { type: "number", default: 0.3 },
+    restitution: { type: "number", default: 0.3 },
     belongsTo: { type: "int", default: 1 },
     collidesWith: { type: "int", default: 1 },
     emitsWith: { type: "int", default: 0 },
@@ -1489,6 +1497,10 @@ AFRAME.registerComponent("body", {
       worker.postMessage("world body " + this.id + " type = " + cmd.stringifyParam(this.data.type))
     if (this.data.mass !== oldData.mass)
       worker.postMessage("world body " + this.id + " mass = " + cmd.stringifyParam(this.data.mass))
+    if (this.data.friction !== oldData.friction)
+      worker.postMessage("world body " + this.id + " friction = " + cmd.stringifyParam(this.data.friction))
+    if (this.data.restitution !== oldData.restitution)
+      worker.postMessage("world body " + this.id + " restitution = " + cmd.stringifyParam(this.data.restitution))
     if (this.data.belongsTo !== oldData.belongsTo)
       worker.postMessage("world body " + this.id + " belongsTo = " + cmd.stringifyParam(this.data.belongsTo))
     if (this.data.collidesWith !== oldData.collidesWith)
