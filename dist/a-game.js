@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.3",
+  "version": "0.11.4",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -574,29 +574,21 @@ AFRAME.registerComponent("fingerflex", {
 AFRAME.registerComponent("grabbable", {
   schema: {
     physics: { type: "boolean", default: true },
-    physicsOnGrab: { type: "boolean", default: false },
+    kinematicGrab: { type: "boolean", default: false },
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
 
   init() {
-    this._body = "type:dynamic;"
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", this._body)
+    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   },
 
   events: {
     grab() {
-      // this._body = this.el.getAttribute("body")
-      // if (!this.data.physicsOnGrab) this.el.removeAttribute("body")
-      if (this.el.components.body)
-        this.el.components.body.pause()
-      console.log("grabbed!")
+      if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "kinematic")
     },
     drop() {
-      // if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", this._body)
-      if (this.el.components.body)
-        this.el.components.body.play()
-      console.log("dropped!")
+      if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "dynamic")
     },
   }
 })
@@ -1680,48 +1672,56 @@ AFRAME.registerComponent("joint", {
   },
 
   play() {
-    if (this.id != null) return
+    if (this._id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
-    this.id = joints.indexOf(null)
-    if (this.id < 0) this.id = joints.length
-    joints[this.id] = this.el
+    if (!this.data.body1.components.body) return this._retry = setTimeout(() => {
+      this.play()
+    }, 256)
+    if (!this.data.body2.components.body) return this._retry = setTimeout(() => {
+      this.play()
+    }, 256)
+    this._id = joints.indexOf(null)
+    if (this._id < 0) this._id = joints.length
+    joints[this._id] = this.el
 
-    setTimeout(() => {
-      let joint = {}
-      joint.type = this.data.type
-      joint.body1 = this.data.body1 ? this.data.body1.components.body.id : this.el.components.body.id
-      joint.body2 = this.data.body2.components.body.id
-      joint.pivot1 = this.data.pivot1
-      joint.pivot2 = this.data.pivot2
-      joint.axis1 = this.data.axis1
-      joint.axis2 = this.data.axis2
-      joint.min = this.data.min
-      joint.max = this.data.max
-      joint.collision = this.data.collision
-      worker.postMessage("world joint " + this.id + " create " + cmd.stringifyParam(joint))
-    })
+    // setTimeout(() => {
+    let joint = {}
+    joint.type = this.data.type
+    joint.body1 = this.data.body1 ? this.data.body1.components.body.id : this.el.components.body.id
+    joint.body2 = this.data.body2.components.body.id
+    joint.pivot1 = this.data.pivot1
+    joint.pivot2 = this.data.pivot2
+    joint.axis1 = this.data.axis1
+    joint.axis2 = this.data.axis2
+    joint.min = this.data.min
+    joint.max = this.data.max
+    joint.collision = this.data.collision
+    worker.postMessage("world joint " + this._id + " create " + cmd.stringifyParam(joint))
+    // })
   },
 
   update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
+    this.data.body1 = this.data.body1 || this.el
     // if (this.data.type !== oldData.type)
-    //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
+    //   worker.postMessage("world joint " + this._id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
   pause() {
+    clearTimeout(this._retry)
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
-    joints[this.id] = null
-    worker.postMessage("world joint " + this.id + " remove")
-    this.id = null
+    joints[this._id] = null
+    worker.postMessage("world joint " + this._id + " remove")
+    this._id = null
   },
   eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
-    worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
+    worker.postMessage("world joint " + this._id + " eval " + cmd.stringifyParam(expr))
   }
 
 })
