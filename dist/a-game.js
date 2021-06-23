@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.2",
+  "version": "0.11.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -588,11 +588,15 @@ AFRAME.registerComponent("grabbable", {
     grab() {
       // this._body = this.el.getAttribute("body")
       // if (!this.data.physicsOnGrab) this.el.removeAttribute("body")
-      this.el.pause()
+      if (this.el.components.body)
+        this.el.components.body.pause()
+      console.log("grabbed!")
     },
     drop() {
       // if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", this._body)
-      this.el.play()
+      if (this.el.components.body)
+        this.el.components.body.play()
+      console.log("dropped!")
     },
   }
 })
@@ -1495,6 +1499,16 @@ AFRAME.registerComponent("body", {
       body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
       worker.postMessage("world body " + this.id + " position = " + cmd.stringifyParam(body.position))
       worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
+
+      if (this.el.components.shape) this.el.components.shape.play()
+      let els = this.el.querySelectorAll("[shape]")
+      if (els) els.forEach(el => {
+        if (el.components.shape) el.components.shape.play()
+      })
+      if (this.el.components.joint) this.el.components.joint.play()
+      for (let comp in this.el.components) {
+        if (comp.substr(0, 7) === "joint__") this.el.components[comp].play()
+      }
     })
 
     if (this.data.autoShape) {
@@ -1554,6 +1568,17 @@ AFRAME.registerComponent("body", {
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
     if (!worker) return
+
+    if (this.el.components.joint) this.el.components.joint.pause()
+    for (let comp in this.el.components) {
+      if (comp.substr(0, 7) === "joint__") this.el.components[comp].pause()
+    }
+    let els = this.el.querySelectorAll("[shape]")
+    if (els) els.forEach(el => {
+      if (el.components.shape) el.components.shape.pause()
+    })
+    if (this.el.components.shape) this.el.components.shape.pause()
+
     bodies[this.id] = null
     if (this.mid !== null)
       movingBodies[this.mid] = null
@@ -1655,6 +1680,7 @@ AFRAME.registerComponent("joint", {
   },
 
   play() {
+    if (this.id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -1691,6 +1717,7 @@ AFRAME.registerComponent("joint", {
     if (!worker) return
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
+    this.id = null
   },
   eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
@@ -1711,6 +1738,7 @@ AFRAME.registerComponent("shape", {
   },
 
   play() {
+    if (this.id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
@@ -1768,6 +1796,7 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+    this.id = null
   },
 
   eval(expr) {

@@ -23,6 +23,7 @@ AFRAME.registerComponent("joint", {
   },
 
   play() {
+    if (this.id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
@@ -59,6 +60,7 @@ AFRAME.registerComponent("joint", {
     if (!worker) return
     joints[this.id] = null
     worker.postMessage("world joint " + this.id + " remove")
+    this.id = null
   },
   eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
