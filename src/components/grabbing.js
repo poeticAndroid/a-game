@@ -250,16 +250,17 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].anchor.removeAttribute("joint__grab")
-    }, 20)
+    }, 32)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
-    this._flexFinger(hand, 5, 0)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this.el.removeState("grabbing")
-    if (this[_hand].grabbed)
+    if (this[_hand].grabbed) {
+      this._flexFinger(hand, 5, 0)
       this[_hand].grabbed.removeState("grabbed")
-    this[_hand].grabbed = null
+      this[_hand].grabbed = null
+    }
   },
   dropObject(el) {
     for (let hand of this._hands) {
