@@ -245,10 +245,12 @@ AFRAME.registerComponent("grabbing", {
   drop(hand = "head") {
     let _hand = "_" + hand
     if (this.sticky) return
-    this[_hand].anchor.removeAttribute("joint__grab")
     this[_hand].anchor.removeAttribute("animation__rot")
     this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
+    setTimeout(() => {
+      this[_hand].anchor.removeAttribute("joint__grab")
+    }, 20)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)

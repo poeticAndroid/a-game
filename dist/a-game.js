@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.4",
+  "version": "0.11.7",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -309,10 +309,12 @@ AFRAME.registerComponent("grabbing", {
   drop(hand = "head") {
     let _hand = "_" + hand
     if (this.sticky) return
-    this[_hand].anchor.removeAttribute("joint__grab")
     this[_hand].anchor.removeAttribute("animation__rot")
     this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
+    setTimeout(() => {
+      this[_hand].anchor.removeAttribute("joint__grab")
+    }, 20)
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
@@ -574,7 +576,7 @@ AFRAME.registerComponent("fingerflex", {
 AFRAME.registerComponent("grabbable", {
   schema: {
     physics: { type: "boolean", default: true },
-    kinematicGrab: { type: "boolean", default: false },
+    kinematicGrab: { type: "boolean", default: true },
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
