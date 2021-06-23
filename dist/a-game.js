@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.1",
+  "version": "0.11.2",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -216,8 +216,8 @@ AFRAME.registerComponent("grabbing", {
       }
 
       if (this[_hand].grabbed) {
-        if (!this[_hand].isPhysical)
-          this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        // if (!this[_hand].isPhysical)
+        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
       } else if (this[_hand].ray) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
@@ -265,7 +265,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].anchor.removeAttribute("animation__rot")
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
-      else delta -= 0.0625
+      else delta -= 0.09375
       if (this[_hand].grabbed.components.grabbable.data.fixed) {
         let pos = THREE.Vector3.temp().copy(this[_hand].grabbed.components.grabbable.data.fixedPosition)
         if (hand === "left") pos.x *= -1
@@ -297,9 +297,12 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.el.addState("grabbing")
+      this[_hand].grabbed.addState("grabbed")
       this.sticky = true
       setTimeout(() => {
         this.sticky = false
+        this._flexFinger(hand, 5, 0.5)
       }, 256)
     }
   },
@@ -313,7 +316,11 @@ AFRAME.registerComponent("grabbing", {
     setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
+    this._flexFinger(hand, 5, 0)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
+    this.el.removeState("grabbing")
+    if (this[_hand].grabbed)
+      this[_hand].grabbed.removeState("grabbed")
     this[_hand].grabbed = null
   },
   dropObject(el) {
@@ -448,6 +455,16 @@ AFRAME.registerComponent("grabbing", {
       </a-entity>
     </a-box>`)
   },
+  _flexFinger(hand, finger, flex) {
+    let _hand = "_" + hand
+    if (finger < 5) {
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+    } else {
+      for (finger -= 5; finger < 5; finger++) {
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      }
+    }
+  },
 
   _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
   _onMouseDown(e) {
@@ -476,7 +493,7 @@ AFRAME.registerComponent("grabbing", {
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.useUp(hand)
         break
       case 1: // Grip
-        finger = 5
+        finger = 7
         if (e.detail.state.pressed && !this._btnPress[hand + e.detail.id]) this.grab(hand)
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.drop(hand)
         break
@@ -498,13 +515,11 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (finger < 5) {
-      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
-    } else {
-      for (let finger = 2; finger < 5; finger++) {
-        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
-      }
+    if (this.sticky) {
+      finger = 5
+      flex = 0
     }
+    this._flexFinger(hand, finger, flex)
   },
 })
 
@@ -559,12 +574,26 @@ AFRAME.registerComponent("fingerflex", {
 AFRAME.registerComponent("grabbable", {
   schema: {
     physics: { type: "boolean", default: true },
+    physicsOnGrab: { type: "boolean", default: false },
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
 
   init() {
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
+    this._body = "type:dynamic;"
+    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", this._body)
+  },
+
+  events: {
+    grab() {
+      // this._body = this.el.getAttribute("body")
+      // if (!this.data.physicsOnGrab) this.el.removeAttribute("body")
+      this.el.pause()
+    },
+    drop() {
+      // if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", this._body)
+      this.el.play()
+    },
   }
 })
 
