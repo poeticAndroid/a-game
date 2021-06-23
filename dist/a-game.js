@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.7",
+  "version": "0.11.8",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -590,7 +590,7 @@ AFRAME.registerComponent("grabbable", {
       if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "kinematic")
     },
     drop() {
-      if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "dynamic")
+      if (this.data.physics) this.el.setAttribute("body", "type", "dynamic")
     },
   }
 })

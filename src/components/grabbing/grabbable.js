@@ -17,7 +17,7 @@ AFRAME.registerComponent("grabbable", {
       if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "kinematic")
     },
     drop() {
-      if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "dynamic")
+      if (this.data.physics) this.el.setAttribute("body", "type", "dynamic")
     },
   }
 })
