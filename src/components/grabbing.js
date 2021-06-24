@@ -158,11 +158,11 @@ AFRAME.registerComponent("grabbing", {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
         let hit = ray.intersections[0]
-        if (hit && hit.object.el.getAttribute("grabbable") != null) {
-          if (this[_hand]._lastHit !== hit.object.el) {
+        if (hit && hit.el.getAttribute("grabbable") != null) {
+          if (this[_hand]._lastHit !== hit.el) {
             if (this[_hand]._lastHit)
               this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
-            this[_hand]._lastHit = hit.object.el
+            this[_hand]._lastHit = hit.el
             this.emit("reach", this[_hand].glove, this[_hand]._lastHit)
           }
         } else {
@@ -186,9 +186,9 @@ AFRAME.registerComponent("grabbing", {
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
-    if (hit && hit.object.el.getAttribute("grabbable") != null) {
-      this.dropObject(hit.object.el)
-      this[_hand].grabbed = hit.object.el
+    if (hit && hit.el.getAttribute("grabbable") != null) {
+      this.dropObject(hit.el)
+      this[_hand].grabbed = hit.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
       this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {

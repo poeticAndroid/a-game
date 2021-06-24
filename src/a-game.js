@@ -2,6 +2,7 @@ require("./libs/pools")
 require("./libs/copyWorldPosRot")
 require("./libs/ensureElement")
 require("./libs/touchGestures")
+require("./libs/betterRaycaster")
 
 setTimeout(() => {
   document.body.addEventListener("swipeup", e => {
