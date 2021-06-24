@@ -22,7 +22,7 @@ This makes it possible to grab and use grabbable objects using the following con
 
 | Property     | Description                          | Default |
 | ------------ | ------------------------------------ | ------- |
-| hideOnGrab   | Hide the glove when grabbing         | false   |
+| hideOnGrab   | Hide the glove when grabbing         | true    |
 | grabDistance | Maximum distance to grab object from | 1       |
 
 
@@ -60,4 +60,5 @@ These events are emitted by both the glove and the `grabbable` that it's grabbin
 ## Related components
 
  - [grabbable](./grabbing/grabbable.md)
+ - [receptacle](./grabbing/receptacle.md)
  - [fingerflex](./grabbing/fingerflex.md)

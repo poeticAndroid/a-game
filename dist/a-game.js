@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -41,6 +41,7 @@ require("./libs/pools")
 require("./libs/copyWorldPosRot")
 require("./libs/ensureElement")
 require("./libs/touchGestures")
+require("./libs/betterRaycaster")
 
 setTimeout(() => {
   document.body.addEventListener("swipeup", e => {
@@ -61,7 +62,7 @@ require("./primitives/a-hand")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":6,"./components/injectplayer":7,"./components/locomotion":8,"./components/physics":12,"./libs/copyWorldPosRot":17,"./libs/ensureElement":18,"./libs/pools":19,"./libs/touchGestures":20,"./primitives/a-hand":21,"./primitives/a-main":22,"./primitives/a-player":23}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":7,"./components/injectplayer":8,"./components/locomotion":9,"./components/physics":13,"./libs/betterRaycaster":17,"./libs/copyWorldPosRot":19,"./libs/ensureElement":20,"./libs/pools":21,"./libs/touchGestures":22,"./primitives/a-hand":23,"./primitives/a-main":24,"./primitives/a-player":25}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -216,17 +217,17 @@ AFRAME.registerComponent("grabbing", {
       }
 
       if (this[_hand].grabbed) {
-        if (!this[_hand].isPhysical)
-          this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        // if (!this[_hand].isPhysical)
+        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
       } else if (this[_hand].ray) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
         let hit = ray.intersections[0]
-        if (hit && hit.object.el.getAttribute("grabbable") != null) {
-          if (this[_hand]._lastHit !== hit.object.el) {
+        if (hit && hit.el.getAttribute("grabbable") != null) {
+          if (this[_hand]._lastHit !== hit.el) {
             if (this[_hand]._lastHit)
               this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
-            this[_hand]._lastHit = hit.object.el
+            this[_hand]._lastHit = hit.el
             this.emit("reach", this[_hand].glove, this[_hand]._lastHit)
           }
         } else {
@@ -250,9 +251,9 @@ AFRAME.registerComponent("grabbing", {
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
-    if (hit && hit.object.el.getAttribute("grabbable") != null) {
-      this.dropObject(hit.object.el)
-      this[_hand].grabbed = hit.object.el
+    if (hit && hit.el.getAttribute("grabbable") != null) {
+      this.dropObject(hit.el)
+      this[_hand].grabbed = hit.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
       this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {
@@ -265,7 +266,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].anchor.removeAttribute("animation__rot")
       let delta = hit.distance
       if (hand === "head") delta -= 0.5
-      else delta -= 0.0625
+      else delta -= 0.09375
       if (this[_hand].grabbed.components.grabbable.data.fixed) {
         let pos = THREE.Vector3.temp().copy(this[_hand].grabbed.components.grabbable.data.fixedPosition)
         if (hand === "left") pos.x *= -1
@@ -297,24 +298,34 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.setAttribute("visible", false)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.el.addState("grabbing")
+      this[_hand].grabbed.addState("grabbed")
       this.sticky = true
       setTimeout(() => {
         this.sticky = false
+        this._flexFinger(hand, 5, 0.5)
       }, 256)
     }
   },
   drop(hand = "head") {
     let _hand = "_" + hand
     if (this.sticky) return
-    this[_hand].anchor.removeAttribute("joint__grab")
     this[_hand].anchor.removeAttribute("animation__rot")
     this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
+      this[_hand].anchor.removeAttribute("joint__grab")
+    }, 32)
+    setTimeout(() => {
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
-    this[_hand].grabbed = null
+    this.el.removeState("grabbing")
+    if (this[_hand].grabbed) {
+      this._flexFinger(hand, 5, 0)
+      this[_hand].grabbed.removeState("grabbed")
+      this[_hand].grabbed = null
+    }
   },
   dropObject(el) {
     for (let hand of this._hands) {
@@ -448,6 +459,16 @@ AFRAME.registerComponent("grabbing", {
       </a-entity>
     </a-box>`)
   },
+  _flexFinger(hand, finger, flex) {
+    let _hand = "_" + hand
+    if (finger < 5) {
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+    } else {
+      for (finger -= 5; finger < 5; finger++) {
+        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      }
+    }
+  },
 
   _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
   _onMouseDown(e) {
@@ -476,7 +497,7 @@ AFRAME.registerComponent("grabbing", {
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.useUp(hand)
         break
       case 1: // Grip
-        finger = 5
+        finger = 7
         if (e.detail.state.pressed && !this._btnPress[hand + e.detail.id]) this.grab(hand)
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.drop(hand)
         break
@@ -498,20 +519,19 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (finger < 5) {
-      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
-    } else {
-      for (let finger = 2; finger < 5; finger++) {
-        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
-      }
+    if (this.sticky) {
+      finger = 5
+      flex = 0
     }
+    this._flexFinger(hand, finger, flex)
   },
 })
 
 require("./grabbing/grabbable")
 require("./grabbing/fingerflex")
+require("./grabbing/receptacle")
 
-},{"./grabbing/fingerflex":4,"./grabbing/grabbable":5}],4:[function(require,module,exports){
+},{"./grabbing/fingerflex":4,"./grabbing/grabbable":5,"./grabbing/receptacle":6}],4:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("fingerflex", {
@@ -559,16 +579,168 @@ AFRAME.registerComponent("fingerflex", {
 AFRAME.registerComponent("grabbable", {
   schema: {
     physics: { type: "boolean", default: true },
+    kinematicGrab: { type: "boolean", default: true },
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },
 
   init() {
     if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
+  },
+
+  events: {
+    grab() {
+      if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "kinematic")
+    },
+    drop() {
+      if (this.data.physics) this.el.setAttribute("body", "type", "dynamic")
+    },
   }
 })
 
 },{}],6:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerComponent("receptacle", {
+  schema: {
+    objects: { type: "string", default: "[grabbable]" },
+    radius: { type: "number", default: 0.125 },
+  },
+
+  init() {
+    this._anchor = this.el.ensure(".receptacle.anchor", "a-entity", {
+      class: "receptacle anchor",
+      body: "type:kinematic;autoShape:false;"
+    })
+    this._refreshTO = setInterval(this.refreshObjects.bind(this), 1024)
+  },
+
+  remove() {
+    clearInterval(this._refreshTO)
+  },
+
+  tick() {
+    if (!this.nearest) return this.refreshObjects()
+    let thisPos = THREE.Vector3.temp()
+    let delta = THREE.Vector3.temp()
+    this.el.object3D.getWorldPosition(thisPos)
+    this.nearest.object3D.getWorldPosition(delta)
+    delta.sub(thisPos)
+    if (this._lastNearest && this._lastNearest !== this.nearest) {
+      if (this.el.is("filled")) {
+        this._anchor.removeAttribute("joint__put")
+        this._anchor.removeAttribute("animation__pos")
+        this._anchor.removeAttribute("animation__rot")
+        this.el.removeState("filled")
+        this._lastNearest.removeState("put")
+        this.el.emit("take", {
+          grabbable: this._lastNearest
+        })
+        this._lastNearest.emit("take", {
+          receptacle: this.el
+        })
+      }
+      if (this._hover) {
+        this.el.emit("unhover", {
+          grabbable: this._lastNearest
+        })
+        this._lastNearest.emit("unhover", {
+          receptacle: this.el
+        })
+      }
+      this._hover = false
+    } else if (delta.length() > this.data.radius) {
+      if (this.el.is("filled")) {
+        this._anchor.removeAttribute("joint__put")
+        this._anchor.removeAttribute("animation__pos")
+        this._anchor.removeAttribute("animation__rot")
+        this.el.removeState("filled")
+        this.nearest.removeState("put")
+        this.el.emit("take", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("take", {
+          receptacle: this.el
+        })
+      }
+      if (this._hover) {
+        this.el.emit("unhover", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("unhover", {
+          receptacle: this.el
+        })
+      }
+      this._hover = false
+    } else if (this.nearest.is("grabbed") || !this._hover) {
+      if (!this._hover) {
+        this.el.emit("hover", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("hover", {
+          receptacle: this.el
+        })
+      }
+      this._anchor.removeAttribute("animation__pos")
+      this._anchor.removeAttribute("animation__rot")
+      this._anchor.copyWorldPosRot(this.nearest)
+      this._hover = true
+    } else {
+      if (!this.el.is("filled")) {
+        this._anchor.copyWorldPosRot(this.nearest)
+        this._anchor.components.body.commit()
+        if (this.nearest.components.body)
+          this._anchor.setAttribute("joint__put", { body2: this.nearest, type: "lock" })
+        this.el.addState("filled")
+        this.nearest.addState("put")
+        this.el.emit("put", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("put", {
+          receptacle: this.el
+        })
+      }
+      if (!this._anchor.getAttribute("animation__pos")) {
+        this._anchor.setAttribute("animation__pos", {
+          property: "position",
+          to: { x: 0, y: 0, z: 0 },
+          dur: 256
+        })
+        this._anchor.setAttribute("animation__rot", {
+          property: "rotation",
+          to: { x: 0, y: 0, z: 0 },
+          dur: 256
+        })
+      }
+      this.nearest.copyWorldPosRot(this._anchor)
+      this._hover = true
+    }
+    this._lastNearest = this.nearest
+  },
+
+  refreshObjects() {
+    let shortest = Infinity
+    let thisPos = THREE.Vector3.temp()
+    let thatPos = THREE.Vector3.temp()
+    let delta = THREE.Vector3.temp()
+    let els = this.el.sceneEl.querySelectorAll(this.data.objects)
+    this.nearest = null
+    if (!els) return
+    this.el.object3D.getWorldPosition(thisPos)
+    els.forEach(el => {
+      el.object3D.getWorldPosition(thatPos)
+      delta.copy(thatPos).sub(thisPos)
+      if (shortest > delta.length()) {
+        shortest = delta.length()
+        this.nearest = el
+      }
+    })
+  },
+
+
+})
+
+},{}],7:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("include", {
@@ -601,7 +773,7 @@ AFRAME.registerComponent("include", {
   }
 })
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("injectplayer", {
@@ -616,7 +788,7 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -781,7 +953,7 @@ AFRAME.registerComponent("locomotion", {
       let hit = ray.intersections[0]
       if (hit && this._vertVelocity <= 0) {
         this._vertVelocity = 0
-        if (this.currentFloor === hit.object.el) {
+        if (this.currentFloor === hit.el) {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
           this._move(delta)
@@ -789,10 +961,10 @@ AFRAME.registerComponent("locomotion", {
           this._legs.object3D.position.add(delta)
         } else {
           if (this.currentFloor) this.currentFloor.emit("playerleave")
-          hit.object.el.emit("playerenter")
+          hit.el.emit("playerenter")
         }
         this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
-        this.currentFloor = hit.object.el
+        this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
         if (this.currentFloor) this.currentFloor.emit("playerleave")
@@ -887,7 +1059,7 @@ AFRAME.registerComponent("locomotion", {
       let hit = ray.intersections[0]
       if (hit) {
         this.el.removeAttribute("animation")
-        matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
+        matrix.getNormalMatrix(hit.el.object3D.matrixWorld)
         delta
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
@@ -1065,7 +1237,7 @@ AFRAME.registerComponent("locomotion", {
         ray = this._teleportBeam.components.raycaster
         ray.refreshObjects()
         hit = ray.intersections[0]
-        if (hit && hit.object.el.getAttribute("floor") != null) {
+        if (hit && hit.el.getAttribute("floor") != null) {
           let straight = THREE.Vector3.temp()
           let delta = THREE.Vector3.temp()
           let matrix = THREE.Matrix3.temp()
@@ -1076,7 +1248,7 @@ AFRAME.registerComponent("locomotion", {
           this._teleportCursor.object3D.position.copy(delta)
           this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
 
-          matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
+          matrix.getNormalMatrix(hit.el.object3D.matrixWorld)
           delta
             .copy(hit.face.normal)
             .applyMatrix3(matrix)
@@ -1244,7 +1416,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":9,"./locomotion/start":10,"./locomotion/wall":11}],9:[function(require,module,exports){
+},{"./locomotion/floor":10,"./locomotion/start":11,"./locomotion/wall":12}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1257,7 +1429,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1278,7 +1450,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1291,7 +1463,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -1406,7 +1578,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":16,"./physics/body":13,"./physics/joint":14,"./physics/shape":15}],13:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":18,"./physics/body":14,"./physics/joint":15,"./physics/shape":16}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1466,6 +1638,16 @@ AFRAME.registerComponent("body", {
       body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
       worker.postMessage("world body " + this.id + " position = " + cmd.stringifyParam(body.position))
       worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
+
+      if (this.el.components.shape) this.el.components.shape.play()
+      let els = this.el.querySelectorAll("[shape]")
+      if (els) els.forEach(el => {
+        if (el.components.shape) el.components.shape.play()
+      })
+      if (this.el.components.joint) this.el.components.joint.play()
+      for (let comp in this.el.components) {
+        if (comp.substr(0, 7) === "joint__") this.el.components[comp].play()
+      }
     })
 
     if (this.data.autoShape) {
@@ -1525,6 +1707,17 @@ AFRAME.registerComponent("body", {
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
     if (!worker) return
+
+    if (this.el.components.joint) this.el.components.joint.pause()
+    for (let comp in this.el.components) {
+      if (comp.substr(0, 7) === "joint__") this.el.components[comp].pause()
+    }
+    let els = this.el.querySelectorAll("[shape]")
+    if (els) els.forEach(el => {
+      if (el.components.shape) el.components.shape.pause()
+    })
+    if (this.el.components.shape) this.el.components.shape.pause()
+
     bodies[this.id] = null
     if (this.mid !== null)
       movingBodies[this.mid] = null
@@ -1600,7 +1793,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":16}],14:[function(require,module,exports){
+},{"../../libs/cmdCodec":18}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1626,52 +1819,62 @@ AFRAME.registerComponent("joint", {
   },
 
   play() {
+    if (this._id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
-    this.id = joints.indexOf(null)
-    if (this.id < 0) this.id = joints.length
-    joints[this.id] = this.el
+    if (!this.data.body1.components.body) return this._retry = setTimeout(() => {
+      this.play()
+    }, 256)
+    if (!this.data.body2.components.body) return this._retry = setTimeout(() => {
+      this.play()
+    }, 256)
+    this._id = joints.indexOf(null)
+    if (this._id < 0) this._id = joints.length
+    joints[this._id] = this.el
 
-    setTimeout(() => {
-      let joint = {}
-      joint.type = this.data.type
-      joint.body1 = this.data.body1 ? this.data.body1.components.body.id : this.el.components.body.id
-      joint.body2 = this.data.body2.components.body.id
-      joint.pivot1 = this.data.pivot1
-      joint.pivot2 = this.data.pivot2
-      joint.axis1 = this.data.axis1
-      joint.axis2 = this.data.axis2
-      joint.min = this.data.min
-      joint.max = this.data.max
-      joint.collision = this.data.collision
-      worker.postMessage("world joint " + this.id + " create " + cmd.stringifyParam(joint))
-    })
+    // setTimeout(() => {
+    let joint = {}
+    joint.type = this.data.type
+    joint.body1 = this.data.body1 ? this.data.body1.components.body.id : this.el.components.body.id
+    joint.body2 = this.data.body2.components.body.id
+    joint.pivot1 = this.data.pivot1
+    joint.pivot2 = this.data.pivot2
+    joint.axis1 = this.data.axis1
+    joint.axis2 = this.data.axis2
+    joint.min = this.data.min
+    joint.max = this.data.max
+    joint.collision = this.data.collision
+    worker.postMessage("world joint " + this._id + " create " + cmd.stringifyParam(joint))
+    // })
   },
 
   update(oldData) {
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
+    this.data.body1 = this.data.body1 || this.el
     // if (this.data.type !== oldData.type)
-    //   worker.postMessage("world joint " + this.id + " type = " + cmd.stringifyParam(this.data.type))
+    //   worker.postMessage("world joint " + this._id + " type = " + cmd.stringifyParam(this.data.type))
   },
 
   pause() {
+    clearTimeout(this._retry)
     let worker = this.el.sceneEl.systems.physics.worker
     let joints = this.el.sceneEl.systems.physics.joints
     if (!worker) return
-    joints[this.id] = null
-    worker.postMessage("world joint " + this.id + " remove")
+    joints[this._id] = null
+    worker.postMessage("world joint " + this._id + " remove")
+    this._id = null
   },
   eval(expr) {
     let worker = this.el.sceneEl.systems.physics.worker
-    worker.postMessage("world joint " + this.id + " eval " + cmd.stringifyParam(expr))
+    worker.postMessage("world joint " + this._id + " eval " + cmd.stringifyParam(expr))
   }
 
 })
 
 
-},{"../../libs/cmdCodec":16}],15:[function(require,module,exports){
+},{"../../libs/cmdCodec":18}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1682,6 +1885,7 @@ AFRAME.registerComponent("shape", {
   },
 
   play() {
+    if (this.id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
@@ -1739,6 +1943,7 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+    this.id = null
   },
 
   eval(expr) {
@@ -1748,7 +1953,35 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":16}],16:[function(require,module,exports){
+},{"../../libs/cmdCodec":18}],17:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+const _update = AFRAME.components.raycaster.Component.prototype.update
+const _refreshObjects = AFRAME.components.raycaster.Component.prototype.refreshObjects
+
+AFRAME.components.raycaster.Component.prototype.update = function () {
+  this._matchSelector = this.data.objects
+  this.data.objects = deepMatch(this.data.objects)
+  return _update.apply(this, arguments)
+}
+
+AFRAME.components.raycaster.Component.prototype.refreshObjects = function () {
+  let result = _refreshObjects.apply(this, arguments)
+  let hits = this.intersections
+  for (let hit of hits) {
+    hit.el = hit.object.el
+    while (hit.el && !hit.el.matches(this._matchSelector)) hit.el = hit.el.parentNode
+  }
+  return result
+}
+
+
+function deepMatch(selector) {
+  if (selector.indexOf("*") >= 0) return selector
+  let deep = (selector + ", ").replaceAll(",", " *,")
+  return deep + selector
+}
+},{}],18:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -1769,7 +2002,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -1787,7 +2020,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -1802,7 +2035,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -1828,7 +2061,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -1922,7 +2155,7 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -1931,11 +2164,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {

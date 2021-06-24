@@ -140,6 +140,7 @@ AFRAME.registerComponent("tile", {
     for (let handle of this._handles) {
       handle.setAttribute("visible", false)
     }
+    if (!this._editor) return
     this._editor.components.editor.snap(this.el)
     if (!this._changed) return
     let pair = this._editor.components.editor.getPair(this.el)

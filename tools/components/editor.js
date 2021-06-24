@@ -49,12 +49,12 @@ AFRAME.registerComponent("editor", {
       ray.refreshObjects()
       let int = ray.intersections[0]
       if (int) {
-        let grab = int.object.el
+        let grab = int.el
         if (!grab) return
-        while (!grab.classList.contains("editable")) {
-          grab = grab.parentNode
-          if (!grab) return
-        }
+        // while (!grab.classList.contains("editable")) {
+        //   grab = grab.parentNode
+        //   if (!grab) return
+        // }
         this._anchor.copyWorldPosRot(grab)
         this._worldAnchor.copyWorldPosRot(grab)
         if (this._grabbed.indexOf(grab) < 0) {
@@ -104,7 +104,7 @@ AFRAME.registerComponent("editor", {
       }, 256)
       if (!this.el.getAttribute("raycaster"))
         this.el.setAttribute("raycaster", {
-          objects: ".editable, .editable *",
+          objects: ".editable",
           far: 2,
           autoRefresh: false,
           showLine: true

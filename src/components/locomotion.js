@@ -162,7 +162,7 @@ AFRAME.registerComponent("locomotion", {
       let hit = ray.intersections[0]
       if (hit && this._vertVelocity <= 0) {
         this._vertVelocity = 0
-        if (this.currentFloor === hit.object.el) {
+        if (this.currentFloor === hit.el) {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
           this._move(delta)
@@ -170,10 +170,10 @@ AFRAME.registerComponent("locomotion", {
           this._legs.object3D.position.add(delta)
         } else {
           if (this.currentFloor) this.currentFloor.emit("playerleave")
-          hit.object.el.emit("playerenter")
+          hit.el.emit("playerenter")
         }
         this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
-        this.currentFloor = hit.object.el
+        this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
         if (this.currentFloor) this.currentFloor.emit("playerleave")
@@ -268,7 +268,7 @@ AFRAME.registerComponent("locomotion", {
       let hit = ray.intersections[0]
       if (hit) {
         this.el.removeAttribute("animation")
-        matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
+        matrix.getNormalMatrix(hit.el.object3D.matrixWorld)
         delta
           .copy(hit.face.normal)
           .applyMatrix3(matrix)
@@ -446,7 +446,7 @@ AFRAME.registerComponent("locomotion", {
         ray = this._teleportBeam.components.raycaster
         ray.refreshObjects()
         hit = ray.intersections[0]
-        if (hit && hit.object.el.getAttribute("floor") != null) {
+        if (hit && hit.el.getAttribute("floor") != null) {
           let straight = THREE.Vector3.temp()
           let delta = THREE.Vector3.temp()
           let matrix = THREE.Matrix3.temp()
@@ -457,7 +457,7 @@ AFRAME.registerComponent("locomotion", {
           this._teleportCursor.object3D.position.copy(delta)
           this._teleportCursor.object3D.parent.worldToLocal(this._teleportCursor.object3D.position)
 
-          matrix.getNormalMatrix(hit.object.el.object3D.matrixWorld)
+          matrix.getNormalMatrix(hit.el.object3D.matrixWorld)
           delta
             .copy(hit.face.normal)
             .applyMatrix3(matrix)

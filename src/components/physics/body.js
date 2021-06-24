@@ -57,6 +57,16 @@ AFRAME.registerComponent("body", {
       body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
       worker.postMessage("world body " + this.id + " position = " + cmd.stringifyParam(body.position))
       worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
+
+      if (this.el.components.shape) this.el.components.shape.play()
+      let els = this.el.querySelectorAll("[shape]")
+      if (els) els.forEach(el => {
+        if (el.components.shape) el.components.shape.play()
+      })
+      if (this.el.components.joint) this.el.components.joint.play()
+      for (let comp in this.el.components) {
+        if (comp.substr(0, 7) === "joint__") this.el.components[comp].play()
+      }
     })
 
     if (this.data.autoShape) {
@@ -116,6 +126,17 @@ AFRAME.registerComponent("body", {
     let bodies = this.el.sceneEl.systems.physics.bodies
     let movingBodies = this.el.sceneEl.systems.physics.movingBodies
     if (!worker) return
+
+    if (this.el.components.joint) this.el.components.joint.pause()
+    for (let comp in this.el.components) {
+      if (comp.substr(0, 7) === "joint__") this.el.components[comp].pause()
+    }
+    let els = this.el.querySelectorAll("[shape]")
+    if (els) els.forEach(el => {
+      if (el.components.shape) el.components.shape.pause()
+    })
+    if (this.el.components.shape) this.el.components.shape.pause()
+
     bodies[this.id] = null
     if (this.mid !== null)
       movingBodies[this.mid] = null

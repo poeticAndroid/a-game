@@ -8,6 +8,7 @@ AFRAME.registerComponent("shape", {
   },
 
   play() {
+    if (this.id != null) return
     let worker = this.el.sceneEl.systems.physics.worker
     if (!worker) return
 
@@ -65,6 +66,7 @@ AFRAME.registerComponent("shape", {
     let shapes = this.body.components.body.shapes
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " remove")
     shapes[this.id] = null
+    this.id = null
   },
 
   eval(expr) {

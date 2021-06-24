@@ -10,7 +10,8 @@ Add the `grabbable` component to any object you want the player to be able to pi
 
 | Property      | Description                                                                | Default |
 | ------------- | -------------------------------------------------------------------------- | ------- |
-| physics       | Whether or not to add physics components automatically.                    | true    |
+| physics       | Whether or not to add physics body automatically.                          | true    |
+| kinematicGrab | Whether or not to make physics kinematic during grab.                      | true    |
 | fixed         | If `true` the object will have a fixed position and rotation when grabbed. | false   |
 | fixedPosition | Relative position in hand, if `fixed` is `true`.                           | 0 0 0   |
 
