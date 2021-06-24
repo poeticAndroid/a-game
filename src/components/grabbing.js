@@ -464,3 +464,4 @@ AFRAME.registerComponent("grabbing", {
 
 require("./grabbing/grabbable")
 require("./grabbing/fingerflex")
+require("./grabbing/receptacle")

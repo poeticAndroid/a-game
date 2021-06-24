@@ -32,6 +32,15 @@ Essential game components for [A-Frame](https://aframe.io/)!
 
  - [include](./src/components/include.md)
  - [physics](./src/components/physics.md)
+   - [body](./src/components/physics/body.md)
+   - [shape](./src/components/physics/shape.md)
+   - [joint](./src/components/physics/joint.md)
  - [locomotion](./src/components/locomotion.md)
+   - [floor](./src/components/locomotion/floor.md)
+   - [wall](./src/components/locomotion/wall.md)
+   - [start](./src/components/locomotion/start.md)
  - [grabbing](./src/components/grabbing.md)
+   - [grabbable](./src/components/grabbing/grabbable.md)
+   - [receptacle](./src/components/grabbing/receptacle.md)
+   - [fingerflex](./src/components/grabbing/fingerflex.md)
  

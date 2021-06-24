@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.11.10",
+  "version": "0.11.11",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -62,7 +62,7 @@ require("./primitives/a-hand")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":6,"./components/injectplayer":7,"./components/locomotion":8,"./components/physics":12,"./libs/betterRaycaster":16,"./libs/copyWorldPosRot":18,"./libs/ensureElement":19,"./libs/pools":20,"./libs/touchGestures":21,"./primitives/a-hand":22,"./primitives/a-main":23,"./primitives/a-player":24}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":7,"./components/injectplayer":8,"./components/locomotion":9,"./components/physics":13,"./libs/betterRaycaster":17,"./libs/copyWorldPosRot":19,"./libs/ensureElement":20,"./libs/pools":21,"./libs/touchGestures":22,"./primitives/a-hand":23,"./primitives/a-main":24,"./primitives/a-player":25}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -529,8 +529,9 @@ AFRAME.registerComponent("grabbing", {
 
 require("./grabbing/grabbable")
 require("./grabbing/fingerflex")
+require("./grabbing/receptacle")
 
-},{"./grabbing/fingerflex":4,"./grabbing/grabbable":5}],4:[function(require,module,exports){
+},{"./grabbing/fingerflex":4,"./grabbing/grabbable":5,"./grabbing/receptacle":6}],4:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("fingerflex", {
@@ -600,6 +601,148 @@ AFRAME.registerComponent("grabbable", {
 },{}],6:[function(require,module,exports){
 /* global AFRAME, THREE */
 
+AFRAME.registerComponent("receptacle", {
+  schema: {
+    objects: { type: "string", default: "[grabbable]" },
+    radius: { type: "number", default: 0.125 },
+  },
+
+  init() {
+    this._anchor = this.el.ensure(".receptacle.anchor", "a-entity", {
+      class: "receptacle anchor",
+      body: "type:kinematic;autoShape:false;"
+    })
+    this._refreshTO = setInterval(this.refreshObjects.bind(this), 1024)
+  },
+
+  remove() {
+    clearInterval(this._refreshTO)
+  },
+
+  tick() {
+    if (!this.nearest) return this.refreshObjects()
+    let thisPos = THREE.Vector3.temp()
+    let delta = THREE.Vector3.temp()
+    this.el.object3D.getWorldPosition(thisPos)
+    this.nearest.object3D.getWorldPosition(delta)
+    delta.sub(thisPos)
+    if (this._lastNearest && this._lastNearest !== this.nearest) {
+      if (this.el.is("filled")) {
+        this._anchor.removeAttribute("joint__put")
+        this._anchor.removeAttribute("animation__pos")
+        this._anchor.removeAttribute("animation__rot")
+        this.el.removeState("filled")
+        this._lastNearest.removeState("put")
+        this.el.emit("take", {
+          grabbable: this._lastNearest
+        })
+        this._lastNearest.emit("take", {
+          receptacle: this.el
+        })
+      }
+      if (this._hover) {
+        this.el.emit("unhover", {
+          grabbable: this._lastNearest
+        })
+        this._lastNearest.emit("unhover", {
+          receptacle: this.el
+        })
+      }
+      this._hover = false
+    } else if (delta.length() > this.data.radius) {
+      if (this.el.is("filled")) {
+        this._anchor.removeAttribute("joint__put")
+        this._anchor.removeAttribute("animation__pos")
+        this._anchor.removeAttribute("animation__rot")
+        this.el.removeState("filled")
+        this.nearest.removeState("put")
+        this.el.emit("take", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("take", {
+          receptacle: this.el
+        })
+      }
+      if (this._hover) {
+        this.el.emit("unhover", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("unhover", {
+          receptacle: this.el
+        })
+      }
+      this._hover = false
+    } else if (this.nearest.is("grabbed") || !this._hover) {
+      if (!this._hover) {
+        this.el.emit("hover", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("hover", {
+          receptacle: this.el
+        })
+      }
+      this._anchor.removeAttribute("animation__pos")
+      this._anchor.removeAttribute("animation__rot")
+      this._anchor.copyWorldPosRot(this.nearest)
+      this._hover = true
+    } else {
+      if (!this.el.is("filled")) {
+        this._anchor.copyWorldPosRot(this.nearest)
+        this._anchor.components.body.commit()
+        if (this.nearest.components.body)
+          this._anchor.setAttribute("joint__put", { body2: this.nearest, type: "lock" })
+        this.el.addState("filled")
+        this.nearest.addState("put")
+        this.el.emit("put", {
+          grabbable: this.nearest
+        })
+        this.nearest.emit("put", {
+          receptacle: this.el
+        })
+      }
+      if (!this._anchor.getAttribute("animation__pos")) {
+        this._anchor.setAttribute("animation__pos", {
+          property: "position",
+          to: { x: 0, y: 0, z: 0 },
+          dur: 256
+        })
+        this._anchor.setAttribute("animation__rot", {
+          property: "rotation",
+          to: { x: 0, y: 0, z: 0 },
+          dur: 256
+        })
+      }
+      this.nearest.copyWorldPosRot(this._anchor)
+      this._hover = true
+    }
+    this._lastNearest = this.nearest
+  },
+
+  refreshObjects() {
+    let shortest = Infinity
+    let thisPos = THREE.Vector3.temp()
+    let thatPos = THREE.Vector3.temp()
+    let delta = THREE.Vector3.temp()
+    let els = this.el.sceneEl.querySelectorAll(this.data.objects)
+    this.nearest = null
+    if (!els) return
+    this.el.object3D.getWorldPosition(thisPos)
+    els.forEach(el => {
+      el.object3D.getWorldPosition(thatPos)
+      delta.copy(thatPos).sub(thisPos)
+      if (shortest > delta.length()) {
+        shortest = delta.length()
+        this.nearest = el
+      }
+    })
+  },
+
+
+})
+
+},{}],7:[function(require,module,exports){
+/* global AFRAME, THREE */
+
 AFRAME.registerComponent("include", {
   schema: { type: "string" },
 
@@ -630,7 +773,7 @@ AFRAME.registerComponent("include", {
   }
 })
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("injectplayer", {
@@ -645,7 +788,7 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -1273,7 +1416,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":9,"./locomotion/start":10,"./locomotion/wall":11}],9:[function(require,module,exports){
+},{"./locomotion/floor":10,"./locomotion/start":11,"./locomotion/wall":12}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1286,7 +1429,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1307,7 +1450,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1320,7 +1463,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -1435,7 +1578,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":17,"./physics/body":13,"./physics/joint":14,"./physics/shape":15}],13:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":18,"./physics/body":14,"./physics/joint":15,"./physics/shape":16}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1650,7 +1793,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":17}],14:[function(require,module,exports){
+},{"../../libs/cmdCodec":18}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1731,7 +1874,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":17}],15:[function(require,module,exports){
+},{"../../libs/cmdCodec":18}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1810,7 +1953,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":17}],16:[function(require,module,exports){
+},{"../../libs/cmdCodec":18}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
@@ -1838,7 +1981,7 @@ function deepMatch(selector) {
   let deep = (selector + ", ").replaceAll(",", " *,")
   return deep + selector
 }
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -1859,7 +2002,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -1877,7 +2020,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],19:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -1892,7 +2035,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -1918,7 +2061,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -2012,7 +2155,7 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -2021,11 +2164,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {
