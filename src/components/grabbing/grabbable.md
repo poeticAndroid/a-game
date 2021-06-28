@@ -19,11 +19,12 @@ Add the `grabbable` component to any object you want the player to be able to pi
 
 ## Events
 
-These event are emitted on the grabbable as well as the hand that initiated the event.
-
-| Event   | Description                                                    |
-| ------- | -------------------------------------------------------------- |
-| grab    | Emitted when grabbed.                                          |
-| usedown | Emitted when use-button is pressed while holding this object.  |
-| useup   | Emitted when use-button is released while holding this object. |
-| drop    | Emitted when dropped.                                          |
+| Event       | Description                |
+| ----------- | -------------------------- |
+| reachable   | grabbable is within reach. |
+| unreachable | grabbable is out of reach. |
+| grab        | grabbing.                  |
+| usedown     | use-button is pressed.     |
+| useup       | use-button is released.    |
+| drop        | dropping.                  |
+| fingerflex  | a finger is flexing.       |

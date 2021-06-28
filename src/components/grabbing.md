@@ -46,15 +46,15 @@ This makes it possible to grab and use grabbable objects using the following con
 
 These events are emitted by both the glove and the `grabbable` that it's grabbing, if any.
 
-| Event      | Description                             |
-| ---------- | --------------------------------------- |
-| reach      | Emitted when grabbable is within reach. |
-| unreach    | Emitted when grabbable is out of reach. |
-| grab       | Emitted when grabbing.                  |
-| usedown    | Emitted when use-button is pressed.     |
-| useup      | Emitted when use-button is released.    |
-| drop       | Emitted when dropping.                  |
-| fingerflex | Emitted when a finger is flexing.       |
+| Event       | Description                |
+| ----------- | -------------------------- |
+| reachable   | grabbable is within reach. |
+| unreachable | grabbable is out of reach. |
+| grab        | grabbing.                  |
+| usedown     | use-button is pressed.     |
+| useup       | use-button is released.    |
+| drop        | dropping.                  |
+| fingerflex  | a finger is flexing.       |
 
 
 ## Related components

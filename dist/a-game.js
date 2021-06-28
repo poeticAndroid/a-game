@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -226,13 +226,13 @@ AFRAME.registerComponent("grabbing", {
         if (hit && hit.el.getAttribute("grabbable") != null) {
           if (this[_hand]._lastHit !== hit.el) {
             if (this[_hand]._lastHit)
-              this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
+              this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
             this[_hand]._lastHit = hit.el
-            this.emit("reach", this[_hand].glove, this[_hand]._lastHit)
+            this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
           }
         } else {
           if (this[_hand]._lastHit)
-            this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
+            this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
           this[_hand]._lastHit = null
         }
       }

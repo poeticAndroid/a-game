@@ -14,3 +14,9 @@ Add the `floor` component to any object you want the player to be able to walk o
 | physics    | Whether or not to add physics components automatically.      | true    |
 
 
+## Events
+
+| Event | Description             |
+| ----- | ----------------------- |
+| enter | Player enters the floor |
+| leave | Player leaves the floor |

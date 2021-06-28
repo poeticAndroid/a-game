@@ -169,14 +169,14 @@ AFRAME.registerComponent("locomotion", {
           delta.y = 0
           this._legs.object3D.position.add(delta)
         } else {
-          if (this.currentFloor) this.currentFloor.emit("playerleave")
-          hit.el.emit("playerenter")
+          if (this.currentFloor) this.currentFloor.emit("leave")
+          hit.el.emit("enter")
         }
         this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
         this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
-        if (this.currentFloor) this.currentFloor.emit("playerleave")
+        if (this.currentFloor) this.currentFloor.emit("leave")
         this._vertVelocity -= this.data.gravity * timeDelta
         this._move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
         this.currentFloor = null
