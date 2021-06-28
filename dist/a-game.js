@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -960,14 +960,14 @@ AFRAME.registerComponent("locomotion", {
           delta.y = 0
           this._legs.object3D.position.add(delta)
         } else {
-          if (this.currentFloor) this.currentFloor.emit("playerleave")
-          hit.el.emit("playerenter")
+          if (this.currentFloor) this.currentFloor.emit("leave")
+          hit.el.emit("enter")
         }
         this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
         this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
-        if (this.currentFloor) this.currentFloor.emit("playerleave")
+        if (this.currentFloor) this.currentFloor.emit("leave")
         this._vertVelocity -= this.data.gravity * timeDelta
         this._move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
         this.currentFloor = null

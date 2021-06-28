@@ -6,6 +6,7 @@ Add the `floor` component to any object you want the player to be able to walk o
 <a-box floor></a-box>
 ```
 
+
 ## Properties
 
 | Property   | Description                                                  | Default |

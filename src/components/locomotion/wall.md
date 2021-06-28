@@ -6,6 +6,7 @@ Add the `wall` component to any object you want the player not to be able to wal
 <a-box wall></a-box>
 ```
 
+
 ## Properties
 
 | Property   | Description                                                  | Default |

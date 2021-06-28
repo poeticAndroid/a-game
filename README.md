@@ -6,7 +6,7 @@ Essential game components for [A-Frame](https://aframe.io/)!
 <html>
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.12.0/dist/a-game.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.13.0/dist/a-game.min.js"></script>
   </head>
   <body>
     <a-scene physics>
@@ -22,11 +22,13 @@ Essential game components for [A-Frame](https://aframe.io/)!
 
 **[Demo!](https://a-game-demo.glitch.me)**
 
+
 ## Primitives
 
  - [a-main](./src/primitives/a-main.md)
  - [a-player](./src/primitives/a-player.md)
  - [a-hand](./src/primitives/a-hand.md)
+
 
 ## Components
 

@@ -1,4 +1,4 @@
-## receptacle
+# receptacle
 
 Add the `receptacle` component to any object you want the player to be able to pick up.
 
@@ -6,14 +6,16 @@ Add the `receptacle` component to any object you want the player to be able to p
 <a-entity receptacle></a-entity>
 ```
 
-### Properties
+
+## Properties
 
 | Property | Description                                               | Default      |
 | -------- | --------------------------------------------------------- | ------------ |
 | objects  | Selector for the type of objects this receptacle attracts | \[grabbable] |
 | radius   | Radius of attraction                                      | 0.125        |
 
-### Events
+
+## Events
 
 These event are emitted on the receptacle as well as the object it attracts.
 

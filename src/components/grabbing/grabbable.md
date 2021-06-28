@@ -1,4 +1,4 @@
-## grabbable
+# grabbable
 
 Add the `grabbable` component to any object you want the player to be able to pick up.
 
@@ -6,7 +6,8 @@ Add the `grabbable` component to any object you want the player to be able to pi
 <a-entity grabbable></a-entity>
 ```
 
-### Properties
+
+## Properties
 
 | Property      | Description                                                                | Default |
 | ------------- | -------------------------------------------------------------------------- | ------- |
@@ -15,7 +16,8 @@ Add the `grabbable` component to any object you want the player to be able to pi
 | fixed         | If `true` the object will have a fixed position and rotation when grabbed. | false   |
 | fixedPosition | Relative position in hand, if `fixed` is `true`.                           | 0 0 0   |
 
-### Events
+
+## Events
 
 These event are emitted on the grabbable as well as the hand that initiated the event.
 

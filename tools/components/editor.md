@@ -8,12 +8,14 @@ Add the `editor` component to an entity that represents your tool.
 <a-gltf-model src="tool.glb" position="0 1 -.25" editor></a-gltf-model>
 ```
 
+
 ## Properties
 
 | Property      | Description                     | Default  |
 | ------------- | ------------------------------- | -------- |
 | gridSize      | Size of snapping grid.          | .5 .5 .5 |
 | rotationSteps | Number of valid rotation steps. | 8 8 8    |
+
 
 ## Methods
 
