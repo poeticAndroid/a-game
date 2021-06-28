@@ -15,11 +15,7 @@
 <body>
   <a-scene physics="workerUrl:./cannonWorker.js;">
     <a-entity include="./scenes/_assets.html"></a-entity>
-    <a-player locomotion grabbing="hideOnGrab:false;">
-      <a-cylinder class="teleport-cursor" radius="0.5" height="0.0625" material="opacity:0.5;">
-        <a-cone radius-top="0" radius-bottom="0.25" height="0.625" scale="1 1 0.125" rotation="-90 0 0"
-          material="opacity:0.5;"></a-cone>
-      </a-cylinder>
+    <a-player include="./scenes/_player.html">
     </a-player>
     <a-main include="./scenes/demo.html">
       <a-box floor color="gray" width="32" height="0.25" depth="32"></a-box>

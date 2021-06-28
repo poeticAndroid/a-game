@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.2",
+  "version": "0.12.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -795,6 +795,7 @@ AFRAME.registerComponent("locomotion", {
   dependencies: ["position", "injectplayer"],
   schema: {
     speed: { type: "number", default: 4 },
+    stepLength: { type: "number", default: 1 },
     rotationSpeed: { type: "number", default: 1 },
     teleportDistance: { type: "number", default: 5 },
     jumpForce: { type: "number", default: 4 },
@@ -828,6 +829,7 @@ AFRAME.registerComponent("locomotion", {
     this.headPos = new THREE.Vector3()
     this.headDir = new THREE.Vector3()
     this.feetPos = new THREE.Vector3()
+    this.lastStep = new THREE.Vector3()
 
     this._config = {
       quantizeMovement: false,
@@ -957,6 +959,7 @@ AFRAME.registerComponent("locomotion", {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
           this._move(delta)
+          this.lastStep.add(delta)
           delta.y = 0
           this._legs.object3D.position.add(delta)
         } else {
@@ -989,6 +992,21 @@ AFRAME.registerComponent("locomotion", {
       this._bump(pos, this._legBumper)
       pos.copy(this.headPos)
       this._bump(pos, this._headBumper)
+    }
+
+    // take step
+    let delta = THREE.Vector3.temp()
+    delta.copy(this.feetPos).sub(this.lastStep)
+    if (delta.length() > this.data.stepLength) {
+      if (this.currentFloor) {
+        this.el.emit("step")
+        this.currentFloor.emit("step")
+      }
+      while (delta.length() > this.data.stepLength) {
+        delta.multiplyScalar(this.data.stepLength / delta.length())
+        this.lastStep.add(delta)
+        delta.copy(this.feetPos).sub(this.lastStep)
+      }
     }
   },
 

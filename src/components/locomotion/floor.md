@@ -16,7 +16,8 @@ Add the `floor` component to any object you want the player to be able to walk o
 
 ## Events
 
-| Event | Description             |
-| ----- | ----------------------- |
-| enter | Player enters the floor |
-| leave | Player leaves the floor |
+| Event | Description                   |
+| ----- | ----------------------------- |
+| enter | Player enters the floor       |
+| leave | Player leaves the floor       |
+| step  | Player takes a simulated step |
