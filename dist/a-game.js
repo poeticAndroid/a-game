@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -49,20 +49,22 @@ setTimeout(() => {
   })
 })
 
+require("./components/grabbing")
 require("./components/include")
-require("./components/physics")
 require("./components/injectplayer")
 require("./components/locomotion")
-require("./components/grabbing")
+require("./components/onevent")
+require("./components/onstate")
+require("./components/physics")
 
+require("./primitives/a-hand")
 require("./primitives/a-main")
 require("./primitives/a-player")
-require("./primitives/a-hand")
 
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":7,"./components/injectplayer":8,"./components/locomotion":9,"./components/physics":13,"./libs/betterRaycaster":17,"./libs/copyWorldPosRot":19,"./libs/ensureElement":20,"./libs/pools":21,"./libs/touchGestures":22,"./primitives/a-hand":23,"./primitives/a-main":24,"./primitives/a-player":25}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":7,"./components/injectplayer":8,"./components/locomotion":9,"./components/onevent":13,"./components/onstate":14,"./components/physics":15,"./libs/betterRaycaster":19,"./libs/copyWorldPosRot":21,"./libs/ensureElement":22,"./libs/pools":23,"./libs/touchGestures":24,"./primitives/a-hand":25,"./primitives/a-main":26,"./primitives/a-player":27}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -1494,6 +1496,95 @@ AFRAME.registerComponent("wall", {
 },{}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
+AFRAME.registerComponent("onevent", {
+  multiple: true,
+  schema: {
+    event: { type: "string" },
+    entity: { type: "selector" },
+    property: { type: "string" },
+    value: { type: "string" },
+  },
+
+  init() {
+    this.trigger = this.trigger.bind(this)
+  },
+
+  update(oldData) {
+    this.pause()
+    this._event = this.data.event || this.id || ""
+    this._entity = this.data.entity || this.el
+    this._property = this.data.property || ""
+    this._value = this.data.value || ""
+    if (this.el.isPlaying)
+      this.play()
+  },
+
+  play() {
+    if (!this._event) return
+    this.el.addEventListener(this._event, this.trigger)
+  },
+
+  pause() {
+    if (!this._event) return
+    this.el.removeEventListener(this._event, this.trigger)
+  },
+
+  trigger() {
+    let args = this._property.split(".")
+    args.push(this._value)
+    this._entity.setAttribute(...args)
+  }
+})
+
+},{}],14:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerComponent("onstate", {
+  multiple: true,
+  schema: {
+    state: { type: "string" },
+    entity: { type: "selector" },
+    property: { type: "string" },
+    on: { type: "string" },
+    off: { type: "string" },
+  },
+
+  init() {
+    this.trigger = this.trigger.bind(this)
+  },
+
+  update(oldData) {
+    this.pause()
+    this._state = this.data.state || this.id || ""
+    this._entity = this.data.entity || this.el
+    this._property = this.data.property || ""
+    this._on = this.data.on || ""
+    this._off = this.data.off || ""
+    this.trigger()
+    if (this.el.isPlaying)
+      this.play()
+  },
+
+  play() {
+    this.el.addEventListener("stateadded", this.trigger)
+    this.el.addEventListener("stateremoved", this.trigger)
+  },
+
+  pause() {
+    this.el.removeEventListener("stateadded", this.trigger)
+    this.el.removeEventListener("stateremoved", this.trigger)
+  },
+
+  trigger() {
+    let args = this._property.split(".")
+    args.push(this.el.is(this._state) ? this._on : this._off)
+    this._entity.setAttribute(...args)
+  }
+})
+
+},{}],15:[function(require,module,exports){
+/* global AFRAME, THREE */
+
 const cmd = require("../libs/cmdCodec")
 const pkg = require("../../package")
 
@@ -1606,7 +1697,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":18,"./physics/body":14,"./physics/joint":15,"./physics/shape":16}],14:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":20,"./physics/body":16,"./physics/joint":17,"./physics/shape":18}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1821,7 +1912,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":18}],15:[function(require,module,exports){
+},{"../../libs/cmdCodec":20}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1902,7 +1993,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":18}],16:[function(require,module,exports){
+},{"../../libs/cmdCodec":20}],18:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1981,7 +2072,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":18}],17:[function(require,module,exports){
+},{"../../libs/cmdCodec":20}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
@@ -2009,7 +2100,7 @@ function deepMatch(selector) {
   let deep = (selector + ", ").replaceAll(",", " *,")
   return deep + selector
 }
-},{}],18:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -2030,7 +2121,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],19:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -2048,7 +2139,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -2063,7 +2154,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -2089,7 +2180,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -2183,7 +2274,7 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -2192,11 +2283,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {

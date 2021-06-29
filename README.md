@@ -25,24 +25,26 @@ Essential game components for [A-Frame](https://aframe.io/)!
 
 ## Primitives
 
+ - [a-hand](./src/primitives/a-hand.md)
  - [a-main](./src/primitives/a-main.md)
  - [a-player](./src/primitives/a-player.md)
- - [a-hand](./src/primitives/a-hand.md)
 
 
 ## Components
 
- - [include](./src/components/include.md)
- - [physics](./src/components/physics.md)
-   - [body](./src/components/physics/body.md)
-   - [shape](./src/components/physics/shape.md)
-   - [joint](./src/components/physics/joint.md)
- - [locomotion](./src/components/locomotion.md)
-   - [floor](./src/components/locomotion/floor.md)
-   - [wall](./src/components/locomotion/wall.md)
-   - [start](./src/components/locomotion/start.md)
  - [grabbing](./src/components/grabbing.md)
+   - [fingerflex](./src/components/grabbing/fingerflex.md)
    - [grabbable](./src/components/grabbing/grabbable.md)
    - [receptacle](./src/components/grabbing/receptacle.md)
-   - [fingerflex](./src/components/grabbing/fingerflex.md)
+ - [include](./src/components/include.md)
+ - [locomotion](./src/components/locomotion.md)
+   - [floor](./src/components/locomotion/floor.md)
+   - [start](./src/components/locomotion/start.md)
+   - [wall](./src/components/locomotion/wall.md)
+ - [onevent](./src/components/onevent.md)
+ - [onstate](./src/components/onstate.md)
+ - [physics](./src/components/physics.md)
+   - [body](./src/components/physics/body.md)
+   - [joint](./src/components/physics/joint.md)
+   - [shape](./src/components/physics/shape.md)
  

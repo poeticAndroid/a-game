@@ -10,15 +10,17 @@ setTimeout(() => {
   })
 })
 
+require("./components/grabbing")
 require("./components/include")
-require("./components/physics")
 require("./components/injectplayer")
 require("./components/locomotion")
-require("./components/grabbing")
+require("./components/onevent")
+require("./components/onstate")
+require("./components/physics")
 
+require("./primitives/a-hand")
 require("./primitives/a-main")
 require("./primitives/a-player")
-require("./primitives/a-hand")
 
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)

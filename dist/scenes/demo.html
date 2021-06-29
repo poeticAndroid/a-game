@@ -2,7 +2,9 @@
   <a-sky src="#skyImg"></a-sky>
   <a-entity start position="0 1 1"></a-entity>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
-  <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable body="friction:1;"></a-box>
+  <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable
+    onevent__reachable="property:color; value:yellow;" onevent__unreachable="property:color; value:blue;"
+    onstate__grabbed="property:color; on:green; off:red;"></a-box>
   <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable></a-box>
   <a-box color="#c9f" position="-0.55 .55 -4" rotation="10 11 12" grabbable="kinematicGrab:true;"></a-box>
   <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4">
