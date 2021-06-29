@@ -384,16 +384,16 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["KeyC"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    this._deadZone(stick.set(this._axes[2], this._axes[3]))
+    this._fourWay(this._deadZone(stick.set(this._axes[2], this._axes[3])))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.copy(this._rightTouchDir)
+    this._fourWay(stick.copy(this._rightTouchDir))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3]))
+        this._fourWay(this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3])))
         if (stick.length() > bestStick.length()) bestStick.copy(stick)
       }
     }
@@ -538,6 +538,16 @@ AFRAME.registerComponent("locomotion", {
     } else {
       vec.set(0, 0)
     }
+    return vec
+  },
+  _fourWay(vec) {
+    let len = vec.length()
+    if (Math.abs(vec.x) > Math.abs(vec.y)) {
+      vec.y = 0
+    } else {
+      vec.x = 0
+    }
+    vec.multiplyScalar(len / vec.length())
     return vec
   },
 
