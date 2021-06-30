@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.5",
+  "version": "0.12.6",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -1529,7 +1529,7 @@ AFRAME.registerComponent("onevent", {
     this.el.removeEventListener(this._event, this.trigger)
   },
 
-  trigger() {
+  trigger(e) {
     let args = this._property.split(".")
     args.push(this._value)
     this._entity.setAttribute(...args)
@@ -1554,18 +1554,15 @@ AFRAME.registerComponent("onstate", {
   },
 
   update(oldData) {
-    this.pause()
     this._state = this.data.state || this.id || ""
     this._entity = this.data.entity || this.el
     this._property = this.data.property || ""
     this._on = this.data.on || ""
     this._off = this.data.off || ""
-    this.trigger()
-    if (this.el.isPlaying)
-      this.play()
   },
 
   play() {
+    this.trigger()
     this.el.addEventListener("stateadded", this.trigger)
     this.el.addEventListener("stateremoved", this.trigger)
   },
@@ -1575,7 +1572,8 @@ AFRAME.registerComponent("onstate", {
     this.el.removeEventListener("stateremoved", this.trigger)
   },
 
-  trigger() {
+  trigger(e) {
+    if (e && e.detail !== this._state) return
     let args = this._property.split(".")
     args.push(this.el.is(this._state) ? this._on : this._off)
     this._entity.setAttribute(...args)

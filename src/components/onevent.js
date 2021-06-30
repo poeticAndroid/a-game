@@ -33,7 +33,7 @@ AFRAME.registerComponent("onevent", {
     this.el.removeEventListener(this._event, this.trigger)
   },
 
-  trigger() {
+  trigger(e) {
     let args = this._property.split(".")
     args.push(this._value)
     this._entity.setAttribute(...args)

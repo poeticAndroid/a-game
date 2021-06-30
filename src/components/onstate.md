@@ -3,7 +3,7 @@
 Change a property when an state is added or removed.
 
 ```html
-<a-box grabbable onstate__grabbed="property:color; onAdd:green; onRemove:red;" ></a-box>
+<a-box grabbable onstate__grabbed="property:color; on:green; off:red;" ></a-box>
 ```
 
 
