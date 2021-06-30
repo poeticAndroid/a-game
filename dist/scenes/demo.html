@@ -18,6 +18,11 @@
   </a-gltf-model>
   <a-box src="#granite" width="5" depth="1" material="repeat: 5 1" floor wall position="0 0 5" rotation="0 0 10">
   </a-box>
+  <a-cylinder trigger onevent__trigger="entity:#trigger-indicator; property:color; value:green;"
+    onevent__untrigger="entity:#trigger-indicator; property:color; value:red;" position="-3 1 0" height="2" radius="2"
+    material="opacity:0.5">
+    <a-sphere id="trigger-indicator" radius="0.125"></a-sphere>
+  </a-cylinder>
   <a-entity position="0 5 0">
     <a-box src="#granite" material="repeat: 20 1" floor width="20" height="0.1" position="0 -2.5 -8.5"
       rotation="0 0 21"></a-box>

@@ -17,6 +17,7 @@ require("./components/locomotion")
 require("./components/onevent")
 require("./components/onstate")
 require("./components/physics")
+require("./components/trigger")
 
 require("./primitives/a-hand")
 require("./primitives/a-main")
