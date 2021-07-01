@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.9",
+  "version": "0.12.11",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -199,8 +199,8 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.copyWorldPosRot(this[_hand].hand)
 
         this[_hand]._occlusionRay.object3D.position.copy(headPos)
-        palm.object3D.localToWorld(delta.set(0, 0, 0))
-        this[_hand].glove.object3D.localToWorld(palmDelta.set(0, 0, 0))
+        palm.object3D.getWorldPosition(delta)
+        this[_hand].glove.object3D.getWorldPosition(palmDelta)
         palmDelta.sub(delta)
         delta.sub(headPos)
         let handDist = delta.length()
@@ -1956,13 +1956,16 @@ AFRAME.registerComponent("joint", {
     joint.type = this.data.type
     joint.body1 = this.data.body1 ? this.data.body1.components.body.id : this.el.components.body.id
     joint.body2 = this.data.body2.components.body.id
-    joint.pivot1 = this.data.pivot1
-    joint.pivot2 = this.data.pivot2
+    joint.pivot1 = THREE.Vector3.temp().copy(this.data.pivot1)
+    joint.pivot2 = THREE.Vector3.temp().copy(this.data.pivot2)
     joint.axis1 = this.data.axis1
     joint.axis2 = this.data.axis2
     joint.min = this.data.min
     joint.max = this.data.max
     joint.collision = this.data.collision
+    let scale = this.el.object3D.getWorldScale(THREE.Vector3.temp())
+    joint.pivot1.multiply(scale)
+    joint.pivot2.multiply(scale)
     worker.postMessage("world joint " + this._id + " create " + cmd.stringifyParam(joint))
     // })
   },
@@ -2048,7 +2051,9 @@ AFRAME.registerComponent("shape", {
       //   shape.type = "plane"
       //   break
     }
-    shape.size.multiply(this.el.object3D.getWorldScale(THREE.Vector3.temp()))
+    let scale = this.el.object3D.getWorldScale(THREE.Vector3.temp())
+    shape.size.multiply(scale)
+    shape.position.multiply(scale)
 
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },

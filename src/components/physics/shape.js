@@ -53,7 +53,9 @@ AFRAME.registerComponent("shape", {
       //   shape.type = "plane"
       //   break
     }
-    shape.size.multiply(this.el.object3D.getWorldScale(THREE.Vector3.temp()))
+    let scale = this.el.object3D.getWorldScale(THREE.Vector3.temp())
+    shape.size.multiply(scale)
+    shape.position.multiply(scale)
 
     worker.postMessage("world body " + this.bodyId + " shape " + this.id + " create " + cmd.stringifyParam(shape))
   },

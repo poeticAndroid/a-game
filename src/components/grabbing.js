@@ -131,8 +131,8 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.copyWorldPosRot(this[_hand].hand)
 
         this[_hand]._occlusionRay.object3D.position.copy(headPos)
-        palm.object3D.localToWorld(delta.set(0, 0, 0))
-        this[_hand].glove.object3D.localToWorld(palmDelta.set(0, 0, 0))
+        palm.object3D.getWorldPosition(delta)
+        this[_hand].glove.object3D.getWorldPosition(palmDelta)
         palmDelta.sub(delta)
         delta.sub(headPos)
         let handDist = delta.length()

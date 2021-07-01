@@ -42,13 +42,16 @@ AFRAME.registerComponent("joint", {
     joint.type = this.data.type
     joint.body1 = this.data.body1 ? this.data.body1.components.body.id : this.el.components.body.id
     joint.body2 = this.data.body2.components.body.id
-    joint.pivot1 = this.data.pivot1
-    joint.pivot2 = this.data.pivot2
+    joint.pivot1 = THREE.Vector3.temp().copy(this.data.pivot1)
+    joint.pivot2 = THREE.Vector3.temp().copy(this.data.pivot2)
     joint.axis1 = this.data.axis1
     joint.axis2 = this.data.axis2
     joint.min = this.data.min
     joint.max = this.data.max
     joint.collision = this.data.collision
+    let scale = this.el.object3D.getWorldScale(THREE.Vector3.temp())
+    joint.pivot1.multiply(scale)
+    joint.pivot2.multiply(scale)
     worker.postMessage("world joint " + this._id + " create " + cmd.stringifyParam(joint))
     // })
   },
