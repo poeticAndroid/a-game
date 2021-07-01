@@ -336,7 +336,7 @@ AFRAME.registerComponent("grabbing", {
     this._left.glove.setAttribute("visible", true)
     this._right.glove.setAttribute("visible", true)
 
-    this._head.ray.setAttribute("raycaster", "far", 0)
+    this._head.ray = null
     this.update()
   },
 

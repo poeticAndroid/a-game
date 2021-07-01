@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.12",
+  "version": "0.12.13",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -404,7 +404,7 @@ AFRAME.registerComponent("grabbing", {
     this._left.glove.setAttribute("visible", true)
     this._right.glove.setAttribute("visible", true)
 
-    this._head.ray.setAttribute("raycaster", "far", 0)
+    this._head.ray = null
     this.update()
   },
 
