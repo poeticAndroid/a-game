@@ -22,7 +22,7 @@ AFRAME.registerComponent("trigger", {
     let radius = parseFloat(this.el.getAttribute("radius") || 1)
     let inside
     for (let obj of this.objects) {
-      obj.object3D.getWorldPosition(local)
+      obj.object3D.localToWorld(local.set(0, 0, 0))
       this.el.object3D.worldToLocal(local)
       switch (this.el.tagName.toLowerCase()) {
         case "a-sphere":

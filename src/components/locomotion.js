@@ -133,13 +133,13 @@ AFRAME.registerComponent("locomotion", {
 
   tick(time, timeDelta) {
     timeDelta /= 1000
-    this.el.object3D.getWorldPosition(this.centerPos)
+    this.el.object3D.localToWorld(this.centerPos.set(0, 0, 0))
     this.headPos.copy(this._camera.object3D.position)
     this._camera.object3D.parent.localToWorld(this.headPos)
     this.headDir.set(0, 0, -1)
       .applyQuaternion(this._camera.object3D.quaternion)
       .applyQuaternion(this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp()))
-    this._legs.object3D.getWorldPosition(this.feetPos)
+    this._legs.object3D.localToWorld(this.feetPos.set(0, 0, 0))
     this.feetPos.y -= 0.5
 
     this._applyButtons(timeDelta)
@@ -490,7 +490,7 @@ AFRAME.registerComponent("locomotion", {
         }
       } else if (this._teleporting) {
         let pos = THREE.Vector3.temp()
-        this._teleportCursor.object3D.getWorldPosition(pos)
+        this._teleportCursor.object3D.localToWorld(pos.set(0, 0, 0))
         this.teleport(pos)
         this._teleportCursor.setAttribute("visible", false)
         this._teleportCursor.setAttribute("position", "0 0 0")

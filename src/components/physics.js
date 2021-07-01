@@ -58,7 +58,7 @@ AFRAME.registerSystem("physics", {
       for (let i = 0; i < bods.length; i++) {
         let p = i * 8
         if (bods[i]) {
-          bods[i].object3D.getWorldPosition(vec)
+          bods[i].object3D.localToWorld(vec.set(0, 0, 0))
           buffer[p++] = vec.x
           buffer[p++] = vec.y
           buffer[p++] = vec.z

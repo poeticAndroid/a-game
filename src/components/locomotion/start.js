@@ -9,7 +9,7 @@ AFRAME.registerComponent("start", {
     // console.log("starting at", pos)
 
     setTimeout(() => {
-      this.el.object3D.getWorldPosition(pos)
+      this.el.object3D.localToWorld(pos.set(0, 0, 0))
       loco.teleport(pos, true)
       setTimeout(() => {
         loco.toggleCrouch(true)

@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.12.8",
+  "version": "0.12.9",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -199,8 +199,8 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.copyWorldPosRot(this[_hand].hand)
 
         this[_hand]._occlusionRay.object3D.position.copy(headPos)
-        palm.object3D.getWorldPosition(delta)
-        this[_hand].glove.object3D.getWorldPosition(palmDelta)
+        palm.object3D.localToWorld(delta.set(0, 0, 0))
+        this[_hand].glove.object3D.localToWorld(palmDelta.set(0, 0, 0))
         palmDelta.sub(delta)
         delta.sub(headPos)
         let handDist = delta.length()
@@ -626,8 +626,8 @@ AFRAME.registerComponent("receptacle", {
     if (!this.nearest) return this.refreshObjects()
     let thisPos = THREE.Vector3.temp()
     let delta = THREE.Vector3.temp()
-    this.el.object3D.getWorldPosition(thisPos)
-    this.nearest.object3D.getWorldPosition(delta)
+    this.el.object3D.localToWorld(thisPos.set(0, 0, 0))
+    this.nearest.object3D.localToWorld(delta.set(0, 0, 0))
     delta.sub(thisPos)
     if (this._lastNearest && this._lastNearest !== this.nearest) {
       if (this.el.is("filled")) {
@@ -729,9 +729,9 @@ AFRAME.registerComponent("receptacle", {
     let els = this.el.sceneEl.querySelectorAll(this.data.objects)
     this.nearest = null
     if (!els) return
-    this.el.object3D.getWorldPosition(thisPos)
+    this.el.object3D.localToWorld(thisPos.set(0, 0, 0))
     els.forEach(el => {
-      el.object3D.getWorldPosition(thatPos)
+      el.object3D.localToWorld(thatPos.set(0, 0, 0))
       delta.copy(thatPos).sub(thisPos)
       if (shortest > delta.length()) {
         shortest = delta.length()
@@ -927,13 +927,13 @@ AFRAME.registerComponent("locomotion", {
 
   tick(time, timeDelta) {
     timeDelta /= 1000
-    this.el.object3D.getWorldPosition(this.centerPos)
+    this.el.object3D.localToWorld(this.centerPos.set(0, 0, 0))
     this.headPos.copy(this._camera.object3D.position)
     this._camera.object3D.parent.localToWorld(this.headPos)
     this.headDir.set(0, 0, -1)
       .applyQuaternion(this._camera.object3D.quaternion)
       .applyQuaternion(this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp()))
-    this._legs.object3D.getWorldPosition(this.feetPos)
+    this._legs.object3D.localToWorld(this.feetPos.set(0, 0, 0))
     this.feetPos.y -= 0.5
 
     this._applyButtons(timeDelta)
@@ -1284,7 +1284,7 @@ AFRAME.registerComponent("locomotion", {
         }
       } else if (this._teleporting) {
         let pos = THREE.Vector3.temp()
-        this._teleportCursor.object3D.getWorldPosition(pos)
+        this._teleportCursor.object3D.localToWorld(pos.set(0, 0, 0))
         this.teleport(pos)
         this._teleportCursor.setAttribute("visible", false)
         this._teleportCursor.setAttribute("position", "0 0 0")
@@ -1472,7 +1472,7 @@ AFRAME.registerComponent("start", {
     // console.log("starting at", pos)
 
     setTimeout(() => {
-      this.el.object3D.getWorldPosition(pos)
+      this.el.object3D.localToWorld(pos.set(0, 0, 0))
       loco.teleport(pos, true)
       setTimeout(() => {
         loco.toggleCrouch(true)
@@ -1642,7 +1642,7 @@ AFRAME.registerSystem("physics", {
       for (let i = 0; i < bods.length; i++) {
         let p = i * 8
         if (bods[i]) {
-          bods[i].object3D.getWorldPosition(vec)
+          bods[i].object3D.localToWorld(vec.set(0, 0, 0))
           buffer[p++] = vec.x
           buffer[p++] = vec.y
           buffer[p++] = vec.z
@@ -1734,7 +1734,7 @@ AFRAME.registerComponent("body", {
     }
     let body = { mid: this.mid }
     body.type = this.data.type
-    body.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+    body.position = this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0))
     body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
     if (this.mid !== null) {
       let p = this.mid * 8
@@ -1752,7 +1752,7 @@ AFRAME.registerComponent("body", {
     worker.postMessage("world body " + this.id + " create " + cmd.stringifyParam(body))
     // if (body.type === "static") 
     setTimeout(() => {
-      body.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+      body.position = this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0))
       body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
       worker.postMessage("world body " + this.id + " position = " + cmd.stringifyParam(body.position))
       worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
@@ -1851,7 +1851,7 @@ AFRAME.registerComponent("body", {
       let p = this.mid * 8
       if (buffer.length <= p) return
       if (this.data.type === "kinematic") {
-        let vec = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+        let vec = this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0))
         buffer[p++] = vec.x
         buffer[p++] = vec.y
         buffer[p++] = vec.z
@@ -1903,7 +1903,7 @@ AFRAME.registerComponent("body", {
     let worker = this.el.sceneEl.systems.physics.worker
     let pos = THREE.Vector3.temp()
     let quat = THREE.Quaternion.temp()
-    this.el.object3D.getWorldPosition(pos)
+    this.el.object3D.localToWorld(pos.set(0, 0, 0))
     worker.postMessage("world body " + this.id + " position " + cmd.stringifyParam(pos))
     this.el.object3D.getWorldQuaternion(quat)
     worker.postMessage("world body " + this.id + " quaternion " + cmd.stringifyParam(quat))
@@ -2096,7 +2096,7 @@ AFRAME.registerComponent("trigger", {
     let radius = parseFloat(this.el.getAttribute("radius") || 1)
     let inside
     for (let obj of this.objects) {
-      obj.object3D.getWorldPosition(local)
+      obj.object3D.localToWorld(local.set(0, 0, 0))
       this.el.object3D.worldToLocal(local)
       switch (this.el.tagName.toLowerCase()) {
         case "a-sphere":
@@ -2214,7 +2214,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   if (!src) return
   if (!dest) return
   if (!dest.parent) return
-  src.getWorldPosition(dest.position)
+  src.localToWorld(dest.position.set(0, 0, 0))
   dest.parent.worldToLocal(dest.position)
 
   dest.getWorldQuaternion(quat)

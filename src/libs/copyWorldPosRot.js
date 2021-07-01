@@ -7,7 +7,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   if (!src) return
   if (!dest) return
   if (!dest.parent) return
-  src.getWorldPosition(dest.position)
+  src.localToWorld(dest.position.set(0, 0, 0))
   dest.parent.worldToLocal(dest.position)
 
   dest.getWorldQuaternion(quat)
