@@ -36,8 +36,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
     }
 
-    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", visible: false, radius: 0.5 })
-    this._head.glove.setAttribute("body", "type:kinematic;")
+    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", body: "type:kinematic;", visible: true, radius: 0.25 })
     this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
@@ -46,7 +45,7 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
   update(oldData) {
@@ -161,13 +160,13 @@ AFRAME.registerComponent("grabbing", {
         if (hit && hit.el.getAttribute("grabbable") != null) {
           if (this[_hand]._lastHit !== hit.el) {
             if (this[_hand]._lastHit)
-              this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
+              this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
             this[_hand]._lastHit = hit.el
-            this.emit("reach", this[_hand].glove, this[_hand]._lastHit)
+            this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
           }
         } else {
           if (this[_hand]._lastHit)
-            this.emit("unreach", this[_hand].glove, this[_hand]._lastHit)
+            this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
           this[_hand]._lastHit = null
         }
       }
@@ -336,6 +335,8 @@ AFRAME.registerComponent("grabbing", {
     this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._left.glove.setAttribute("visible", true)
     this._right.glove.setAttribute("visible", true)
+
+    this._head.ray = null
     this.update()
   },
 

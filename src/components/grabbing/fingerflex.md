@@ -1,4 +1,4 @@
-## fingerflex
+# fingerflex
 
 The `fingerflex` component "bends" fingers on a glove object according to `fingerflex` events.
 
@@ -21,7 +21,8 @@ E.g. if the glove recieves an event with `event.detail.finger == 1` (index finge
 </a-hand>
 ```
 
-### Properties
+
+## Properties
 
 | Property | Description                            |
 | -------- | -------------------------------------- |

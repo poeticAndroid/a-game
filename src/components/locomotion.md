@@ -19,16 +19,18 @@ This makes it possible to move around the using the following controls.
 | Crouch                                  | Right stick down       | C       | Right side swipe down       |
 | Toggle god mode (if enabled)            | Click left stick       | G       |
 
+
 ## Properties
 
 | Property         | Description                                                      | Default |
 | ---------------- | ---------------------------------------------------------------- | ------- |
 | speed            | Speed of movement                                                | 4       |
-| rotationSpeed    | Speed of rotation                                                | 1       |
+| stepLength       | Distance between `step` events                                   | 4       |
 | teleportDistance | Maximum teleportation distance                                   | 5       |
 | jumpForce        | Amount of force to jump (will disable teleportation)             | 0       |
 | gravity          | Amount of gravity when jumping and falling                       | 10      |
 | godMode          | Enable ability to fly through walls and floors in any direction  | false   |
+
 
 ## Methods
 
@@ -37,6 +39,14 @@ This makes it possible to move around the using the following controls.
 | teleport(pos, force) | Teleport to given position. if `force` is `true`, player will pass through walls/floors along the way. |
 | toggleCrouch(reset)  | Toggle crouch mode. if `reset` is `true`, player height will be reset to default.                      |
 | jump()               | Make the player jump if possible.                                                                      |
+
+
+## Events
+
+| Event | Description                                  |
+| ----- | -------------------------------------------- |
+| step  | Every time the player takes a simulated step |
+
 
 ## Related components
 

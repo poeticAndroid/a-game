@@ -1,8 +1,10 @@
 <a-main>
   <a-sky src="#skyImg"></a-sky>
-  <a-entity start position="0 11 0"></a-entity>
+  <a-entity start position="0 1 1"></a-entity>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
-  <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable body="friction:1;"></a-box>
+  <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable
+    onevent__reachable="property:color; value:yellow;" onevent__unreachable="property:color; value:blue;"
+    onstate__grabbed="property:color; on:green; off:red;"></a-box>
   <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable></a-box>
   <a-box color="#c9f" position="-0.55 .55 -4" rotation="10 11 12" grabbable="kinematicGrab:true;"></a-box>
   <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4">
@@ -16,6 +18,11 @@
   </a-gltf-model>
   <a-box src="#granite" width="5" depth="1" material="repeat: 5 1" floor wall position="0 0 5" rotation="0 0 10">
   </a-box>
+  <a-cylinder trigger onevent__trigger="entity:#triggerIndicator; property:color; value:green;"
+    onevent__untrigger="entity:#triggerIndicator; property:color; value:red;" position="-3 1 0" height="2" radius="2"
+    material="opacity:0.5">
+    <a-sphere grabbable="physics:false;" id="triggerIndicator" radius="0.125"></a-sphere>
+  </a-cylinder>
   <a-entity position="0 5 0">
     <a-box src="#granite" material="repeat: 20 1" floor width="20" height="0.1" position="0 -2.5 -8.5"
       rotation="0 0 21"></a-box>

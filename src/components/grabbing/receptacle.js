@@ -22,8 +22,8 @@ AFRAME.registerComponent("receptacle", {
     if (!this.nearest) return this.refreshObjects()
     let thisPos = THREE.Vector3.temp()
     let delta = THREE.Vector3.temp()
-    this.el.object3D.getWorldPosition(thisPos)
-    this.nearest.object3D.getWorldPosition(delta)
+    this.el.object3D.localToWorld(thisPos.set(0, 0, 0))
+    this.nearest.object3D.localToWorld(delta.set(0, 0, 0))
     delta.sub(thisPos)
     if (this._lastNearest && this._lastNearest !== this.nearest) {
       if (this.el.is("filled")) {
@@ -125,9 +125,9 @@ AFRAME.registerComponent("receptacle", {
     let els = this.el.sceneEl.querySelectorAll(this.data.objects)
     this.nearest = null
     if (!els) return
-    this.el.object3D.getWorldPosition(thisPos)
+    this.el.object3D.localToWorld(thisPos.set(0, 0, 0))
     els.forEach(el => {
-      el.object3D.getWorldPosition(thatPos)
+      el.object3D.localToWorld(thatPos.set(0, 0, 0))
       delta.copy(thatPos).sub(thisPos)
       if (shortest > delta.length()) {
         shortest = delta.length()

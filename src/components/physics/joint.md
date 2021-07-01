@@ -18,6 +18,7 @@ A way to connect bodies together..
 </a-scene>
 ```
 
+
 ## Properties
 
 | Property  | Description                            | Default  |

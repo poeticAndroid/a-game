@@ -4,6 +4,7 @@ AFRAME.registerComponent("locomotion", {
   dependencies: ["position", "injectplayer"],
   schema: {
     speed: { type: "number", default: 4 },
+    stepLength: { type: "number", default: 1 },
     rotationSpeed: { type: "number", default: 1 },
     teleportDistance: { type: "number", default: 5 },
     jumpForce: { type: "number", default: 4 },
@@ -37,6 +38,7 @@ AFRAME.registerComponent("locomotion", {
     this.headPos = new THREE.Vector3()
     this.headDir = new THREE.Vector3()
     this.feetPos = new THREE.Vector3()
+    this.lastStep = new THREE.Vector3()
 
     this._config = {
       quantizeMovement: false,
@@ -131,13 +133,13 @@ AFRAME.registerComponent("locomotion", {
 
   tick(time, timeDelta) {
     timeDelta /= 1000
-    this.el.object3D.getWorldPosition(this.centerPos)
+    this.el.object3D.localToWorld(this.centerPos.set(0, 0, 0))
     this.headPos.copy(this._camera.object3D.position)
     this._camera.object3D.parent.localToWorld(this.headPos)
     this.headDir.set(0, 0, -1)
       .applyQuaternion(this._camera.object3D.quaternion)
       .applyQuaternion(this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp()))
-    this._legs.object3D.getWorldPosition(this.feetPos)
+    this._legs.object3D.localToWorld(this.feetPos.set(0, 0, 0))
     this.feetPos.y -= 0.5
 
     this._applyButtons(timeDelta)
@@ -166,17 +168,18 @@ AFRAME.registerComponent("locomotion", {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
           this._move(delta)
+          this.lastStep.add(delta)
           delta.y = 0
           this._legs.object3D.position.add(delta)
         } else {
-          if (this.currentFloor) this.currentFloor.emit("playerleave")
-          hit.el.emit("playerenter")
+          if (this.currentFloor) this.currentFloor.emit("leave")
+          hit.el.emit("enter")
         }
         this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
         this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
-        if (this.currentFloor) this.currentFloor.emit("playerleave")
+        if (this.currentFloor) this.currentFloor.emit("leave")
         this._vertVelocity -= this.data.gravity * timeDelta
         this._move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
         this.currentFloor = null
@@ -198,6 +201,21 @@ AFRAME.registerComponent("locomotion", {
       this._bump(pos, this._legBumper)
       pos.copy(this.headPos)
       this._bump(pos, this._headBumper)
+    }
+
+    // take step
+    let delta = THREE.Vector3.temp()
+    delta.copy(this.feetPos).sub(this.lastStep)
+    if (delta.length() > this.data.stepLength) {
+      if (this.currentFloor) {
+        this.el.emit("step")
+        this.currentFloor.emit("step")
+      }
+      while (delta.length() > this.data.stepLength) {
+        delta.multiplyScalar(this.data.stepLength / delta.length())
+        this.lastStep.add(delta)
+        delta.copy(this.feetPos).sub(this.lastStep)
+      }
     }
   },
 
@@ -366,16 +384,16 @@ AFRAME.registerComponent("locomotion", {
     if (this._keysDown["KeyC"]) stick.y++
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    this._deadZone(stick.set(this._axes[2], this._axes[3]))
+    this._fourWay(this._deadZone(stick.set(this._axes[2], this._axes[3])))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
-    stick.copy(this._rightTouchDir)
+    this._fourWay(stick.copy(this._rightTouchDir))
     if (stick.length() > bestStick.length()) bestStick.copy(stick)
 
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3]))
+        this._fourWay(this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3])))
         if (stick.length() > bestStick.length()) bestStick.copy(stick)
       }
     }
@@ -472,7 +490,7 @@ AFRAME.registerComponent("locomotion", {
         }
       } else if (this._teleporting) {
         let pos = THREE.Vector3.temp()
-        this._teleportCursor.object3D.getWorldPosition(pos)
+        this._teleportCursor.object3D.localToWorld(pos.set(0, 0, 0))
         this.teleport(pos)
         this._teleportCursor.setAttribute("visible", false)
         this._teleportCursor.setAttribute("position", "0 0 0")
@@ -520,6 +538,16 @@ AFRAME.registerComponent("locomotion", {
     } else {
       vec.set(0, 0)
     }
+    return vec
+  },
+  _fourWay(vec) {
+    let len = vec.length()
+    if (Math.abs(vec.x) > Math.abs(vec.y)) {
+      vec.y = 0
+    } else {
+      vec.x = 0
+    }
+    vec.multiplyScalar(len / vec.length())
     return vec
   },
 

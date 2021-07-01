@@ -35,7 +35,7 @@ AFRAME.registerComponent("body", {
     }
     let body = { mid: this.mid }
     body.type = this.data.type
-    body.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+    body.position = this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0))
     body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
     if (this.mid !== null) {
       let p = this.mid * 8
@@ -53,7 +53,7 @@ AFRAME.registerComponent("body", {
     worker.postMessage("world body " + this.id + " create " + cmd.stringifyParam(body))
     // if (body.type === "static") 
     setTimeout(() => {
-      body.position = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+      body.position = this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0))
       body.quaternion = this.el.object3D.getWorldQuaternion(THREE.Quaternion.temp())
       worker.postMessage("world body " + this.id + " position = " + cmd.stringifyParam(body.position))
       worker.postMessage("world body " + this.id + " quaternion = " + cmd.stringifyParam(body.quaternion))
@@ -152,7 +152,7 @@ AFRAME.registerComponent("body", {
       let p = this.mid * 8
       if (buffer.length <= p) return
       if (this.data.type === "kinematic") {
-        let vec = this.el.object3D.getWorldPosition(THREE.Vector3.temp())
+        let vec = this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0))
         buffer[p++] = vec.x
         buffer[p++] = vec.y
         buffer[p++] = vec.z
@@ -204,7 +204,7 @@ AFRAME.registerComponent("body", {
     let worker = this.el.sceneEl.systems.physics.worker
     let pos = THREE.Vector3.temp()
     let quat = THREE.Quaternion.temp()
-    this.el.object3D.getWorldPosition(pos)
+    this.el.object3D.localToWorld(pos.set(0, 0, 0))
     worker.postMessage("world body " + this.id + " position " + cmd.stringifyParam(pos))
     this.el.object3D.getWorldQuaternion(quat)
     worker.postMessage("world body " + this.id + " quaternion " + cmd.stringifyParam(quat))
