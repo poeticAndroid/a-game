@@ -36,7 +36,8 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
     }
 
-    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", body: "type:kinematic;", visible: true, radius: 0.25 })
+    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", radius: 0.5 })
+    this._head.glove.setAttribute("body", "type:kinematic;")
     this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
