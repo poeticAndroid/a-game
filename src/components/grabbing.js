@@ -47,6 +47,12 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
+    this._head.reticle = this._head.ray.ensure(".reticle", "a-sphere", {
+      class: "reticle",
+      radius: 0.015625,
+      // color: "black",
+      position: "0 0 -1"
+    }, `<a-torus color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
     this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
@@ -170,6 +176,7 @@ AFRAME.registerComponent("grabbing", {
       if (this[_hand].grabbed) {
         // if (!this[_hand].isPhysical)
         this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else if (this[_hand].ray) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
@@ -181,10 +188,12 @@ AFRAME.registerComponent("grabbing", {
             this[_hand]._lastHit = hit.el
             this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
           }
+          if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
         } else {
           if (this[_hand]._lastHit)
             this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
           this[_hand]._lastHit = null
+          if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
         }
       }
     }
