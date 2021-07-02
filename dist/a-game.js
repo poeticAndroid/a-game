@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.14.1",
+  "version": "0.14.2",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -77,14 +77,17 @@ AFRAME.registerComponent("grabbing", {
   init() {
     this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
+    this._onKeyUp = this._onKeyUp.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
     this._onMouseUp = this._onMouseUp.bind(this)
+    this._onWheel = this._onWheel.bind(this)
     this._onButtonChanged = this._onButtonChanged.bind(this)
     this._onTouchTap = this._onTouchTap.bind(this)
     this._onTouchHold = this._onTouchHold.bind(this)
 
     this._btnPress = {}
     this._btnFlex = {}
+    this._keysDown = {}
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -126,8 +129,10 @@ AFRAME.registerComponent("grabbing", {
 
   play() {
     document.addEventListener("keydown", this._onKeyDown)
+    document.addEventListener("keyup", this._onKeyUp)
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
+    this.el.sceneEl.canvas.addEventListener("wheel", this._onWheel)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.addEventListener("buttonchanged", this._enableHands)
       hand.addEventListener("buttonchanged", this._onButtonChanged)
@@ -138,8 +143,10 @@ AFRAME.registerComponent("grabbing", {
 
   pause() {
     document.removeEventListener("keydown", this._onKeyDown)
+    document.removeEventListener("keyup", this._onKeyUp)
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
+    this.el.sceneEl.canvas.removeEventListener("wheel", this._onWheel)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.removeEventListener("buttonchanged", this._enableHands)
       hand.removeEventListener("buttonchanged", this._onButtonChanged)
@@ -168,6 +175,17 @@ AFRAME.registerComponent("grabbing", {
         if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
         if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
         if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
+        if (gamepad.buttons[2].pressed) {
+          if (gamepad.buttons[12].pressed) this.moveHeadHand(0, -0.03125)
+          if (gamepad.buttons[13].pressed) this.moveHeadHand(0, 0.03125)
+          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, -0.03125)
+          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0.03125)
+        } else {
+          if (gamepad.buttons[12].pressed) this.moveHeadHand(-0.03125)
+          if (gamepad.buttons[13].pressed) this.moveHeadHand(0.03125)
+          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, 0, 0.03125)
+          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0, -0.03125)
+        }
       }
     }
     this._grabBtn = false
@@ -318,7 +336,9 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].anchor.removeAttribute("joint__grab")
-    }, 32)
+      this[_hand].anchor.setAttribute("position", "0 0 0")
+      this[_hand].anchor.setAttribute("rotation", "0 0 0")
+    }, 64)
     setTimeout(() => {
       if (this[_hand].glove.getAttribute("body"))
         this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -352,6 +372,11 @@ AFRAME.registerComponent("grabbing", {
   useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
+  },
+  moveHeadHand(pz = 0, rx = 0, ry = 0, rz = 0) {
+    this._head.anchor.object3D.position.z = Math.min(Math.max(-1.5, this._head.anchor.object3D.position.z + pz), -0.125)
+    let quat = THREE.Quaternion.temp().set(rx, ry, rz, 1).normalize()
+    this._head.anchor.object3D.quaternion.premultiply(quat)
   },
 
   emit(eventtype, glove, grabbed, e = {}) {
@@ -476,10 +501,24 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
+  _onKeyDown(e) {
+    this._keysDown[e.code] = true
+    if (e.key === "e") this.toggleGrab()
+  },
+  _onKeyUp(e) { this._keysDown[e.code] = false },
   _onMouseDown(e) {
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
+  },
+  _onWheel(e) {
+    if (this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
+    if (this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
+    if (this._keysDown["KeyY"] && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
+    if (this._keysDown["KeyY"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
+    if (this._keysDown["KeyZ"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
+    if (this._keysDown["KeyZ"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
+    if (e.deltaY > 0) return this.moveHeadHand(0.125)
+    if (e.deltaY < 0) return this.moveHeadHand(-0.125)
   },
   _onMouseUp(e) {
     let btn = e.button
