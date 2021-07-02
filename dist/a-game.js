@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -104,8 +104,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
     }
 
-    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", radius: 0.5 })
-    this._head.glove.setAttribute("body", "type:kinematic;")
+    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", body: "type:kinematic;", radius: 0.25 })
     this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
@@ -299,7 +298,8 @@ AFRAME.registerComponent("grabbing", {
       }
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
-      this[_hand].glove.setAttribute("body", "collidesWith", 0)
+      if (this[_hand].glove.getAttribute("body"))
+        this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed)
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
@@ -320,7 +320,8 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].anchor.removeAttribute("joint__grab")
     }, 32)
     setTimeout(() => {
-      this[_hand].glove.setAttribute("body", "collidesWith", 1)
+      if (this[_hand].glove.getAttribute("body"))
+        this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
     this.el.removeState("grabbing")
