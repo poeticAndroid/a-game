@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -338,7 +338,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].anchor.removeAttribute("joint__grab")
       this[_hand].anchor.setAttribute("position", "0 0 0")
       this[_hand].anchor.setAttribute("rotation", "0 0 0")
-    }, 64)
+    }, 32)
     setTimeout(() => {
       if (this[_hand].glove.getAttribute("body"))
         this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -511,12 +511,12 @@ AFRAME.registerComponent("grabbing", {
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
+    if (e.shiftKey && this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
+    if (e.shiftKey && this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
+    if (e.shiftKey && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
+    if (e.shiftKey && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
     if (this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
     if (this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
-    if (this._keysDown["KeyY"] && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
-    if (this._keysDown["KeyY"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
-    if (this._keysDown["KeyZ"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
-    if (this._keysDown["KeyZ"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
     if (e.deltaY > 0) return this.moveHeadHand(0.125)
     if (e.deltaY < 0) return this.moveHeadHand(-0.125)
   },
