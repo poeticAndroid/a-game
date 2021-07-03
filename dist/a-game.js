@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.14.5",
+  "version": "0.14.6",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -242,7 +242,13 @@ AFRAME.registerComponent("grabbing", {
       }
 
       if (this[_hand].grabbed) {
-        // if (!this[_hand].isPhysical)
+        let ray = this[_hand].ray.components.raycaster
+        ray.refreshObjects()
+        for (let hit of ray.intersections) {
+          if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+            this.moveHeadHand(0.125)
+          }
+        }
         this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else if (this[_hand].ray) {
