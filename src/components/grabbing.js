@@ -178,7 +178,7 @@ AFRAME.registerComponent("grabbing", {
         ray.refreshObjects()
         for (let hit of ray.intersections) {
           if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
-            this.moveHeadHand(0.125)
+            this[_hand].anchor.object3D.position.multiplyScalar(0.5)
           }
         }
         this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
