@@ -167,7 +167,7 @@ AFRAME.registerComponent("locomotion", {
         if (this.currentFloor === hit.el) {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
-          this._move(delta)
+          this.move(delta)
           this.lastStep.add(delta)
           delta.y = 0
           this._legs.object3D.position.add(delta)
@@ -175,13 +175,13 @@ AFRAME.registerComponent("locomotion", {
           if (this.currentFloor) this.currentFloor.emit("leave")
           hit.el.emit("enter")
         }
-        this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
+        this.move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
         this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
         if (this.currentFloor) this.currentFloor.emit("leave")
         this._vertVelocity -= this.data.gravity * timeDelta
-        this._move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
+        this.move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
         this.currentFloor = null
       }
     }
@@ -222,7 +222,7 @@ AFRAME.registerComponent("locomotion", {
   teleport(pos, force) {
     let delta = THREE.Vector3.temp()
     delta.copy(pos).sub(this.feetPos)
-    this._move(delta)
+    this.move(delta)
     this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
     this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
     this._caution = 8
@@ -237,6 +237,11 @@ AFRAME.registerComponent("locomotion", {
     if (this.currentFloor) {
       this._vertVelocity = this.data.jumpForce
     }
+  },
+  stopFall() {
+    this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
+    this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
+    this._vertVelocity = Math.max(this._vertVelocity, 0)
   },
 
   toggleCrouch(reset) {
@@ -264,13 +269,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _move(delta) {
+  move(delta) {
     this.el.object3D.position.add(delta)
     this.centerPos.add(delta)
     this.headPos.add(delta)
     this._legs.object3D.position.y += delta.y
     this.feetPos.y += delta.y
   },
+
   _bump(pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
@@ -293,7 +299,7 @@ AFRAME.registerComponent("locomotion", {
           .normalize()
           .multiplyScalar(dist + 0.125)
         let feety = this._legs.object3D.position.y
-        this._move(delta)
+        this.move(delta)
         bumper.object3D.position.add(delta)
         if (this._legs.object3D.position.y !== feety) {
           if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
@@ -307,6 +313,12 @@ AFRAME.registerComponent("locomotion", {
         this._caution = 4
         this._bumpOverload++
         this._vertVelocity = Math.min(0, this._vertVelocity)
+        let detail = {
+          player: this.el,
+          object: hit.el
+        }
+        this.el.emit("bump", detail)
+        hit.el.emit("bump", detail)
       } else if (this._caution) {
         this._caution--
       } else {
@@ -370,7 +382,7 @@ AFRAME.registerComponent("locomotion", {
         delta.set(0, 0, 0)
       }
     }
-    this._move(delta)
+    this.move(delta)
   },
 
   _callAuxStick() {

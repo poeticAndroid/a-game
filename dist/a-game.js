@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.14.8",
+  "version": "0.14.9",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -65,7 +65,7 @@ require("./primitives/a-player")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":7,"./components/injectplayer":8,"./components/locomotion":9,"./components/onevent":13,"./components/onstate":14,"./components/physics":15,"./components/trigger":19,"./libs/betterRaycaster":20,"./libs/copyWorldPosRot":22,"./libs/ensureElement":23,"./libs/pools":24,"./libs/touchGestures":25,"./primitives/a-hand":26,"./primitives/a-main":27,"./primitives/a-player":28}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":8,"./components/injectplayer":9,"./components/locomotion":10,"./components/onevent":14,"./components/onstate":15,"./components/physics":16,"./components/trigger":20,"./libs/betterRaycaster":21,"./libs/copyWorldPosRot":23,"./libs/ensureElement":24,"./libs/pools":25,"./libs/touchGestures":26,"./primitives/a-hand":27,"./primitives/a-main":28,"./primitives/a-player":29}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -121,7 +121,7 @@ AFRAME.registerComponent("grabbing", {
       // color: "black",
       position: "0 0 -1"
     }, `<a-torus color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
-    this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: false, body: "type:kinematic;autoShape:false;" })
+    this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
   update(oldData) {
@@ -332,7 +332,7 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.setAttribute("visible", false)
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
-      this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
@@ -398,7 +398,7 @@ AFRAME.registerComponent("grabbing", {
     e.grabbedElement = grabbed
     e.gloveElement = glove
     for (let _hand of this._hands) {
-      if (this["_" + _hand].hand === glove) e.hand = _hand
+      if (this["_" + _hand].glove === glove) e.hand = _hand
     }
     glove.emit(eventtype, e)
     if (grabbed) grabbed.emit(eventtype, e)
@@ -440,8 +440,8 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.anchor = this._left.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._right.anchor = this._right.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._left.glove.setAttribute("visible", true)
     this._right.glove.setAttribute("visible", true)
 
@@ -586,11 +586,82 @@ AFRAME.registerComponent("grabbing", {
   },
 })
 
-require("./grabbing/grabbable")
+require("./grabbing/climbable")
 require("./grabbing/fingerflex")
+require("./grabbing/grabbable")
 require("./grabbing/receptacle")
 
-},{"./grabbing/fingerflex":4,"./grabbing/grabbable":5,"./grabbing/receptacle":6}],4:[function(require,module,exports){
+},{"./grabbing/climbable":4,"./grabbing/fingerflex":5,"./grabbing/grabbable":6,"./grabbing/receptacle":7}],4:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerComponent("climbable", {
+  dependencies: ["wall"],
+  schema: {
+  },
+
+  init() {
+    this.el.setAttribute("grabbable", "physics:false; kinematicGrab:false;")
+    this._player = this.el.sceneEl.querySelector("[locomotion")
+    this._quat = new THREE.Quaternion()
+    this._lpos = new THREE.Vector3()
+    this._wpos = new THREE.Vector3()
+    this._handpos = new THREE.Vector3()
+
+    this._onBump = this._onBump.bind(this)
+
+    setTimeout(() => {
+      this._quat.copy(this.el.object3D.quaternion)
+      this._lpos.copy(this.el.object3D.position)
+      this.el.object3D.getWorldPosition(this._wpos)
+      this._top = parseFloat(this.el.getAttribute("height") || 1) / 2 + 2
+    }, 256)
+  },
+
+  play() {
+    this._player.addEventListener("bump", this._onBump)
+  },
+  pause() {
+    this._player.removeEventListener("bump", this._onBump)
+  },
+
+  tick() {
+    if (!this._climbing) return
+    let delta = THREE.Vector3.temp()
+    this._hand.object3D.getWorldPosition(delta)
+    delta.sub(this._handpos).multiplyScalar(-1)
+    if (this._handName === "head") {
+      delta.y = 0
+      delta.y = delta.length()
+      this._handpos.y += delta.y
+    }
+    this._player.components.locomotion.stopFall()
+    this._player.components.locomotion.move(delta)
+    if (this._handpos.y - this._wpos.y > this._top) this._onBump()
+
+    this.el.object3D.quaternion.copy(this._quat)
+    this.el.object3D.position.copy(this._lpos)
+  },
+
+  events: {
+    grab(e) {
+      this._climbing = true
+      this._handName = e.detail.hand
+      this._hand = e.detail.gloveElement.parentNode//.querySelector(".anchor")
+      this._hand.object3D.getWorldPosition(this._handpos)
+      if (e.detail.intersection.distance > (this._handName === "head" ? 0.5 : 0.25)) setTimeout(this._onBump, 260)
+      else this._player.components.locomotion.jump()
+    },
+    drop(e) {
+      this._climbing = false
+    },
+  },
+
+  _onBump(e) {
+    this._player.components.grabbing.dropObject(this.el)
+  }
+})
+
+},{}],5:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("fingerflex", {
@@ -632,7 +703,7 @@ AFRAME.registerComponent("fingerflex", {
   }
 })
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbable", {
@@ -657,7 +728,7 @@ AFRAME.registerComponent("grabbable", {
   }
 })
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("receptacle", {
@@ -799,7 +870,7 @@ AFRAME.registerComponent("receptacle", {
 
 })
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("include", {
@@ -832,7 +903,7 @@ AFRAME.registerComponent("include", {
   }
 })
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("injectplayer", {
@@ -847,7 +918,7 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -1017,7 +1088,7 @@ AFRAME.registerComponent("locomotion", {
         if (this.currentFloor === hit.el) {
           let delta = THREE.Vector3.temp()
           delta.copy(this.currentFloor.object3D.position).sub(this.currentFloorPosition)
-          this._move(delta)
+          this.move(delta)
           this.lastStep.add(delta)
           delta.y = 0
           this._legs.object3D.position.add(delta)
@@ -1025,13 +1096,13 @@ AFRAME.registerComponent("locomotion", {
           if (this.currentFloor) this.currentFloor.emit("leave")
           hit.el.emit("enter")
         }
-        this._move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
+        this.move(THREE.Vector3.temp().set(0, 0.5 - hit.distance, 0))
         this.currentFloor = hit.el
         this.currentFloorPosition.copy(this.currentFloor.object3D.position)
       } else {
         if (this.currentFloor) this.currentFloor.emit("leave")
         this._vertVelocity -= this.data.gravity * timeDelta
-        this._move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
+        this.move(THREE.Vector3.temp().set(0, Math.max(-0.5, this._vertVelocity * timeDelta), 0))
         this.currentFloor = null
       }
     }
@@ -1072,7 +1143,7 @@ AFRAME.registerComponent("locomotion", {
   teleport(pos, force) {
     let delta = THREE.Vector3.temp()
     delta.copy(pos).sub(this.feetPos)
-    this._move(delta)
+    this.move(delta)
     this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
     this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
     this._caution = 8
@@ -1087,6 +1158,11 @@ AFRAME.registerComponent("locomotion", {
     if (this.currentFloor) {
       this._vertVelocity = this.data.jumpForce
     }
+  },
+  stopFall() {
+    this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
+    this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
+    this._vertVelocity = Math.max(this._vertVelocity, 0)
   },
 
   toggleCrouch(reset) {
@@ -1114,13 +1190,14 @@ AFRAME.registerComponent("locomotion", {
     }
   },
 
-  _move(delta) {
+  move(delta) {
     this.el.object3D.position.add(delta)
     this.centerPos.add(delta)
     this.headPos.add(delta)
     this._legs.object3D.position.y += delta.y
     this.feetPos.y += delta.y
   },
+
   _bump(pos, bumper) {
     let matrix = THREE.Matrix3.temp()
     let delta = THREE.Vector3.temp()
@@ -1143,7 +1220,7 @@ AFRAME.registerComponent("locomotion", {
           .normalize()
           .multiplyScalar(dist + 0.125)
         let feety = this._legs.object3D.position.y
-        this._move(delta)
+        this.move(delta)
         bumper.object3D.position.add(delta)
         if (this._legs.object3D.position.y !== feety) {
           if (bumper === this._headBumper) this._headBumper.object3D.position.copy(this._legBumper.object3D.position)
@@ -1157,6 +1234,12 @@ AFRAME.registerComponent("locomotion", {
         this._caution = 4
         this._bumpOverload++
         this._vertVelocity = Math.min(0, this._vertVelocity)
+        let detail = {
+          player: this.el,
+          object: hit.el
+        }
+        this.el.emit("bump", detail)
+        hit.el.emit("bump", detail)
       } else if (this._caution) {
         this._caution--
       } else {
@@ -1220,7 +1303,7 @@ AFRAME.registerComponent("locomotion", {
         delta.set(0, 0, 0)
       }
     }
-    this._move(delta)
+    this.move(delta)
   },
 
   _callAuxStick() {
@@ -1503,7 +1586,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":10,"./locomotion/start":11,"./locomotion/wall":12}],10:[function(require,module,exports){
+},{"./locomotion/floor":11,"./locomotion/start":12,"./locomotion/wall":13}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1516,7 +1599,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1537,7 +1620,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1550,7 +1633,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onevent", {
@@ -1593,7 +1676,7 @@ AFRAME.registerComponent("onevent", {
   }
 })
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onstate", {
@@ -1637,7 +1720,7 @@ AFRAME.registerComponent("onstate", {
   }
 })
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -1752,7 +1835,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":21,"./physics/body":16,"./physics/joint":17,"./physics/shape":18}],16:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":22,"./physics/body":17,"./physics/joint":18,"./physics/shape":19}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -1967,7 +2050,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":21}],17:[function(require,module,exports){
+},{"../../libs/cmdCodec":22}],18:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2051,7 +2134,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":21}],18:[function(require,module,exports){
+},{"../../libs/cmdCodec":22}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2132,7 +2215,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":21}],19:[function(require,module,exports){
+},{"../../libs/cmdCodec":22}],20:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("trigger", {
@@ -2216,7 +2299,7 @@ AFRAME.registerComponent("trigger", {
 
 })
 
-},{}],20:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
@@ -2244,7 +2327,7 @@ function deepMatch(selector) {
   let deep = (selector + ", ").replaceAll(",", " *,")
   return deep + selector
 }
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -2265,7 +2348,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -2283,7 +2366,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -2298,7 +2381,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -2324,7 +2407,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -2418,7 +2501,7 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -2427,11 +2510,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {

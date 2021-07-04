@@ -37,8 +37,10 @@ This makes it possible to move around the using the following controls.
 | Method               | Description                                                                                            |
 | -------------------- | ------------------------------------------------------------------------------------------------------ |
 | teleport(pos, force) | Teleport to given position. if `force` is `true`, player will pass through walls/floors along the way. |
+| move(delta)          | Move by given vector.                                                                                  |
 | toggleCrouch(reset)  | Toggle crouch mode. if `reset` is `true`, player height will be reset to default.                      |
 | jump()               | Make the player jump if possible.                                                                      |
+| stopFall()           | Stop the fall momentarily.                                                                             |
 
 
 ## Events
@@ -46,6 +48,7 @@ This makes it possible to move around the using the following controls.
 | Event | Description                                  |
 | ----- | -------------------------------------------- |
 | step  | Every time the player takes a simulated step |
+| bump  | Player bumps into wall                       |
 
 
 ## Related components

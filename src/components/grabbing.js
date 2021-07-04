@@ -53,7 +53,7 @@ AFRAME.registerComponent("grabbing", {
       // color: "black",
       position: "0 0 -1"
     }, `<a-torus color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
-    this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: false, body: "type:kinematic;autoShape:false;" })
+    this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
   update(oldData) {
@@ -264,7 +264,7 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].glove.setAttribute("visible", false)
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
-      this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
@@ -330,7 +330,7 @@ AFRAME.registerComponent("grabbing", {
     e.grabbedElement = grabbed
     e.gloveElement = glove
     for (let _hand of this._hands) {
-      if (this["_" + _hand].hand === glove) e.hand = _hand
+      if (this["_" + _hand].glove === glove) e.hand = _hand
     }
     glove.emit(eventtype, e)
     if (grabbed) grabbed.emit(eventtype, e)
@@ -372,8 +372,8 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.anchor = this._left.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._right.anchor = this._right.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._left.glove.setAttribute("visible", true)
     this._right.glove.setAttribute("visible", true)
 
@@ -518,6 +518,7 @@ AFRAME.registerComponent("grabbing", {
   },
 })
 
-require("./grabbing/grabbable")
+require("./grabbing/climbable")
 require("./grabbing/fingerflex")
+require("./grabbing/grabbable")
 require("./grabbing/receptacle")

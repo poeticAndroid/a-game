@@ -61,6 +61,7 @@ These events are emitted by both the glove and the `grabbable` that it's grabbin
 
 ## Related components
 
+ - [climbable](./grabbing/climbable.md)
+ - [fingerflex](./grabbing/fingerflex.md)
  - [grabbable](./grabbing/grabbable.md)
  - [receptacle](./grabbing/receptacle.md)
- - [fingerflex](./grabbing/fingerflex.md)
