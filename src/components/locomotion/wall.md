@@ -12,3 +12,10 @@ Add the `wall` component to any object you want the player not to be able to wal
 | Property   | Description                                                  | Default |
 | ---------- | ------------------------------------------------------------ | ------- |
 | physics    | Whether or not to add physics components automatically.      | true    |
+
+
+## Events
+
+| Event | Description            |
+| ----- | ---------------------- |
+| bump  | Player bumps into wall |

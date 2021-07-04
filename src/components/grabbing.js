@@ -9,14 +9,17 @@ AFRAME.registerComponent("grabbing", {
   init() {
     this._enableHands = this._enableHands.bind(this)
     this._onKeyDown = this._onKeyDown.bind(this)
+    this._onKeyUp = this._onKeyUp.bind(this)
     this._onMouseDown = this._onMouseDown.bind(this)
     this._onMouseUp = this._onMouseUp.bind(this)
+    this._onWheel = this._onWheel.bind(this)
     this._onButtonChanged = this._onButtonChanged.bind(this)
     this._onTouchTap = this._onTouchTap.bind(this)
     this._onTouchHold = this._onTouchHold.bind(this)
 
     this._btnPress = {}
     this._btnFlex = {}
+    this._keysDown = {}
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -25,7 +28,7 @@ AFRAME.registerComponent("grabbing", {
     this._head.hand = this.el.querySelector("a-camera")
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
-    this._head.glove = this._head.hand
+    this._head.glove = this._head.hand.ensure(".hitbox", "a-sphere", { class: "hitbox", body: "type:kinematic;", radius: 0.25 })
     this._left.glove = this._ensureGlove(this._left.hand)
     this._right.glove = this._ensureGlove(this._right.hand)
 
@@ -36,9 +39,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].hand.addEventListener("buttonchanged", this._enableHands)
     }
 
-    this._head.glove.ensure(".hitbox", "a-sphere", { class: "hitbox", radius: 0.5 })
-    this._head.glove.setAttribute("body", "type:kinematic;")
-    this._head.ray = this._head.glove.ensure(".grabbing-ray", "a-entity", {
+    this._head.ray = this._head.hand.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray", position: "0 -0.125 0",
       raycaster: {
         objects: "[wall], [grabbable]",
@@ -46,7 +47,13 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._head.anchor = this._head.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: false, body: "type:kinematic;autoShape:false;" })
+    this._head.reticle = this._head.ray.ensure(".reticle", "a-sphere", {
+      class: "reticle",
+      radius: 0.015625,
+      // color: "black",
+      position: "0 0 -1"
+    }, `<a-torus color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
+    this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
   update(oldData) {
@@ -59,8 +66,10 @@ AFRAME.registerComponent("grabbing", {
 
   play() {
     document.addEventListener("keydown", this._onKeyDown)
+    document.addEventListener("keyup", this._onKeyUp)
     this.el.sceneEl.canvas.addEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.addEventListener("mouseup", this._onMouseUp)
+    this.el.sceneEl.canvas.addEventListener("wheel", this._onWheel)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.addEventListener("buttonchanged", this._enableHands)
       hand.addEventListener("buttonchanged", this._onButtonChanged)
@@ -71,8 +80,10 @@ AFRAME.registerComponent("grabbing", {
 
   pause() {
     document.removeEventListener("keydown", this._onKeyDown)
+    document.removeEventListener("keyup", this._onKeyUp)
     this.el.sceneEl.canvas.removeEventListener("mousedown", this._onMouseDown)
     this.el.sceneEl.canvas.removeEventListener("mouseup", this._onMouseUp)
+    this.el.sceneEl.canvas.removeEventListener("wheel", this._onWheel)
     for (let hand of [this._left.hand, this._right.hand]) {
       // hand.removeEventListener("buttonchanged", this._enableHands)
       hand.removeEventListener("buttonchanged", this._onButtonChanged)
@@ -101,6 +112,17 @@ AFRAME.registerComponent("grabbing", {
         if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
         if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
         if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
+        if (gamepad.buttons[2].pressed) {
+          if (gamepad.buttons[12].pressed) this.moveHeadHand(0, -0.03125)
+          if (gamepad.buttons[13].pressed) this.moveHeadHand(0, 0.03125)
+          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, -0.03125)
+          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0.03125)
+        } else {
+          if (gamepad.buttons[12].pressed) this.moveHeadHand(-0.03125)
+          if (gamepad.buttons[13].pressed) this.moveHeadHand(0.03125)
+          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, 0, 0.03125)
+          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0, -0.03125)
+        }
       }
     }
     this._grabBtn = false
@@ -152,8 +174,15 @@ AFRAME.registerComponent("grabbing", {
       }
 
       if (this[_hand].grabbed) {
-        // if (!this[_hand].isPhysical)
+        let ray = this[_hand].ray.components.raycaster
+        ray.refreshObjects()
+        for (let hit of ray.intersections) {
+          if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+            this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+          }
+        }
         this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else if (this[_hand].ray) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
@@ -165,10 +194,12 @@ AFRAME.registerComponent("grabbing", {
             this[_hand]._lastHit = hit.el
             this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
           }
+          if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
         } else {
           if (this[_hand]._lastHit)
             this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
           this[_hand]._lastHit = null
+          if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
         }
       }
     }
@@ -231,8 +262,9 @@ AFRAME.registerComponent("grabbing", {
       }
       if (this.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
+      // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
-      this.emit("grab", this[_hand].glove, this[_hand].grabbed)
+      this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
@@ -250,8 +282,11 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].glove.setAttribute("visible", true)
     setTimeout(() => {
       this[_hand].anchor.removeAttribute("joint__grab")
+      this[_hand].anchor.setAttribute("position", "0 0 0")
+      this[_hand].anchor.setAttribute("rotation", "0 0 0")
     }, 32)
     setTimeout(() => {
+      // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
     this.emit("drop", this[_hand].glove, this[_hand].grabbed)
@@ -284,13 +319,18 @@ AFRAME.registerComponent("grabbing", {
     let _hand = "_" + hand
     this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
   },
+  moveHeadHand(pz = 0, rx = 0, ry = 0, rz = 0) {
+    this._head.anchor.object3D.position.z = Math.min(Math.max(-1.5, this._head.anchor.object3D.position.z + pz), -0.125)
+    let quat = THREE.Quaternion.temp().set(rx, ry, rz, 1).normalize()
+    this._head.anchor.object3D.quaternion.premultiply(quat)
+  },
 
   emit(eventtype, glove, grabbed, e = {}) {
     e.grabbing = this.el
     e.grabbedElement = grabbed
     e.gloveElement = glove
     for (let _hand of this._hands) {
-      if (this["_" + _hand].hand === glove) e.hand = _hand
+      if (this["_" + _hand].glove === glove) e.hand = _hand
     }
     glove.emit(eventtype, e)
     if (grabbed) grabbed.emit(eventtype, e)
@@ -332,8 +372,8 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._left.anchor = this._left.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._right.anchor = this._right.ray.ensure(".grabbing-anchor", "a-entity", { class: "grabbing-anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._left.anchor = this._left.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+    this._right.anchor = this._right.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
     this._left.glove.setAttribute("visible", true)
     this._right.glove.setAttribute("visible", true)
 
@@ -407,10 +447,24 @@ AFRAME.registerComponent("grabbing", {
     }
   },
 
-  _onKeyDown(e) { if (e.key === "e") this.toggleGrab() },
+  _onKeyDown(e) {
+    this._keysDown[e.code] = true
+    if (e.key === "e") this.toggleGrab()
+  },
+  _onKeyUp(e) { this._keysDown[e.code] = false },
   _onMouseDown(e) {
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
+  },
+  _onWheel(e) {
+    if (e.shiftKey && this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
+    if (e.shiftKey && this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
+    if (e.shiftKey && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
+    if (e.shiftKey && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
+    if (this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
+    if (this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
+    if (e.deltaY > 0) return this.moveHeadHand(0.125)
+    if (e.deltaY < 0) return this.moveHeadHand(-0.125)
   },
   _onMouseUp(e) {
     let btn = e.button
@@ -464,6 +518,7 @@ AFRAME.registerComponent("grabbing", {
   },
 })
 
-require("./grabbing/grabbable")
+require("./grabbing/climbable")
 require("./grabbing/fingerflex")
+require("./grabbing/grabbable")
 require("./grabbing/receptacle")
