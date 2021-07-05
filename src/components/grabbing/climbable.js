@@ -14,6 +14,8 @@ AFRAME.registerComponent("climbable", {
     this._handpos = new THREE.Vector3()
 
     this._onBump = this._onBump.bind(this)
+    this._onBumpThis = this._onBumpThis.bind(this)
+    this._autoGrab = true
 
     setTimeout(() => {
       this._quat.copy(this.el.object3D.quaternion)
@@ -25,9 +27,11 @@ AFRAME.registerComponent("climbable", {
 
   play() {
     this._player.addEventListener("bump", this._onBump)
+    this.el.addEventListener("bump", this._onBumpThis)
   },
   pause() {
     this._player.removeEventListener("bump", this._onBump)
+    this.el.removeEventListener("bump", this._onBumpThis)
   },
 
   tick() {
@@ -42,7 +46,7 @@ AFRAME.registerComponent("climbable", {
     }
     this._player.components.locomotion.stopFall()
     this._player.components.locomotion.move(delta)
-    if (this._handpos.y - this._wpos.y > this._top) this._onBump()
+    if (this._handpos.y - this._wpos.y > this._top) this._player.components.grabbing.dropObject(this.el)
 
     this.el.object3D.quaternion.copy(this._quat)
     this.el.object3D.position.copy(this._lpos)
@@ -52,17 +56,35 @@ AFRAME.registerComponent("climbable", {
     grab(e) {
       this._climbing = true
       this._handName = e.detail.hand
-      this._hand = e.detail.gloveElement.parentNode//.querySelector(".anchor")
+      this._hand = e.detail.gloveElement.parentNode
       this._hand.object3D.getWorldPosition(this._handpos)
       if (e.detail.intersection.distance > (this._handName === "head" ? 0.5 : 0.25)) setTimeout(this._onBump, 260)
       else this._player.components.locomotion.jump()
+      clearTimeout(this._autoCrouchTO)
+      this._autoCrouchTO = setTimeout(() => {
+        this.el.sceneEl.querySelector(".legs")?.object3D.position.copy(this._player.components.locomotion.headPos)
+      }, 1024)
     },
     drop(e) {
       this._climbing = false
+      clearTimeout(this._autoCrouchTO)
+      this._autoCrouchTO = setTimeout(() => {
+        this._player.components.locomotion.toggleCrouch(true)
+      }, 1024)
     },
   },
 
   _onBump(e) {
+    if (this._autoGrab) return
     this._player.components.grabbing.dropObject(this.el)
+    clearTimeout(this._autoGrabTO)
+    this._autoGrabTO = setTimeout(() => {
+      this._autoGrab = true
+    }, 4096)
+  },
+  _onBumpThis(e) {
+    if (!this._autoGrab) return
+    this._player.components.grabbing.grab()
+    this._autoGrab = false
   }
 })
