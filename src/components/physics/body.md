@@ -18,12 +18,12 @@ A physical body..
 
 | Property     | Description                                            | Default    |
 | ------------ | ------------------------------------------------------ | ---------- |
-| type         | `static`, `dynamic` or `kinematic`                     | static     |
+| type         | `static`, `dynamic` or `kinematic`                     | dynamic    |
 | mass         | Mass of body                                           | 1          |
 | friction     | Friction of body                                       | 0.3        |
 | restitution  | Bounciness of body                                     | 0.3        |
 | belongsTo    | Bitmask of groups body belongs to                      | 1          |
-| collidesWith | Bitmask of groups body collides with                   | 0xffffffff |
+| collidesWith | Bitmask of groups body collides with                   | 1          |
 | emitsWith    | Bitmask of groups body emits event when colliding with | 0          |
 | sleeping     | Whether or not to start sleeping                       | false      |
 | autoShape    | Automatically add `shape` components                   | true       |
