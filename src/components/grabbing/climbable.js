@@ -70,7 +70,10 @@ AFRAME.registerComponent("climbable", {
       clearTimeout(this._autoCrouchTO)
       this._autoCrouchTO = setTimeout(() => {
         this._player.components.locomotion.toggleCrouch(true)
-      }, 1024)
+        this._autoCrouchTO = setTimeout(() => {
+          this.el.sceneEl.querySelector(".legs")?.object3D.position.add(this._player.components.locomotion.centerPos).sub(this._player.components.locomotion.feetPos)
+        }, 512)
+      }, 256)
     },
   },
 

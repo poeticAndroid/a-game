@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.15.4",
+  "version": "0.15.5",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -751,7 +751,10 @@ AFRAME.registerComponent("climbable", {
       clearTimeout(this._autoCrouchTO)
       this._autoCrouchTO = setTimeout(() => {
         this._player.components.locomotion.toggleCrouch(true)
-      }, 1024)
+        this._autoCrouchTO = setTimeout(() => {
+          this.el.sceneEl.querySelector(".legs")?.object3D.position.add(this._player.components.locomotion.centerPos).sub(this._player.components.locomotion.feetPos)
+        }, 512)
+      }, 256)
     },
   },
 
