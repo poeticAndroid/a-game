@@ -57,10 +57,15 @@ These events are emitted by both the glove and the `grabbable` that it's grabbin
 | useup       | use-button is released.    |
 | drop        | dropping.                  |
 | fingerflex  | a finger is flexing.       |
+| hover       | button is pointed at        |
+| press       | button got pressed          |
+| unpress     | button no longer pressed    |
+| unhover     | button no longer pointed at |
 
 
 ## Related components
 
+ - [button](./grabbing/button.md)
  - [climbable](./grabbing/climbable.md)
  - [fingerflex](./grabbing/fingerflex.md)
  - [grabbable](./grabbing/grabbable.md)

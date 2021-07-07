@@ -33,6 +33,7 @@ Essential game components for [A-Frame](https://aframe.io/)!
 ## Components
 
  - [grabbing](./src/components/grabbing.md)
+   - [button](./src/components/grabbing/button.md)
    - [climbable](./src/components/grabbing/climbable.md)
    - [fingerflex](./src/components/grabbing/fingerflex.md)
    - [grabbable](./src/components/grabbing/grabbable.md)

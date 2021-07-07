@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.15.2",
+  "version": "0.15.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -65,7 +65,7 @@ require("./primitives/a-player")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":8,"./components/injectplayer":9,"./components/locomotion":10,"./components/onevent":14,"./components/onstate":15,"./components/physics":16,"./components/trigger":20,"./libs/betterRaycaster":21,"./libs/copyWorldPosRot":23,"./libs/ensureElement":24,"./libs/pools":25,"./libs/touchGestures":26,"./primitives/a-hand":27,"./primitives/a-main":28,"./primitives/a-player":29}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":9,"./components/injectplayer":10,"./components/locomotion":11,"./components/onevent":15,"./components/onstate":16,"./components/physics":17,"./components/trigger":21,"./libs/betterRaycaster":22,"./libs/copyWorldPosRot":24,"./libs/ensureElement":25,"./libs/pools":26,"./libs/touchGestures":27,"./primitives/a-hand":28,"./primitives/a-main":29,"./primitives/a-player":30}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -115,12 +115,27 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
+    this._head.buttonRay = this._head.hand.ensure(".button.ray", "a-entity", {
+      class: "button ray", position: "0 -0.125 0",
+      raycaster: {
+        objects: "[wall], [button]",
+        far: 1,
+        autoRefresh: false,
+        // showLine: true,
+      }
+    })
     this._head.reticle = this._head.ray.ensure(".reticle", "a-sphere", {
       class: "reticle",
       radius: 0.015625,
       // color: "black",
       position: "0 0 -1"
-    }, `<a-torus color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
+    }, `<a-torus position="0 0 0.015625" color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
+    this._head.buttonReticle = this._head.buttonRay.ensure(".reticle", "a-sphere", {
+      class: "reticle",
+      radius: 0.015625,
+      color: "black",
+      position: "0 0 -1"
+    }, `<a-torus position="0 0 0.015625" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
     this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
@@ -173,6 +188,7 @@ AFRAME.registerComponent("grabbing", {
   },
 
   tick(time, timeDelta) {
+    // handle gamepads
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
@@ -216,6 +232,7 @@ AFRAME.registerComponent("grabbing", {
     for (let hand of this._hands) {
       let _hand = "_" + hand
 
+      // keep hands out of walls
       if (this[_hand]._occlusionRay) {
         let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
         this[_hand].glove.copyWorldPosRot(this[_hand].hand)
@@ -241,6 +258,7 @@ AFRAME.registerComponent("grabbing", {
         }
       }
 
+      // handle grabbables
       if (this[_hand].grabbed) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
@@ -251,23 +269,72 @@ AFRAME.registerComponent("grabbing", {
         }
         this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
-      } else if (this[_hand].ray) {
-        let ray = this[_hand].ray.components.raycaster
-        ray.refreshObjects()
-        let hit = ray.intersections[0]
-        if (hit && hit.el.getAttribute("grabbable") != null) {
-          if (this[_hand]._lastHit !== hit.el) {
+      } else {
+        if (this[_hand].ray) {
+          let ray = this[_hand].ray.components.raycaster
+          ray.refreshObjects()
+          let hit = ray.intersections[0]
+          if (hit && hit.el.getAttribute("grabbable") != null) {
+            if (this[_hand]._lastHit !== hit.el) {
+              if (this[_hand]._lastHit)
+                this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
+              this[_hand]._lastHit = hit.el
+              this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
+            }
+            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
+          } else {
             if (this[_hand]._lastHit)
               this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
-            this[_hand]._lastHit = hit.el
-            this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
+            this[_hand]._lastHit = null
+            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
           }
-          if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
-        } else {
-          if (this[_hand]._lastHit)
-            this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
-          this[_hand]._lastHit = null
-          if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
+        }
+
+        // handle buttons
+        if (this[_hand].buttonRay) {
+          let ray = this[_hand].buttonRay.components.raycaster
+          ray.refreshObjects()
+          let hit = ray.intersections[0]
+          if (hit && hit.el.getAttribute("button") != null) {
+            if (this[_hand]._lastButton !== hit.el) {
+              if (this[_hand]._lastButton)
+                this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
+              this[_hand]._lastButton = hit.el
+              this.emit("hover", this[_hand].glove, this[_hand]._lastButton)
+              this._flexFinger(hand, 7, 1)
+              this._flexFinger(hand, 1, 0)
+            }
+            if (hit.distance < 0.125) {
+              if (this[_hand]._lastPress !== hit.el) {
+                if (this[_hand]._lastPress) {
+                  this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)
+                  this[_hand]._lastPress.removeState("pressed")
+                }
+                this[_hand]._lastPress = hit.el
+                this.emit("press", this[_hand].glove, this[_hand]._lastPress)
+                this[_hand]._lastPress.addState("pressed")
+              }
+            } else {
+              if (this[_hand]._lastPress) {
+                this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)
+                this[_hand]._lastPress.removeState("pressed")
+              }
+              this[_hand]._lastPress = null
+            }
+            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = -hit.distance
+          } else {
+            if (this[_hand]._lastPress) {
+              this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)
+              this[_hand]._lastPress.removeState("pressed")
+            }
+            this[_hand]._lastPress = null
+            if (this[_hand]._lastButton) {
+              this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
+              this._flexFinger(hand, 7, 0.5)
+            }
+            this[_hand]._lastButton = null
+            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = 1
+          }
         }
       }
     }
@@ -336,6 +403,7 @@ AFRAME.registerComponent("grabbing", {
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
+      this._flexFinger(hand, 5, 0)
       setTimeout(() => {
         this.sticky = false
         this._flexFinger(hand, 5, 0.5)
@@ -381,11 +449,23 @@ AFRAME.registerComponent("grabbing", {
   useDown(hand = "head", button = 0) {
     let _hand = "_" + hand
     // if (!this[_hand].grabbed) return this.grab(hand)
-    this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
+    if (this[_hand].grabbed) {
+      this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
+    } else if (this[_hand]._lastButton) {
+      this[_hand]._lastClick = this[_hand]._lastButton
+      this.emit("press", this[_hand].glove, this[_hand]._lastClick, { button: button })
+      this[_hand]._lastClick.addState("pressed")
+    }
   },
   useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
-    this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
+    if (this[_hand].grabbed) {
+      this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
+    } else if (this[_hand]._lastClick) {
+      this.emit("unpress", this[_hand].glove, this[_hand]._lastClick)
+      this[_hand]._lastClick.removeState("pressed")
+      this[_hand]._lastClick = null
+    }
   },
   moveHeadHand(pz = 0, rx = 0, ry = 0, rz = 0) {
     this._head.anchor.object3D.position.z = Math.min(Math.max(-1.5, this._head.anchor.object3D.position.z + pz), -0.125)
@@ -421,31 +501,31 @@ AFRAME.registerComponent("grabbing", {
           autoRefresh: false
         }
       })
+
+      let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
+      this[_hand].ray = palm.ensure(".grabbing.ray", "a-entity", {
+        class: "grabbing ray", position: hand === "left" ? "-0.0625 0 0.0625" : "0.0625 0 0.0625", rotation: hand === "left" ? "0 -45 0" : "0 45 0",
+        raycaster: {
+          objects: "[wall], [grabbable]",
+          autoRefresh: false,
+          // showLine: true,
+        }
+      })
+      this[_hand].buttonRay = palm.ensure(".button.ray", "a-entity", {
+        class: "button ray", position: "0 0.03125 0", rotation: hand === "left" ? "0 -8 0" : "0 8 0",
+        raycaster: {
+          objects: "[wall], [button]",
+          far: 0.5,
+          autoRefresh: false,
+          // showLine: true,
+        }
+      })
+      this[_hand].anchor = this[_hand].ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
+      this[_hand].glove.setAttribute("visible", true)
     }
-    let palm = this._left.glove.querySelector(".palm") || this._left.glove
-    this._left.ray = palm.ensure(".grabbing-ray", "a-entity", {
-      class: "grabbing-ray", position: "-0.0625 0 0.0625", rotation: "0 -45 0",
-      raycaster: {
-        objects: "[wall], [grabbable]",
-        autoRefresh: false,
-        // showLine: true,
-      }
-    })
-    palm = this._right.glove.querySelector(".palm") || this._right.glove
-    this._right.ray = palm.ensure(".grabbing-ray", "a-entity", {
-      class: "grabbing-ray", position: "0.0625 0 0.0625", rotation: "0 45 0",
-      raycaster: {
-        objects: "[wall], [grabbable]",
-        autoRefresh: false,
-        // showLine: true,
-      }
-    })
-    this._left.anchor = this._left.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._right.anchor = this._right.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: "false", body: "type:kinematic;autoShape:false;" })
-    this._left.glove.setAttribute("visible", true)
-    this._right.glove.setAttribute("visible", true)
 
     this._head.ray = null
+    this._head.buttonRay = null
     this.update()
   },
 
@@ -578,20 +658,27 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (this.sticky) {
-      finger = 5
-      flex = 0
-    }
-    this._flexFinger(hand, finger, flex)
+    if (!this.sticky && !this[_hand]._lastButton)
+      this._flexFinger(hand, finger, flex)
   },
 })
 
+require("./grabbing/button")
 require("./grabbing/climbable")
 require("./grabbing/fingerflex")
 require("./grabbing/grabbable")
 require("./grabbing/receptacle")
 
-},{"./grabbing/climbable":4,"./grabbing/fingerflex":5,"./grabbing/grabbable":6,"./grabbing/receptacle":7}],4:[function(require,module,exports){
+},{"./grabbing/button":4,"./grabbing/climbable":5,"./grabbing/fingerflex":6,"./grabbing/grabbable":7,"./grabbing/receptacle":8}],4:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerComponent("button", {
+  schema: {
+  },
+
+})
+
+},{}],5:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("climbable", {
@@ -683,7 +770,7 @@ AFRAME.registerComponent("climbable", {
   }
 })
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("fingerflex", {
@@ -725,7 +812,7 @@ AFRAME.registerComponent("fingerflex", {
   }
 })
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbable", {
@@ -750,7 +837,7 @@ AFRAME.registerComponent("grabbable", {
   }
 })
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("receptacle", {
@@ -892,7 +979,7 @@ AFRAME.registerComponent("receptacle", {
 
 })
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("include", {
@@ -925,7 +1012,7 @@ AFRAME.registerComponent("include", {
   }
 })
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("injectplayer", {
@@ -940,7 +1027,7 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -1608,7 +1695,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":11,"./locomotion/start":12,"./locomotion/wall":13}],11:[function(require,module,exports){
+},{"./locomotion/floor":12,"./locomotion/start":13,"./locomotion/wall":14}],12:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1621,7 +1708,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1642,7 +1729,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1655,7 +1742,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onevent", {
@@ -1698,7 +1785,7 @@ AFRAME.registerComponent("onevent", {
   }
 })
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onstate", {
@@ -1742,7 +1829,7 @@ AFRAME.registerComponent("onstate", {
   }
 })
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -1857,7 +1944,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":22,"./physics/body":17,"./physics/joint":18,"./physics/shape":19}],17:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":23,"./physics/body":18,"./physics/joint":19,"./physics/shape":20}],18:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2072,7 +2159,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":22}],18:[function(require,module,exports){
+},{"../../libs/cmdCodec":23}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2156,7 +2243,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":22}],19:[function(require,module,exports){
+},{"../../libs/cmdCodec":23}],20:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2237,7 +2324,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":22}],20:[function(require,module,exports){
+},{"../../libs/cmdCodec":23}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("trigger", {
@@ -2321,7 +2408,7 @@ AFRAME.registerComponent("trigger", {
 
 })
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
@@ -2349,7 +2436,7 @@ function deepMatch(selector) {
   let deep = (selector + ", ").replaceAll(",", " *,")
   return deep + selector
 }
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -2370,7 +2457,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -2388,7 +2475,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -2403,7 +2490,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -2429,7 +2516,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -2523,7 +2610,7 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -2532,11 +2619,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {
