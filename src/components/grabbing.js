@@ -590,7 +590,7 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (!this.sticky && !this[_hand]._lastButton)
+    if (!this.sticky && !this[_hand]._lastButton || finger === 0)
       this._flexFinger(hand, finger, flex)
   },
 })

@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.15.5",
+  "version": "0.15.6",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -658,7 +658,7 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (!this.sticky && !this[_hand]._lastButton)
+    if (!this.sticky && !this[_hand]._lastButton || finger === 0)
       this._flexFinger(hand, finger, flex)
   },
 })
