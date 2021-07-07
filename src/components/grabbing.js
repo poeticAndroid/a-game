@@ -537,12 +537,12 @@ AFRAME.registerComponent("grabbing", {
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
-    if (e.shiftKey && this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
-    if (e.shiftKey && this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
-    if (e.shiftKey && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
-    if (e.shiftKey && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
-    if (this._keysDown["KeyX"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
-    if (this._keysDown["KeyX"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
+    if (this._keysDown["KeyR"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
+    if (this._keysDown["KeyR"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
+    if (this._keysDown["KeyY"] && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
+    if (this._keysDown["KeyY"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
+    if (this._keysDown["KeyT"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
+    if (this._keysDown["KeyT"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
     if (e.deltaY > 0) return this.moveHeadHand(0.125)
     if (e.deltaY < 0) return this.moveHeadHand(-0.125)
   },

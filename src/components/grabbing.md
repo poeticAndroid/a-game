@@ -16,7 +16,7 @@ This makes it possible to grab and use grabbable objects using the following con
 | Primary use | Trigger              | Left click       | Tap      |
 | Secondary   | A                    | Right click      |
 | Tertiary    | B                    | Middle click     |
-| Move hand   | X, D-pad             | Shift, X, scroll |
+| Move hand   | X + D-pad            | R/T/Y + scroll wheel |
 
 
 ## Properties
