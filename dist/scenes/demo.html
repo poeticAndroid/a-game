@@ -1,6 +1,6 @@
-<a-main>
+<a-main script="src:./scenes/demo.js">
   <a-sky src="#skyImg"></a-sky>
-  <a-entity start position="0 16 1"></a-entity>
+  <a-entity start position="0 1 1"></a-entity>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
   <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable
     onevent__reachable="property:color; value:yellow;" onevent__unreachable="property:color; value:blue;"
@@ -20,8 +20,8 @@
   </a-box>
   <a-box src="#granite" width="6" depth="0.125" height="20" material="repeat: 6 20" climbable wall position="0 8 9">
   </a-box>
-  <a-cylinder trigger onevent__trigger="entity:#triggerIndicator; property:color; value:green;"
-    onevent__untrigger="entity:#triggerIndicator; property:color; value:red;" position="-3 1 0" height="2" radius="2"
+  <a-cylinder trigger onstate__triggered="entity:#triggerIndicator; property:color; on:green; off:red;"
+    onevent__trigger="entity:a-main; property:script.call; value:inside;" position="-3 1 0" height="2" radius="2"
     material="opacity:0.5">
     <a-sphere grabbable="physics:false;" id="triggerIndicator" radius="0.125"></a-sphere>
   </a-cylinder>
