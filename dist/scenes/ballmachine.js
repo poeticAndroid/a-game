@@ -1,11 +1,9 @@
-AFRAME.registerComponent("ball-spewer", {
-  schema: { type: "string" },
-
+({
   init() {
     setTimeout(() => {
-      this.el.removeAttribute("ball-spewer")
+      this.el.removeAttribute("script")
       setTimeout(() => {
-        this.el.setAttribute("ball-spewer", "")
+        this.el.setAttribute("script", "")
       }, 1000 * 60 * 5)
     }, 16000)
   },
@@ -31,13 +29,5 @@ AFRAME.registerComponent("ball-spewer", {
     })
     let scene = this.el.sceneEl.querySelector("a-main")
     scene.appendChild(ball)
-  }
-})
-AFRAME.registerComponent("deadvoid", {
-  schema: { type: "string" },
-
-  tick() {
-    if (this.el.object3D.position.y < -8)
-      this.el.parentElement.removeChild(this.el)
   }
 })

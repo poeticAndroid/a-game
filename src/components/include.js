@@ -3,7 +3,7 @@
 AFRAME.registerComponent("include", {
   schema: { type: "string" },
 
-  init: async function () {
+  async init() {
     if (this.data && !this.el.sceneEl._including_) {
       this.el.sceneEl._including_ = true
       let b4Content = this.el.outerHTML

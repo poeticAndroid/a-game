@@ -6,7 +6,7 @@ Essential game components for [A-Frame](https://aframe.io/)!
 <html>
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.15.0/dist/a-game.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.16.0/dist/a-game.min.js"></script>
   </head>
   <body>
     <a-scene physics>
@@ -33,6 +33,7 @@ Essential game components for [A-Frame](https://aframe.io/)!
 ## Components
 
  - [grabbing](./src/components/grabbing.md)
+   - [button](./src/components/grabbing/button.md)
    - [climbable](./src/components/grabbing/climbable.md)
    - [fingerflex](./src/components/grabbing/fingerflex.md)
    - [grabbable](./src/components/grabbing/grabbable.md)
@@ -48,5 +49,6 @@ Essential game components for [A-Frame](https://aframe.io/)!
    - [body](./src/components/physics/body.md)
    - [joint](./src/components/physics/joint.md)
    - [shape](./src/components/physics/shape.md)
+ - [script](./src/components/script.md)
  - [trigger](./src/components/trigger.md)
  
