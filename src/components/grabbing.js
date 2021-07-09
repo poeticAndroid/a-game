@@ -20,6 +20,7 @@ AFRAME.registerComponent("grabbing", {
     this._btnPress = {}
     this._btnFlex = {}
     this._keysDown = {}
+    this._grabCount = 0
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -332,6 +333,7 @@ AFRAME.registerComponent("grabbing", {
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
+      this._grabCount = Math.min(2, this._grabCount + 1)
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
@@ -357,9 +359,11 @@ AFRAME.registerComponent("grabbing", {
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
-    this.emit("drop", this[_hand].glove, this[_hand].grabbed)
-    this.el.removeState("grabbing")
     if (this[_hand].grabbed) {
+      this.emit("drop", this[_hand].glove, this[_hand].grabbed)
+      this._grabCount = Math.max(0, this._grabCount - 1)
+      if (!this._grabCount)
+        this.el.removeState("grabbing")
       this._flexFinger(hand, 5, 0)
       this[_hand].grabbed.removeState("grabbed")
       this[_hand].grabbed = null

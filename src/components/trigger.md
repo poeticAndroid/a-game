@@ -23,3 +23,10 @@ These events are emitted by both the triggered and the triggering object.
 | --------- | ------------------ |
 | trigger   | object has entered |
 | untrigger | object has left    |
+
+
+## States
+
+| State     | Description                               |
+| --------- | ----------------------------------------- |
+| triggered | at least one object is inside the trigger |

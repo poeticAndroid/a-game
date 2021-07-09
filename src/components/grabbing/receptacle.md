@@ -25,3 +25,10 @@ These event are emitted on the receptacle as well as the object it attracts.
 | take    | object is taken out of the receptacle             |
 | hover   | attractive object is within radius                |
 | unhover | attractive object is out of radius                |
+
+
+## States
+
+| Event  | Description                 |
+| ------ | --------------------------- |
+| filled | currently holding something |

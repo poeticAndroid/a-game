@@ -63,6 +63,13 @@ These events are emitted by both the glove and the `grabbable` that it's grabbin
 | unhover     | button no longer pointed at |
 
 
+## States
+
+| State    | Description                  |
+| -------- | ---------------------------- |
+| grabbing | currently grabbing something |
+
+
 ## Related components
 
  - [button](./grabbing/button.md)
