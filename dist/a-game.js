@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.16.0",
+  "version": "0.16.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -689,17 +689,18 @@ AFRAME.registerComponent("climbable", {
 
   init() {
     this.el.setAttribute("grabbable", "physics:false; kinematicGrab:false;")
-    this._player = this.el.sceneEl.querySelector("[locomotion")
-    this._quat = new THREE.Quaternion()
-    this._lpos = new THREE.Vector3()
-    this._wpos = new THREE.Vector3()
-    this._handpos = new THREE.Vector3()
+    this._player = this.el.sceneEl.querySelector("[locomotion]")
 
     this._onBump = this._onBump.bind(this)
     this._onBumpThis = this._onBumpThis.bind(this)
     this._autoGrab = true
 
     setTimeout(() => {
+      this._quat = new THREE.Quaternion()
+      this._lpos = new THREE.Vector3()
+      this._wpos = new THREE.Vector3()
+      this._handpos = new THREE.Vector3()
+
       this._quat.copy(this.el.object3D.quaternion)
       this._lpos.copy(this.el.object3D.position)
       this.el.object3D.getWorldPosition(this._wpos)
@@ -714,9 +715,14 @@ AFRAME.registerComponent("climbable", {
   pause() {
     this._player.removeEventListener("bump", this._onBump)
     this.el.removeEventListener("bump", this._onBumpThis)
+    this._climbing = false
   },
 
   tick() {
+    if (!this._lpos) return
+    this.el.object3D.quaternion.copy(this._quat)
+    this.el.object3D.position.copy(this._lpos)
+
     if (!this._climbing) return
     let delta = THREE.Vector3.temp()
     this._hand.object3D.getWorldPosition(delta)
@@ -729,9 +735,6 @@ AFRAME.registerComponent("climbable", {
     this._player.components.locomotion.stopFall()
     this._player.components.locomotion.move(delta)
     if (this._handpos.y - this._wpos.y > this._top) this._player.components.grabbing.dropObject(this.el)
-
-    this.el.object3D.quaternion.copy(this._quat)
-    this.el.object3D.position.copy(this._lpos)
   },
 
   events: {
