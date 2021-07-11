@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.16.3",
+  "version": "0.16.4",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -610,12 +610,14 @@ AFRAME.registerComponent("grabbing", {
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
-    if (this._keysDown["KeyR"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
-    if (this._keysDown["KeyR"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
-    if (this._keysDown["KeyY"] && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
-    if (this._keysDown["KeyY"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
-    if (this._keysDown["KeyT"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
-    if (this._keysDown["KeyT"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
+    let x = 0, y = 0, z = 0
+    if (this._keysDown["Digit3"] && e.deltaY > 0) z += -0.125
+    if (this._keysDown["Digit3"] && e.deltaY < 0) z += 0.125
+    if (this._keysDown["Digit2"] && e.deltaY > 0) y += -0.125
+    if (this._keysDown["Digit2"] && e.deltaY < 0) y += 0.125
+    if (this._keysDown["Digit1"] && e.deltaY > 0) x += 0.125
+    if (this._keysDown["Digit1"] && e.deltaY < 0) x += -0.125
+    if (x || y || z) return this.moveHeadHand(0, x, y, z)
     if (e.deltaY > 0) return this.moveHeadHand(0.125)
     if (e.deltaY < 0) return this.moveHeadHand(-0.125)
   },
