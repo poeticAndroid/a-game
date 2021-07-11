@@ -16,7 +16,7 @@ This makes it possible to grab and use grabbable objects using the following con
 | Primary use | Trigger              | Left click       | Tap      |
 | Secondary   | A                    | Right click      |
 | Tertiary    | B                    | Middle click     |
-| Move hand   | X + D-pad            | R/T/Y + scroll wheel |
+| Move hand   | X + D-pad            | 1/2/3 + scroll wheel |
 
 
 ## Properties
@@ -61,6 +61,13 @@ These events are emitted by both the glove and the `grabbable` that it's grabbin
 | press       | button got pressed          |
 | unpress     | button no longer pressed    |
 | unhover     | button no longer pointed at |
+
+
+## States
+
+| State    | Description                  |
+| -------- | ---------------------------- |
+| grabbing | currently grabbing something |
 
 
 ## Related components

@@ -4,6 +4,7 @@ AFRAME.registerComponent("receptacle", {
   schema: {
     objects: { type: "string", default: "[grabbable]" },
     radius: { type: "number", default: 0.125 },
+    onlyGrabbed: { type: "boolean", default: false },
   },
 
   init() {
@@ -48,6 +49,7 @@ AFRAME.registerComponent("receptacle", {
         })
       }
       this._hover = false
+      this._grabbed = false
     } else if (delta.length() > this.data.radius) {
       if (this.el.is("filled")) {
         this._anchor.removeAttribute("joint__put")
@@ -71,6 +73,7 @@ AFRAME.registerComponent("receptacle", {
         })
       }
       this._hover = false
+      this._grabbed = false
     } else if (this.nearest.is("grabbed") || !this._hover) {
       if (!this._hover) {
         this.el.emit("hover", {
@@ -84,7 +87,9 @@ AFRAME.registerComponent("receptacle", {
       this._anchor.removeAttribute("animation__rot")
       this._anchor.copyWorldPosRot(this.nearest)
       this._hover = true
-    } else {
+      if (this.nearest.is("grabbed"))
+        this._grabbed = true
+    } else if (this._grabbed || !this.data.onlyGrabbed) {
       if (!this.el.is("filled")) {
         this._anchor.copyWorldPosRot(this.nearest)
         this._anchor.components.body.commit()

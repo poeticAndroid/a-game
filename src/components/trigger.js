@@ -54,10 +54,11 @@ AFRAME.registerComponent("trigger", {
           trigger: this.el,
           object: obj,
         }
-        this.el.removeState("triggered")
         this.el.emit("untrigger", d)
         obj.emit("untrigger", d)
         this.triggered.splice(this.triggered.indexOf(obj), 1)
+        if (!this.triggered.length)
+          this.el.removeState("triggered")
       }
     }
   },

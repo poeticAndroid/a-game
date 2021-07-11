@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -89,6 +89,7 @@ AFRAME.registerComponent("grabbing", {
     this._btnPress = {}
     this._btnFlex = {}
     this._keysDown = {}
+    this._grabCount = 0
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -401,6 +402,7 @@ AFRAME.registerComponent("grabbing", {
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
+      this._grabCount = Math.min(2, this._grabCount + 1)
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
@@ -426,9 +428,11 @@ AFRAME.registerComponent("grabbing", {
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
-    this.emit("drop", this[_hand].glove, this[_hand].grabbed)
-    this.el.removeState("grabbing")
     if (this[_hand].grabbed) {
+      this.emit("drop", this[_hand].glove, this[_hand].grabbed)
+      this._grabCount = Math.max(0, this._grabCount - 1)
+      if (!this._grabCount)
+        this.el.removeState("grabbing")
       this._flexFinger(hand, 5, 0)
       this[_hand].grabbed.removeState("grabbed")
       this[_hand].grabbed = null
@@ -606,12 +610,14 @@ AFRAME.registerComponent("grabbing", {
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
-    if (this._keysDown["KeyR"] && e.deltaY > 0) return this.moveHeadHand(0, 0, 0, -0.125)
-    if (this._keysDown["KeyR"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0, 0.125)
-    if (this._keysDown["KeyY"] && e.deltaY > 0) return this.moveHeadHand(0, 0, -0.125)
-    if (this._keysDown["KeyY"] && e.deltaY < 0) return this.moveHeadHand(0, 0, 0.125)
-    if (this._keysDown["KeyT"] && e.deltaY > 0) return this.moveHeadHand(0, 0.125)
-    if (this._keysDown["KeyT"] && e.deltaY < 0) return this.moveHeadHand(0, -0.125)
+    let x = 0, y = 0, z = 0
+    if (this._keysDown["Digit3"] && e.deltaY > 0) z += -0.125
+    if (this._keysDown["Digit3"] && e.deltaY < 0) z += 0.125
+    if (this._keysDown["Digit2"] && e.deltaY > 0) y += -0.125
+    if (this._keysDown["Digit2"] && e.deltaY < 0) y += 0.125
+    if (this._keysDown["Digit1"] && e.deltaY > 0) x += 0.125
+    if (this._keysDown["Digit1"] && e.deltaY < 0) x += -0.125
+    if (x || y || z) return this.moveHeadHand(0, x, y, z)
     if (e.deltaY > 0) return this.moveHeadHand(0.125)
     if (e.deltaY < 0) return this.moveHeadHand(-0.125)
   },
@@ -689,17 +695,18 @@ AFRAME.registerComponent("climbable", {
 
   init() {
     this.el.setAttribute("grabbable", "physics:false; kinematicGrab:false;")
-    this._player = this.el.sceneEl.querySelector("[locomotion")
-    this._quat = new THREE.Quaternion()
-    this._lpos = new THREE.Vector3()
-    this._wpos = new THREE.Vector3()
-    this._handpos = new THREE.Vector3()
+    this._player = this.el.sceneEl.querySelector("[locomotion]")
 
     this._onBump = this._onBump.bind(this)
     this._onBumpThis = this._onBumpThis.bind(this)
     this._autoGrab = true
 
     setTimeout(() => {
+      this._quat = new THREE.Quaternion()
+      this._lpos = new THREE.Vector3()
+      this._wpos = new THREE.Vector3()
+      this._handpos = new THREE.Vector3()
+
       this._quat.copy(this.el.object3D.quaternion)
       this._lpos.copy(this.el.object3D.position)
       this.el.object3D.getWorldPosition(this._wpos)
@@ -714,9 +721,14 @@ AFRAME.registerComponent("climbable", {
   pause() {
     this._player.removeEventListener("bump", this._onBump)
     this.el.removeEventListener("bump", this._onBumpThis)
+    this._climbing = false
   },
 
   tick() {
+    if (!this._lpos) return
+    this.el.object3D.quaternion.copy(this._quat)
+    this.el.object3D.position.copy(this._lpos)
+
     if (!this._climbing) return
     let delta = THREE.Vector3.temp()
     this._hand.object3D.getWorldPosition(delta)
@@ -729,9 +741,6 @@ AFRAME.registerComponent("climbable", {
     this._player.components.locomotion.stopFall()
     this._player.components.locomotion.move(delta)
     if (this._handpos.y - this._wpos.y > this._top) this._player.components.grabbing.dropObject(this.el)
-
-    this.el.object3D.quaternion.copy(this._quat)
-    this.el.object3D.position.copy(this._lpos)
   },
 
   events: {
@@ -848,6 +857,7 @@ AFRAME.registerComponent("receptacle", {
   schema: {
     objects: { type: "string", default: "[grabbable]" },
     radius: { type: "number", default: 0.125 },
+    onlyGrabbed: { type: "boolean", default: false },
   },
 
   init() {
@@ -892,6 +902,7 @@ AFRAME.registerComponent("receptacle", {
         })
       }
       this._hover = false
+      this._grabbed = false
     } else if (delta.length() > this.data.radius) {
       if (this.el.is("filled")) {
         this._anchor.removeAttribute("joint__put")
@@ -915,6 +926,7 @@ AFRAME.registerComponent("receptacle", {
         })
       }
       this._hover = false
+      this._grabbed = false
     } else if (this.nearest.is("grabbed") || !this._hover) {
       if (!this._hover) {
         this.el.emit("hover", {
@@ -928,7 +940,9 @@ AFRAME.registerComponent("receptacle", {
       this._anchor.removeAttribute("animation__rot")
       this._anchor.copyWorldPosRot(this.nearest)
       this._hover = true
-    } else {
+      if (this.nearest.is("grabbed"))
+        this._grabbed = true
+    } else if (this._grabbed || !this.data.onlyGrabbed) {
       if (!this.el.is("filled")) {
         this._anchor.copyWorldPosRot(this.nearest)
         this._anchor.components.body.commit()
@@ -2458,10 +2472,11 @@ AFRAME.registerComponent("trigger", {
           trigger: this.el,
           object: obj,
         }
-        this.el.removeState("triggered")
         this.el.emit("untrigger", d)
         obj.emit("untrigger", d)
         this.triggered.splice(this.triggered.indexOf(obj), 1)
+        if (!this.triggered.length)
+          this.el.removeState("triggered")
       }
     }
   },

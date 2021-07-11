@@ -28,3 +28,11 @@ Add the `grabbable` component to any object you want the player to be able to pi
 | useup       | use-button is released.    |
 | drop        | dropping.                  |
 | fingerflex  | a finger is flexing.       |
+
+
+## States
+
+| State   | Description                 |
+| ------- | --------------------------- |
+| grabbed | currently being grabbed     |
+| put     | currently in a `receptacle` |

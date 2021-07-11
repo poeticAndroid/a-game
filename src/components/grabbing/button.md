@@ -15,3 +15,10 @@ Add the `button` component to any object you want the player to be able to press
 | press   | button got pressed          |
 | unpress | button no longer pressed    |
 | unhover | button no longer pointed at |
+
+
+## States
+
+| State   | Description             |
+| ------- | ----------------------- |
+| pressed | currently being pressed |
