@@ -1,7 +1,7 @@
 {
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -20,6 +20,7 @@
   ],
   "keywords": [
     "aframe",
+    "aframe-component",
     "webvr",
     "webxr",
     "gamedev"
@@ -29,7 +30,7 @@
   "devDependencies": {
     "browserify": "^17.0.0",
     "foreach-cli": "^1.8.1",
-    "minify": "^7.0.1",
+    "minify": "^7.0.2",
     "pre-commit": "^1.2.2",
     "watchify": "^4.0.0"
   }
