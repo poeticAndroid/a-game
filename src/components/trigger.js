@@ -14,7 +14,7 @@ AFRAME.registerComponent("trigger", {
   },
 
   tick() {
-    if (!this.objects) this.refreshObjects()
+    if (!this.objects) return this.refreshObjects()
     let local = THREE.Vector3.temp()
     let width = parseFloat(this.el.getAttribute("width") || 1)
     let height = parseFloat(this.el.getAttribute("height") || 1)

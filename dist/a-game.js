@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.17.2",
+  "version": "0.17.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -31,7 +31,7 @@ module.exports={
   "devDependencies": {
     "browserify": "^17.0.0",
     "foreach-cli": "^1.8.1",
-    "minify": "^7.0.1",
+    "minify": "^7.0.2",
     "pre-commit": "^1.2.2",
     "watchify": "^4.0.0"
   }
@@ -2433,7 +2433,7 @@ AFRAME.registerComponent("trigger", {
   },
 
   tick() {
-    if (!this.objects) this.refreshObjects()
+    if (!this.objects) return this.refreshObjects()
     let local = THREE.Vector3.temp()
     let width = parseFloat(this.el.getAttribute("width") || 1)
     let height = parseFloat(this.el.getAttribute("height") || 1)
