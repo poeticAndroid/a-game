@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -644,7 +644,13 @@ AFRAME.registerComponent("grabbing", {
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.useUp(hand)
         break
       case 1: // Grip
-        finger = 7
+        if (flex <= 0 || flex >= 1) {
+          finger = 7
+          this._fist = flex > 0.5
+        } else {
+          if (!this.sticky) this._flexFinger(hand, 2, this._fist ? 0 : 1)
+          finger = 3
+        }
         if (e.detail.state.pressed && !this._btnPress[hand + e.detail.id]) this.grab(hand)
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.drop(hand)
         break
