@@ -5,6 +5,7 @@ AFRAME.registerComponent("receptacle", {
     objects: { type: "string", default: "[grabbable]" },
     radius: { type: "number", default: 0.125 },
     onlyGrabbed: { type: "boolean", default: false },
+    autoDrop: { type: "boolean", default: false },
   },
 
   init() {
@@ -82,6 +83,7 @@ AFRAME.registerComponent("receptacle", {
         this.nearest.emit("hover", {
           receptacle: this.el
         })
+        if (this.data.autoDrop && this._grabber) this._grabber.dropObject(this.nearest)
       }
       this._anchor.removeAttribute("animation__pos")
       this._anchor.removeAttribute("animation__rot")
@@ -139,6 +141,8 @@ AFRAME.registerComponent("receptacle", {
         this.nearest = el
       }
     })
+
+    this._grabber = this.el.sceneEl.querySelector("[grabbing]")?.components.grabbing
   },
 
 
