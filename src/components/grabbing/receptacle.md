@@ -32,4 +32,4 @@ These event are emitted on the receptacle as well as the object it attracts.
 
 | Event  | Description                 |
 | ------ | --------------------------- |
-| filled | currently holding something |
+| occupied | currently holding something |
