@@ -14,6 +14,7 @@ Add the `receptacle` component to any object you want to attract and hold anothe
 | objects     | Selector for the type of objects this receptacle attracts | `[grabbable]` |
 | radius      | Radius of attraction                                      | 0.125         |
 | onlyGrabbed | Only accept grabbed objects                               | false         |
+| autoDrop    | Automatically drop in object when within radius           | false         |
 
 
 ## Events
@@ -32,4 +33,4 @@ These event are emitted on the receptacle as well as the object it attracts.
 
 | Event  | Description                 |
 | ------ | --------------------------- |
-| filled | currently holding something |
+| occupied | currently holding something |

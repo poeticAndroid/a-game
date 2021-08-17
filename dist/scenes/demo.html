@@ -1,6 +1,8 @@
 <a-main script="src:./scenes/demo.js">
   <a-sky src="#skyImg"></a-sky>
   <a-entity start position="0 1 1"></a-entity>
+  <a-box trigger onevent__trigger="entity:a-main; property:include; value:./scenes/demo.html;" position="0 -16 0"
+    width="1024" depth="1024" visible="false"></a-box>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
   <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable
     onevent__reachable="property:color; value:yellow;" onevent__unreachable="property:color; value:blue;"
@@ -53,8 +55,8 @@
       rotation="0 0 21"></a-box>
     <a-box rotation="-90 0 0" src="#woodImg" material="repeat: 2 2" width="16" height="16" depth="0.25" floor></a-box>
     <a-sphere radius="0.125" receptacle="onlyGrabbed:true;" position="0 1 0"></a-sphere>
-    <a-sphere radius="0.125" receptacle position="1 1 0"></a-sphere>
-    <a-sphere radius="0.125" receptacle position="-1 1 0"></a-sphere>
+    <a-sphere radius="0.125" receptacle="autoDrop:true;" position="1 1 0"></a-sphere>
+    <a-sphere radius="0.125" receptacle="autoDrop:true;" position="-1 1 0"></a-sphere>
     <a-sphere radius="0.125" receptacle position="2 1 0"></a-sphere>
     <a-sphere radius="0.125" receptacle position="-2 1 0"></a-sphere>
     <a-cylinder src="#granite" climbable height="20" position="0 10 4"></a-cylinder>

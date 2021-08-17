@@ -5,6 +5,7 @@ AFRAME.registerComponent("receptacle", {
     objects: { type: "string", default: "[grabbable]" },
     radius: { type: "number", default: 0.125 },
     onlyGrabbed: { type: "boolean", default: false },
+    autoDrop: { type: "boolean", default: false },
   },
 
   init() {
@@ -27,11 +28,11 @@ AFRAME.registerComponent("receptacle", {
     this.nearest.object3D.localToWorld(delta.set(0, 0, 0))
     delta.sub(thisPos)
     if (this._lastNearest && this._lastNearest !== this.nearest) {
-      if (this.el.is("filled")) {
+      if (this.el.is("occupied")) {
         this._anchor.removeAttribute("joint__put")
         this._anchor.removeAttribute("animation__pos")
         this._anchor.removeAttribute("animation__rot")
-        this.el.removeState("filled")
+        this.el.removeState("occupied")
         this._lastNearest.removeState("put")
         this.el.emit("take", {
           grabbable: this._lastNearest
@@ -51,11 +52,11 @@ AFRAME.registerComponent("receptacle", {
       this._hover = false
       this._grabbed = false
     } else if (delta.length() > this.data.radius) {
-      if (this.el.is("filled")) {
+      if (this.el.is("occupied")) {
         this._anchor.removeAttribute("joint__put")
         this._anchor.removeAttribute("animation__pos")
         this._anchor.removeAttribute("animation__rot")
-        this.el.removeState("filled")
+        this.el.removeState("occupied")
         this.nearest.removeState("put")
         this.el.emit("take", {
           grabbable: this.nearest
@@ -82,6 +83,7 @@ AFRAME.registerComponent("receptacle", {
         this.nearest.emit("hover", {
           receptacle: this.el
         })
+        if (this.data.autoDrop && this._grabber) this._grabber.dropObject(this.nearest)
       }
       this._anchor.removeAttribute("animation__pos")
       this._anchor.removeAttribute("animation__rot")
@@ -90,12 +92,12 @@ AFRAME.registerComponent("receptacle", {
       if (this.nearest.is("grabbed"))
         this._grabbed = true
     } else if (this._grabbed || !this.data.onlyGrabbed) {
-      if (!this.el.is("filled")) {
+      if (!this.el.is("occupied")) {
         this._anchor.copyWorldPosRot(this.nearest)
         this._anchor.components.body.commit()
         if (this.nearest.components.body)
           this._anchor.setAttribute("joint__put", { body2: this.nearest, type: "lock" })
-        this.el.addState("filled")
+        this.el.addState("occupied")
         this.nearest.addState("put")
         this.el.emit("put", {
           grabbable: this.nearest
@@ -139,6 +141,8 @@ AFRAME.registerComponent("receptacle", {
         this.nearest = el
       }
     })
+
+    this._grabber = this.el.sceneEl.querySelector("[grabbing]")?.components.grabbing
   },
 
 
