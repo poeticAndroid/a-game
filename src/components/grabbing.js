@@ -574,7 +574,13 @@ AFRAME.registerComponent("grabbing", {
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.useUp(hand)
         break
       case 1: // Grip
-        finger = 7
+        if (flex <= 0 || flex >= 1) {
+          finger = 7
+          this._fist = flex > 0.5
+        } else {
+          if (!this.sticky) this._flexFinger(hand, 2, this._fist ? 0 : 1)
+          finger = 3
+        }
         if (e.detail.state.pressed && !this._btnPress[hand + e.detail.id]) this.grab(hand)
         if (!e.detail.state.pressed && this._btnPress[hand + e.detail.id]) this.drop(hand)
         break
