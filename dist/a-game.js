@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.20.0",
+  "version": "0.20.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -11,7 +11,7 @@ module.exports={
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "touch dist/foo.min.js && rm dist/*.min.js && foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -72,7 +72,7 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepa
 
 AFRAME.registerComponent("grabbing", {
   schema: {
-    hideOnGrab: { type: "boolean", default: true },
+    hideOnGrab: { type: "boolean", default: false },
     grabDistance: { type: "number", default: 1 }
   },
 
@@ -398,7 +398,7 @@ AFRAME.registerComponent("grabbing", {
           dur: 256
         })
       }
-      if (this.data.hideOnGrab)
+      if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
@@ -839,6 +839,7 @@ AFRAME.registerComponent("grabbable", {
   schema: {
     physics: { type: "boolean", default: true },
     kinematicGrab: { type: "boolean", default: true },
+    hideOnGrab: { type: "boolean", default: false },
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
   },

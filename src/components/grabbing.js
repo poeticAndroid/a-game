@@ -2,7 +2,7 @@
 
 AFRAME.registerComponent("grabbing", {
   schema: {
-    hideOnGrab: { type: "boolean", default: true },
+    hideOnGrab: { type: "boolean", default: false },
     grabDistance: { type: "number", default: 1 }
   },
 
@@ -328,7 +328,7 @@ AFRAME.registerComponent("grabbing", {
           dur: 256
         })
       }
-      if (this.data.hideOnGrab)
+      if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)

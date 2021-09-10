@@ -23,7 +23,7 @@ This makes it possible to grab and use grabbable objects using the following con
 
 | Property     | Description                          | Default |
 | ------------ | ------------------------------------ | ------- |
-| hideOnGrab   | Hide the glove when grabbing         | true    |
+| hideOnGrab   | Hide the glove when grabbing         | false   |
 | grabDistance | Maximum distance to grab object from | 1       |
 
 
