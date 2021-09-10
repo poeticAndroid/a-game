@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.20.3",
+  "version": "0.20.4",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -283,7 +283,8 @@ AFRAME.registerComponent("grabbing", {
                 this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
               this[_hand]._lastHit = hit.el
               this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
-              this._flexFinger(hand, 5, 0.25, true)
+              this._flexFinger(hand, 5, -0.125, true)
+              this._flexFinger(hand, 0, 0, true)
             }
             if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
           } else {
@@ -308,7 +309,7 @@ AFRAME.registerComponent("grabbing", {
               this[_hand]._lastButton = hit.el
               this.emit("hover", this[_hand].glove, this[_hand]._lastButton)
               this._flexFinger(hand, 7, 1, true)
-              this._flexFinger(hand, 1, 0, true)
+              this._flexFinger(hand, 1, -0.125, true)
             }
             if (hit.distance < 0.125) {
               if (this[_hand]._lastPress !== hit.el) {
@@ -462,8 +463,10 @@ AFRAME.registerComponent("grabbing", {
     let _hand = "_" + hand
     // if (!this[_hand].grabbed) return this.grab(hand)
     if (this[_hand].grabbed) {
+      this._flexFinger(hand, Math.max(0, 1 - button), 0.5, true)
       this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
     } else if (this[_hand]._lastButton) {
+      this._flexFinger(hand, 0, 0.5, true)
       this[_hand]._lastClick = this[_hand]._lastButton
       this.emit("press", this[_hand].glove, this[_hand]._lastClick, { button: button })
       this[_hand]._lastClick.addState("pressed")
@@ -472,8 +475,10 @@ AFRAME.registerComponent("grabbing", {
   useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     if (this[_hand].grabbed) {
+      this._flexFinger(hand, Math.max(0, 1 - button), 0, true)
       this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
     } else if (this[_hand]._lastClick) {
+      this._flexFinger(hand, 0, 0, true)
       this.emit("unpress", this[_hand].glove, this[_hand]._lastClick)
       this[_hand]._lastClick.removeState("pressed")
       this[_hand]._lastClick = null
