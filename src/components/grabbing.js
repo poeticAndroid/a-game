@@ -213,11 +213,14 @@ AFRAME.registerComponent("grabbing", {
                 this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
               this[_hand]._lastHit = hit.el
               this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
+              this._flexFinger(hand, 5, 0.25, true)
             }
             if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
           } else {
-            if (this[_hand]._lastHit)
+            if (this[_hand]._lastHit) {
               this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
+              this._restoreUserFlex(hand)
+            }
             this[_hand]._lastHit = null
             if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
           }
@@ -234,8 +237,8 @@ AFRAME.registerComponent("grabbing", {
                 this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
               this[_hand]._lastButton = hit.el
               this.emit("hover", this[_hand].glove, this[_hand]._lastButton)
-              this._flexFinger(hand, 7, 1)
-              this._flexFinger(hand, 1, 0)
+              this._flexFinger(hand, 7, 1, true)
+              this._flexFinger(hand, 1, 0, true)
             }
             if (hit.distance < 0.125) {
               if (this[_hand]._lastPress !== hit.el) {
@@ -263,7 +266,7 @@ AFRAME.registerComponent("grabbing", {
             this[_hand]._lastPress = null
             if (this[_hand]._lastButton) {
               this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
-              this._flexFinger(hand, 7, 0.5)
+              this._restoreUserFlex(hand)
             }
             this[_hand]._lastButton = null
             if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = 1
@@ -337,10 +340,10 @@ AFRAME.registerComponent("grabbing", {
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
-      this._flexFinger(hand, 5, 0)
+      this._flexFinger(hand, 5, 0, true)
       setTimeout(() => {
         this.sticky = false
-        this._flexFinger(hand, 5, 0.5)
+        this._flexFinger(hand, 5, 0.5, true)
       }, 256)
     }
   },
@@ -364,7 +367,7 @@ AFRAME.registerComponent("grabbing", {
       this._grabCount = Math.max(0, this._grabCount - 1)
       if (!this._grabCount)
         this.el.removeState("grabbing")
-      this._flexFinger(hand, 5, 0)
+      this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
       this[_hand].grabbed = null
     }
@@ -520,14 +523,27 @@ AFRAME.registerComponent("grabbing", {
       </a-entity>
     </a-box>`)
   },
-  _flexFinger(hand, finger, flex) {
+  _flexFinger(hand, finger, flex, priority = false) {
     let _hand = "_" + hand
+    this[_hand].userFlex = this[_hand].userFlex || []
+    if (priority) this[_hand].priorityFlex = true
     if (finger < 5) {
-      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      if (priority || !this[_hand].priorityFlex) this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      if (!priority) this[_hand].userFlex[finger] = flex
     } else {
       for (finger -= 5; finger < 5; finger++) {
-        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+        if (priority || !this[_hand].priorityFlex) this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+        if (!priority) this[_hand].userFlex[finger] = flex
       }
+    }
+  },
+  _restoreUserFlex(hand) {
+    let _hand = "_" + hand
+    this[_hand].userFlex = this[_hand].userFlex || []
+    this[_hand].priorityFlex = false
+    for (let finger = 0; finger < 5; finger++) {
+      let flex = this[_hand].userFlex[finger] || 0
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
     }
   },
 
@@ -578,7 +594,7 @@ AFRAME.registerComponent("grabbing", {
           finger = 7
           this._fist = flex > 0.5
         } else {
-          if (!this.sticky) this._flexFinger(hand, 2, this._fist ? 0 : 1)
+          this._flexFinger(hand, 2, this._fist ? 0 : 1)
           finger = 3
         }
         if (e.detail.state.pressed && !this._btnPress[hand + e.detail.id]) this.grab(hand)
@@ -602,8 +618,7 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (!this.sticky && !this[_hand]._lastButton || finger === 0)
-      this._flexFinger(hand, finger, flex)
+    this._flexFinger(hand, finger, flex)
   },
 })
 
