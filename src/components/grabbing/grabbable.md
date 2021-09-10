@@ -16,6 +16,7 @@ Add the `grabbable` component to any object you want the player to be able to pi
 | hideOnGrab    | Hide the glove when grabbing                                               | false   |
 | fixed         | If `true` the object will have a fixed position and rotation when grabbed. | false   |
 | fixedPosition | Relative position in hand, if `fixed` is `true`.                           | 0 0 0   |
+| fingerFlex    | How much to flex each finger when grabbed.                                 | 0.5     |
 
 
 ## Events

@@ -331,7 +331,7 @@ AFRAME.registerComponent("grabbing", {
           dur: 256
         })
       }
-      if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.hideOnGrab)
+      if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
@@ -342,8 +342,11 @@ AFRAME.registerComponent("grabbing", {
       this.sticky = true
       this._flexFinger(hand, 5, 0, true)
       setTimeout(() => {
+        let flexes = this[_hand].grabbed.components.grabbable.data.fingerFlex.map(x => parseFloat(x)) || [0.5]
+        this._flexFinger(hand, 5, flexes.pop() || 0, true)
+        let finger = 0
+        for (let flex of flexes) this._flexFinger(hand, finger++, flex || 0, true)
         this.sticky = false
-        this._flexFinger(hand, 5, 0.5, true)
       }, 256)
     }
   },
