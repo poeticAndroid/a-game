@@ -41,7 +41,7 @@ AFRAME.registerComponent("grabbing", {
     }
 
     this._head.ray = this._head.hand.ensure(".grabbing-ray", "a-entity", {
-      class: "grabbing-ray", position: "0 -0.125 0",
+      class: "grabbing-ray",
       raycaster: {
         objects: "[wall], [grabbable]",
         autoRefresh: false,
@@ -49,7 +49,7 @@ AFRAME.registerComponent("grabbing", {
       }
     })
     this._head.buttonRay = this._head.hand.ensure(".button.ray", "a-entity", {
-      class: "button ray", position: "0 -0.125 0",
+      class: "button ray",
       raycaster: {
         objects: "[wall], [button]",
         far: 1,
@@ -318,6 +318,11 @@ AFRAME.registerComponent("grabbing", {
     ray.refreshObjects()
     let hit = ray.intersections[0]
     if (hit && hit.el.getAttribute("grabbable") != null) {
+      if (hand === "head") this[_hand].ray.setAttribute("animation__pos", {
+        property: "position",
+        to: { x: 0, y: -0.125, z: 0 },
+        dur: 256
+      })
       this.dropObject(hit.el)
       this[_hand].grabbed = hit.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
@@ -405,6 +410,10 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
       }
       this[_hand].grabbed = null
+      if (hand === "head") {
+        this[_hand].ray.removeAttribute("animation__pos")
+        this[_hand].ray.object3D.position.y = 0
+      }
     }
   },
   dropObject(el) {
