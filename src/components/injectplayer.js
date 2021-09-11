@@ -3,6 +3,7 @@
 AFRAME.registerComponent("injectplayer", {
 
   init() {
+    this.el.addState("noinput")
     this.el.ensure("a-camera", "a-camera", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }

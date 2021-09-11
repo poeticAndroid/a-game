@@ -6,7 +6,7 @@ Essential game components for [A-Frame](https://aframe.io/)!
 <html>
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.20.0/dist/a-game.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v0.21.0/dist/a-game.min.js"></script>
   </head>
   <body>
     <a-scene physics>

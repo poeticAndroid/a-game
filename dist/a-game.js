@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -72,7 +72,7 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepa
 
 AFRAME.registerComponent("grabbing", {
   schema: {
-    hideOnGrab: { type: "boolean", default: true },
+    hideOnGrab: { type: "boolean", default: false },
     grabDistance: { type: "number", default: 1 }
   },
 
@@ -127,18 +127,24 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._head.reticle = this._head.ray.ensure(".reticle", "a-sphere", {
+    this._head.reticle = this._head.ray.ensure(".reticle", "a-box", {
       class: "reticle",
-      radius: 0.015625,
-      // color: "black",
-      position: "0 0 -1"
-    }, `<a-torus position="0 0 0.015625" color="black" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
-    this._head.buttonReticle = this._head.buttonRay.ensure(".reticle", "a-sphere", {
-      class: "reticle",
-      radius: 0.015625,
+      depth: 0,
+      width: 0.5,
+      height: 0.25,
       color: "black",
-      position: "0 0 -1"
-    }, `<a-torus position="0 0 0.015625" radius="0.015625" radius-tubular="0.001953125"></a-torus>`)
+      position: "0 0 -1",
+      scale: "0.125 0.125 0.125"
+    }, `<a-text align="center" value="grab"></a-text>`)
+    this._head.buttonReticle = this._head.buttonRay.ensure(".reticle", "a-box", {
+      class: "reticle",
+      depth: 0,
+      width: 0.625,
+      height: 0.25,
+      color: "black",
+      position: "0 0 -1",
+      scale: "0.125 0.125 0.125"
+    }, `<a-text align="center" value="press"></a-text>`)
     this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
@@ -195,7 +201,10 @@ AFRAME.registerComponent("grabbing", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) this.toggleGrab()
+        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) {
+          this._setDevice("gamepad")
+          this.toggleGrab()
+        }
         if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
         if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
         if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
@@ -283,11 +292,15 @@ AFRAME.registerComponent("grabbing", {
                 this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
               this[_hand]._lastHit = hit.el
               this.emit("reachable", this[_hand].glove, this[_hand]._lastHit)
+              this._flexFinger(hand, 5, -0.125, true)
+              this._flexFinger(hand, 0, 0, true)
             }
-            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance
+            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance / 2
           } else {
-            if (this[_hand]._lastHit)
+            if (this[_hand]._lastHit) {
               this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
+              this._restoreUserFlex(hand)
+            }
             this[_hand]._lastHit = null
             if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
           }
@@ -304,8 +317,8 @@ AFRAME.registerComponent("grabbing", {
                 this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
               this[_hand]._lastButton = hit.el
               this.emit("hover", this[_hand].glove, this[_hand]._lastButton)
-              this._flexFinger(hand, 7, 1)
-              this._flexFinger(hand, 1, 0)
+              this._flexFinger(hand, 7, 1, true)
+              this._flexFinger(hand, 1, -0.125, true)
             }
             if (hit.distance < 0.125) {
               if (this[_hand]._lastPress !== hit.el) {
@@ -324,7 +337,7 @@ AFRAME.registerComponent("grabbing", {
               }
               this[_hand]._lastPress = null
             }
-            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = -hit.distance
+            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
           } else {
             if (this[_hand]._lastPress) {
               this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)
@@ -333,12 +346,30 @@ AFRAME.registerComponent("grabbing", {
             this[_hand]._lastPress = null
             if (this[_hand]._lastButton) {
               this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
-              this._flexFinger(hand, 7, 0.5)
+              this._restoreUserFlex(hand)
             }
             this[_hand]._lastButton = null
             if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = 1
           }
         }
+      }
+
+      // Track velocity
+      this[_hand].lastGlovePos = this[_hand].lastGlovePos || THREE.Vector3.temp()
+      this[_hand].lastGrabbedPos = this[_hand].lastGrabbedPos || THREE.Vector3.temp()
+      this[_hand].gloveVelocity = this[_hand].gloveVelocity || THREE.Vector3.temp()
+      this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || THREE.Vector3.temp()
+      if (this[_hand].glove) {
+        this[_hand].glove.object3D.localToWorld(this[_hand].gloveVelocity.set(0, 0, 0))
+          .sub(this[_hand].lastGlovePos)
+          .multiplyScalar(500 / timeDelta)
+        this[_hand].glove.object3D.localToWorld(this[_hand].lastGlovePos.set(0, 0, 0))
+      }
+      if (this[_hand].grabbed) {
+        this[_hand].grabbed.object3D.localToWorld(this[_hand].grabbedVelocity.set(0, 0, 0))
+          .sub(this[_hand].lastGrabbedPos)
+          .multiplyScalar(500 / timeDelta)
+        this[_hand].grabbed.object3D.localToWorld(this[_hand].lastGrabbedPos.set(0, 0, 0))
       }
     }
   },
@@ -398,7 +429,7 @@ AFRAME.registerComponent("grabbing", {
           dur: 256
         })
       }
-      if (this.data.hideOnGrab)
+      if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
@@ -407,10 +438,13 @@ AFRAME.registerComponent("grabbing", {
       this.el.addState("grabbing")
       this[_hand].grabbed.addState("grabbed")
       this.sticky = true
-      this._flexFinger(hand, 5, 0)
+      this._flexFinger(hand, 5, 0, true)
       setTimeout(() => {
+        let flexes = this[_hand].grabbed.components.grabbable.data.fingerFlex.map(x => parseFloat(x)) || [0.5]
+        this._flexFinger(hand, 5, flexes.pop() || 0, true)
+        let finger = 0
+        for (let flex of flexes) this._flexFinger(hand, finger++, flex || 0, true)
         this.sticky = false
-        this._flexFinger(hand, 5, 0.5)
       }, 256)
     }
   },
@@ -420,11 +454,9 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.removeAttribute("animation__rot")
     this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
-    setTimeout(() => {
-      this[_hand].anchor.removeAttribute("joint__grab")
-      this[_hand].anchor.setAttribute("position", "0 0 0")
-      this[_hand].anchor.setAttribute("rotation", "0 0 0")
-    }, 32)
+    this[_hand].anchor.removeAttribute("joint__grab")
+    this[_hand].anchor.setAttribute("position", "0 0 0")
+    this[_hand].anchor.setAttribute("rotation", "0 0 0")
     setTimeout(() => {
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -434,8 +466,10 @@ AFRAME.registerComponent("grabbing", {
       this._grabCount = Math.max(0, this._grabCount - 1)
       if (!this._grabCount)
         this.el.removeState("grabbing")
-      this._flexFinger(hand, 5, 0)
+      this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
+      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
+      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
       this[_hand].grabbed = null
     }
   },
@@ -456,8 +490,10 @@ AFRAME.registerComponent("grabbing", {
     let _hand = "_" + hand
     // if (!this[_hand].grabbed) return this.grab(hand)
     if (this[_hand].grabbed) {
+      this._flexFinger(hand, Math.max(0, 1 - button), 0.5, true)
       this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
     } else if (this[_hand]._lastButton) {
+      this._flexFinger(hand, 0, 0.5, true)
       this[_hand]._lastClick = this[_hand]._lastButton
       this.emit("press", this[_hand].glove, this[_hand]._lastClick, { button: button })
       this[_hand]._lastClick.addState("pressed")
@@ -466,8 +502,10 @@ AFRAME.registerComponent("grabbing", {
   useUp(hand = "head", button = 0) {
     let _hand = "_" + hand
     if (this[_hand].grabbed) {
+      this._flexFinger(hand, Math.max(0, 1 - button), 0, true)
       this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
     } else if (this[_hand]._lastClick) {
+      this._flexFinger(hand, 0, 0, true)
       this.emit("unpress", this[_hand].glove, this[_hand]._lastClick)
       this[_hand]._lastClick.removeState("pressed")
       this[_hand]._lastClick = null
@@ -490,7 +528,31 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
+  events: {
+    stateadded(e) {
+      if (this.el.is("desktop")) {
+        this._setReticleText(this._head.reticle, "[E]")
+        this._setReticleText(this._head.buttonReticle, "Click")
+      }
+      if (this.el.is("touch")) {
+        this._setReticleText(this._head.reticle, "hold")
+        this._setReticleText(this._head.buttonReticle, "tap")
+      }
+      if (this.el.is("gamepad")) {
+        this._setReticleText(this._head.reticle, "[RB]")
+        this._setReticleText(this._head.buttonReticle, "(A)")
+      }
+    }
+  },
+
+  _setReticleText(reticle, text) {
+    reticle.setAttribute("width", text.length * 0.125)
+    let txt = reticle.querySelector("a-text")
+    txt.setAttribute("value", text)
+  },
+
   _enableHands() {
+    this._setDevice("vrcontroller")
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -518,7 +580,7 @@ AFRAME.registerComponent("grabbing", {
         }
       })
       this[_hand].buttonRay = palm.ensure(".button.ray", "a-entity", {
-        class: "button ray", position: "0 0.03125 0", rotation: hand === "left" ? "0 -8 0" : "0 8 0",
+        class: "button ray", position: "0 0.03125 0",
         raycaster: {
           objects: "[wall], [button]",
           far: 0.5,
@@ -590,27 +652,45 @@ AFRAME.registerComponent("grabbing", {
       </a-entity>
     </a-box>`)
   },
-  _flexFinger(hand, finger, flex) {
+  _flexFinger(hand, finger, flex, priority = false) {
     let _hand = "_" + hand
+    this[_hand].userFlex = this[_hand].userFlex || []
+    if (priority) this[_hand].priorityFlex = true
     if (finger < 5) {
-      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      if (priority || !this[_hand].priorityFlex) this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+      if (!priority) this[_hand].userFlex[finger] = flex
     } else {
       for (finger -= 5; finger < 5; finger++) {
-        this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+        if (priority || !this[_hand].priorityFlex) this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
+        if (!priority) this[_hand].userFlex[finger] = flex
       }
+    }
+  },
+  _restoreUserFlex(hand) {
+    let _hand = "_" + hand
+    this[_hand].userFlex = this[_hand].userFlex || []
+    this[_hand].priorityFlex = false
+    for (let finger = 0; finger < 5; finger++) {
+      let flex = this[_hand].userFlex[finger] || 0
+      this.emit("fingerflex", this[_hand].glove, this[_hand].grabbed, { hand: hand, finger: finger, flex: flex })
     }
   },
 
   _onKeyDown(e) {
     this._keysDown[e.code] = true
-    if (e.key === "e") this.toggleGrab()
+    if (e.key === "e") {
+      this._setDevice("desktop")
+      this.toggleGrab()
+    }
   },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onMouseDown(e) {
+    this._setDevice("desktop")
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
+    this._setDevice("desktop")
     let x = 0, y = 0, z = 0
     if (this._keysDown["Digit3"] && e.deltaY > 0) z += -0.125
     if (this._keysDown["Digit3"] && e.deltaY < 0) z += 0.125
@@ -626,9 +706,16 @@ AFRAME.registerComponent("grabbing", {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap(e) { this.use() },
-  _onTouchHold(e) { this.toggleGrab() },
+  _onTouchTap(e) {
+    this._setDevice("touch")
+    this.use()
+  },
+  _onTouchHold(e) {
+    this._setDevice("touch")
+    this.toggleGrab()
+  },
   _onButtonChanged(e) {
+    this._setDevice("vrcontroller")
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1
@@ -648,7 +735,7 @@ AFRAME.registerComponent("grabbing", {
           finger = 7
           this._fist = flex > 0.5
         } else {
-          if (!this.sticky) this._flexFinger(hand, 2, this._fist ? 0 : 1)
+          this._flexFinger(hand, 2, this._fist ? 0 : 1)
           finger = 3
         }
         if (e.detail.state.pressed && !this._btnPress[hand + e.detail.id]) this.grab(hand)
@@ -672,9 +759,15 @@ AFRAME.registerComponent("grabbing", {
         break
     }
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
-    if (!this.sticky && !this[_hand]._lastButton || finger === 0)
-      this._flexFinger(hand, finger, flex)
+    this._flexFinger(hand, finger, flex)
   },
+
+  _setDevice(device) {
+    if (this.device === device) return
+    this.el.removeState(this.device || "noinput")
+    this.device = device
+    this.el.addState(this.device || "noinput")
+  }
 })
 
 require("./grabbing/button")
@@ -839,8 +932,10 @@ AFRAME.registerComponent("grabbable", {
   schema: {
     physics: { type: "boolean", default: true },
     kinematicGrab: { type: "boolean", default: true },
+    hideOnGrab: { type: "boolean", default: false },
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
+    fingerFlex: { type: "array", default: [0.5] },
   },
 
   init() {
@@ -1047,6 +1142,7 @@ AFRAME.registerComponent("include", {
 AFRAME.registerComponent("injectplayer", {
 
   init() {
+    this.el.addState("noinput")
     this.el.ensure("a-camera", "a-camera", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }
@@ -1412,7 +1508,10 @@ AFRAME.registerComponent("locomotion", {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
         this._deadZone(stick.set(gamepad.axes[0], gamepad.axes[1]))
-        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+        if (stick.length() > bestStick.length()) {
+          this._setDevice("gamepad")
+          bestStick.copy(stick)
+        }
       }
     }
 
@@ -1465,7 +1564,10 @@ AFRAME.registerComponent("locomotion", {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
         this._fourWay(this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3])))
-        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+        if (stick.length() > bestStick.length()) {
+          this._setDevice("gamepad")
+          bestStick.copy(stick)
+        }
       }
     }
 
@@ -1581,9 +1683,18 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[3].pressed) buttons = buttons | 1
-        if (gamepad.buttons[11].pressed) buttons = buttons | 1
-        if (gamepad.buttons[10].pressed) buttons = buttons | 2
+        if (gamepad.buttons[3].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 1
+        }
+        if (gamepad.buttons[11].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 1
+        }
+        if (gamepad.buttons[10].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 2
+        }
       }
     }
 
@@ -1622,9 +1733,13 @@ AFRAME.registerComponent("locomotion", {
     return vec
   },
 
-  _onKeyDown(e) { this._keysDown[e.code] = true },
+  _onKeyDown(e) {
+    this._setDevice("desktop")
+    this._keysDown[e.code] = true
+  },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onAxisMove(e) {
+    this._setDevice("vrcontroller")
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       this._axes[0] = e.detail.axis[2]
       this._axes[1] = e.detail.axis[3]
@@ -1645,6 +1760,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
   _onButtonChanged(e) {
+    this._setDevice("vrcontroller")
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
@@ -1653,6 +1769,7 @@ AFRAME.registerComponent("locomotion", {
   },
 
   _onTouchStart(e) {
+    this._setDevice("touch")
     let vw = this.el.sceneEl.canvas.clientWidth
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -1718,6 +1835,13 @@ AFRAME.registerComponent("locomotion", {
     this.quantizeMovement = this._config.quantizeMovement
     this.quantizeRotation = this._config.quantizeRotation
   },
+
+  _setDevice(device) {
+    if (this.device === device) return
+    this.el.removeState(this.device || "noinput")
+    this.device = device
+    this.el.addState(this.device || "noinput")
+  }
 })
 
 require("./locomotion/floor")
@@ -2097,6 +2221,17 @@ AFRAME.registerComponent("body", {
     this.sleeping = true
   },
 
+  applyWorldImpulse(force, point) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    if (!worker) return
+    worker.postMessage("world body " + this.id + " impulse " + cmd.stringifyParam(force) + " " + cmd.stringifyParam(point))
+  },
+  applyLocalImpulse(force, point) {
+    let _point = this.el.object3D.localToWorld(THREE.Vector3.temp().copy(point))
+    let _force = this.el.object3D.localToWorld(THREE.Vector3.temp().copy(force)).sub(this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0)))
+    this.applyWorldImpulse(_force, _point)
+  },
+
   pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
@@ -2431,7 +2566,7 @@ AFRAME.registerComponent("script", {
 
 AFRAME.registerComponent("trigger", {
   schema: {
-    objects: { type: "string", default: "[camera]" },
+    objects: { type: "string", default: ".head-bumper" },
   },
 
   init() {
