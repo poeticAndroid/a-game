@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.20.8",
+  "version": "0.20.9",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -2566,7 +2566,7 @@ AFRAME.registerComponent("script", {
 
 AFRAME.registerComponent("trigger", {
   schema: {
-    objects: { type: "string", default: "[camera]" },
+    objects: { type: "string", default: ".head-bumper" },
   },
 
   init() {

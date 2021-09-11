@@ -2,7 +2,7 @@
 
 AFRAME.registerComponent("trigger", {
   schema: {
-    objects: { type: "string", default: "[camera]" },
+    objects: { type: "string", default: ".head-bumper" },
   },
 
   init() {
