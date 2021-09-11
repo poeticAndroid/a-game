@@ -595,7 +595,7 @@ AFRAME.registerComponent("locomotion", {
     if (!this._handEnabled) {
       this._teleportBeam.parentElement.removeChild(this._teleportBeam)
       this._teleportBeam = this._rightHand.ensure(".teleportBeam", "a-entity", {
-        class: "teleportBeam",
+        class: "teleportBeam", rotation: "-45 0 0",
         raycaster: {
           autoRefresh: false,
           objects: "[wall]",
