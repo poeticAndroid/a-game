@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.20.4",
+  "version": "0.20.6",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -195,7 +195,10 @@ AFRAME.registerComponent("grabbing", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) this.toggleGrab()
+        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) {
+          this._setDevice("gamepad")
+          this.toggleGrab()
+        }
         if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
         if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
         if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
@@ -501,7 +504,14 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
+  events: {
+    stateadded(e) {
+
+    }
+  },
+
   _enableHands() {
+    this._setDevice("vrcontroller")
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -627,14 +637,19 @@ AFRAME.registerComponent("grabbing", {
 
   _onKeyDown(e) {
     this._keysDown[e.code] = true
-    if (e.key === "e") this.toggleGrab()
+    if (e.key === "e") {
+      this._setDevice("desktop")
+      this.toggleGrab()
+    }
   },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onMouseDown(e) {
+    this._setDevice("desktop")
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
+    this._setDevice("desktop")
     let x = 0, y = 0, z = 0
     if (this._keysDown["Digit3"] && e.deltaY > 0) z += -0.125
     if (this._keysDown["Digit3"] && e.deltaY < 0) z += 0.125
@@ -650,9 +665,16 @@ AFRAME.registerComponent("grabbing", {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap(e) { this.use() },
-  _onTouchHold(e) { this.toggleGrab() },
+  _onTouchTap(e) {
+    this._setDevice("touch")
+    this.use()
+  },
+  _onTouchHold(e) {
+    this._setDevice("touch")
+    this.toggleGrab()
+  },
   _onButtonChanged(e) {
+    this._setDevice("vrcontroller")
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1
@@ -698,6 +720,13 @@ AFRAME.registerComponent("grabbing", {
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
     this._flexFinger(hand, finger, flex)
   },
+
+  _setDevice(device) {
+    if (this.device === device) return
+    this.el.removeState(this.device || "noinput")
+    this.device = device
+    this.el.addState(this.device || "noinput")
+  }
 })
 
 require("./grabbing/button")
@@ -1072,6 +1101,7 @@ AFRAME.registerComponent("include", {
 AFRAME.registerComponent("injectplayer", {
 
   init() {
+    this.el.addState("noinput")
     this.el.ensure("a-camera", "a-camera", {
       "look-controls": { pointerLockEnabled: true, touchEnabled: false },
       "wasd-controls": { enabled: false }
@@ -1437,7 +1467,10 @@ AFRAME.registerComponent("locomotion", {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
         this._deadZone(stick.set(gamepad.axes[0], gamepad.axes[1]))
-        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+        if (stick.length() > bestStick.length()) {
+          this._setDevice("gamepad")
+          bestStick.copy(stick)
+        }
       }
     }
 
@@ -1490,7 +1523,10 @@ AFRAME.registerComponent("locomotion", {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
         this._fourWay(this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3])))
-        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+        if (stick.length() > bestStick.length()) {
+          this._setDevice("gamepad")
+          bestStick.copy(stick)
+        }
       }
     }
 
@@ -1606,9 +1642,18 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[3].pressed) buttons = buttons | 1
-        if (gamepad.buttons[11].pressed) buttons = buttons | 1
-        if (gamepad.buttons[10].pressed) buttons = buttons | 2
+        if (gamepad.buttons[3].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 1
+        }
+        if (gamepad.buttons[11].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 1
+        }
+        if (gamepad.buttons[10].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 2
+        }
       }
     }
 
@@ -1647,9 +1692,13 @@ AFRAME.registerComponent("locomotion", {
     return vec
   },
 
-  _onKeyDown(e) { this._keysDown[e.code] = true },
+  _onKeyDown(e) {
+    this._setDevice("desktop")
+    this._keysDown[e.code] = true
+  },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onAxisMove(e) {
+    this._setDevice("vrcontroller")
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       this._axes[0] = e.detail.axis[2]
       this._axes[1] = e.detail.axis[3]
@@ -1670,6 +1719,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
   _onButtonChanged(e) {
+    this._setDevice("vrcontroller")
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
@@ -1678,6 +1728,7 @@ AFRAME.registerComponent("locomotion", {
   },
 
   _onTouchStart(e) {
+    this._setDevice("touch")
     let vw = this.el.sceneEl.canvas.clientWidth
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -1743,6 +1794,13 @@ AFRAME.registerComponent("locomotion", {
     this.quantizeMovement = this._config.quantizeMovement
     this.quantizeRotation = this._config.quantizeRotation
   },
+
+  _setDevice(device) {
+    if (this.device === device) return
+    this.el.removeState(this.device || "noinput")
+    this.device = device
+    this.el.addState(this.device || "noinput")
+  }
 })
 
 require("./locomotion/floor")

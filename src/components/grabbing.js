@@ -125,7 +125,10 @@ AFRAME.registerComponent("grabbing", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) this.toggleGrab()
+        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) {
+          this._setDevice("gamepad")
+          this.toggleGrab()
+        }
         if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
         if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
         if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
@@ -431,7 +434,14 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e)
   },
 
+  events: {
+    stateadded(e) {
+
+    }
+  },
+
   _enableHands() {
+    this._setDevice("vrcontroller")
     for (let hand of this._hands) {
       let _hand = "_" + hand
       this[_hand].hand.removeEventListener("buttonchanged", this._enableHands)
@@ -557,14 +567,19 @@ AFRAME.registerComponent("grabbing", {
 
   _onKeyDown(e) {
     this._keysDown[e.code] = true
-    if (e.key === "e") this.toggleGrab()
+    if (e.key === "e") {
+      this._setDevice("desktop")
+      this.toggleGrab()
+    }
   },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onMouseDown(e) {
+    this._setDevice("desktop")
     let btn = e.button
     this.useDown("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
   _onWheel(e) {
+    this._setDevice("desktop")
     let x = 0, y = 0, z = 0
     if (this._keysDown["Digit3"] && e.deltaY > 0) z += -0.125
     if (this._keysDown["Digit3"] && e.deltaY < 0) z += 0.125
@@ -580,9 +595,16 @@ AFRAME.registerComponent("grabbing", {
     let btn = e.button
     this.useUp("head", btn ? ((btn % 2) ? btn + 1 : btn - 1) : btn)
   },
-  _onTouchTap(e) { this.use() },
-  _onTouchHold(e) { this.toggleGrab() },
+  _onTouchTap(e) {
+    this._setDevice("touch")
+    this.use()
+  },
+  _onTouchHold(e) {
+    this._setDevice("touch")
+    this.toggleGrab()
+  },
   _onButtonChanged(e) {
+    this._setDevice("vrcontroller")
     let hand = e.srcElement.getAttribute("tracked-controls").hand
     let _hand = "_" + hand
     let finger = -1
@@ -628,6 +650,13 @@ AFRAME.registerComponent("grabbing", {
     this._btnPress[hand + e.detail.id] = e.detail.state.pressed
     this._flexFinger(hand, finger, flex)
   },
+
+  _setDevice(device) {
+    if (this.device === device) return
+    this.el.removeState(this.device || "noinput")
+    this.device = device
+    this.el.addState(this.device || "noinput")
+  }
 })
 
 require("./grabbing/button")

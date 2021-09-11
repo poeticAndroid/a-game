@@ -353,7 +353,10 @@ AFRAME.registerComponent("locomotion", {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
         this._deadZone(stick.set(gamepad.axes[0], gamepad.axes[1]))
-        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+        if (stick.length() > bestStick.length()) {
+          this._setDevice("gamepad")
+          bestStick.copy(stick)
+        }
       }
     }
 
@@ -406,7 +409,10 @@ AFRAME.registerComponent("locomotion", {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
         this._fourWay(this._deadZone(stick.set(gamepad.axes[2], gamepad.axes[3])))
-        if (stick.length() > bestStick.length()) bestStick.copy(stick)
+        if (stick.length() > bestStick.length()) {
+          this._setDevice("gamepad")
+          bestStick.copy(stick)
+        }
       }
     }
 
@@ -522,9 +528,18 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[3].pressed) buttons = buttons | 1
-        if (gamepad.buttons[11].pressed) buttons = buttons | 1
-        if (gamepad.buttons[10].pressed) buttons = buttons | 2
+        if (gamepad.buttons[3].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 1
+        }
+        if (gamepad.buttons[11].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 1
+        }
+        if (gamepad.buttons[10].pressed) {
+          this._setDevice("gamepad")
+          buttons = buttons | 2
+        }
       }
     }
 
@@ -563,9 +578,13 @@ AFRAME.registerComponent("locomotion", {
     return vec
   },
 
-  _onKeyDown(e) { this._keysDown[e.code] = true },
+  _onKeyDown(e) {
+    this._setDevice("desktop")
+    this._keysDown[e.code] = true
+  },
   _onKeyUp(e) { this._keysDown[e.code] = false },
   _onAxisMove(e) {
+    this._setDevice("vrcontroller")
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       this._axes[0] = e.detail.axis[2]
       this._axes[1] = e.detail.axis[3]
@@ -586,6 +605,7 @@ AFRAME.registerComponent("locomotion", {
     }
   },
   _onButtonChanged(e) {
+    this._setDevice("vrcontroller")
     if (e.srcElement.getAttribute("tracked-controls").hand === "left") {
       if (e.detail.id == 3) this._vrLeftClick = e.detail.state.pressed
     } else {
@@ -594,6 +614,7 @@ AFRAME.registerComponent("locomotion", {
   },
 
   _onTouchStart(e) {
+    this._setDevice("touch")
     let vw = this.el.sceneEl.canvas.clientWidth
     for (let j = 0; j < e.changedTouches.length; j++) {
       let touchEvent = e.changedTouches[j]
@@ -659,6 +680,13 @@ AFRAME.registerComponent("locomotion", {
     this.quantizeMovement = this._config.quantizeMovement
     this.quantizeRotation = this._config.quantizeRotation
   },
+
+  _setDevice(device) {
+    if (this.device === device) return
+    this.el.removeState(this.device || "noinput")
+    this.device = device
+    this.el.addState(this.device || "noinput")
+  }
 })
 
 require("./locomotion/floor")
