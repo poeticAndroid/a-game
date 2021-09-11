@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.23.0",
+  "version": "0.24.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -360,17 +360,16 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].lastGrabbedPos = this[_hand].lastGrabbedPos || THREE.Vector3.temp()
       this[_hand].gloveVelocity = this[_hand].gloveVelocity || THREE.Vector3.temp()
       this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || THREE.Vector3.temp()
+      let pos = THREE.Vector3.temp()
       if (this[_hand].glove) {
-        this[_hand].glove.object3D.localToWorld(this[_hand].gloveVelocity.set(0, 0, 0))
-          .sub(this[_hand].lastGlovePos)
-          .multiplyScalar(500 / timeDelta)
-        this[_hand].glove.object3D.localToWorld(this[_hand].lastGlovePos.set(0, 0, 0))
+        this[_hand].glove.object3D.localToWorld(pos.set(0, 0, 0))
+        this[_hand].gloveVelocity.copy(pos).sub(this[_hand].lastGlovePos).multiplyScalar(500 / timeDelta)
+        this[_hand].lastGlovePos.copy(pos)
       }
       if (this[_hand].grabbed) {
-        this[_hand].grabbed.object3D.localToWorld(this[_hand].grabbedVelocity.set(0, 0, 0))
-          .sub(this[_hand].lastGrabbedPos)
-          .multiplyScalar(500 / timeDelta)
-        this[_hand].grabbed.object3D.localToWorld(this[_hand].lastGrabbedPos.set(0, 0, 0))
+        this[_hand].grabbed.object3D.localToWorld(pos.set(0, 0, 0))
+        this[_hand].grabbedVelocity.copy(pos).sub(this[_hand].lastGrabbedPos).multiplyScalar(500 / timeDelta)
+        this[_hand].lastGrabbedPos.copy(pos)
       }
     }
   },
@@ -475,7 +474,7 @@ AFRAME.registerComponent("grabbing", {
         this.el.removeState("grabbing")
       this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
-      if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+      if (this[_hand].grabbed.components.grabbable?.data.kinematicGrab && !this[_hand].grabbed.components.grabbable?.data.immovable) {
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
       }
