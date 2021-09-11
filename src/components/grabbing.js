@@ -209,7 +209,8 @@ AFRAME.registerComponent("grabbing", {
             this[_hand].anchor.object3D.position.multiplyScalar(0.5)
           }
         }
-        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
+          this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
         if (this[_hand].ray) {
@@ -322,7 +323,8 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
       this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {
-        this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
+          this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
         this[_hand].isPhysical = true
       } else {
         this[_hand].isPhysical = false
@@ -398,8 +400,10 @@ AFRAME.registerComponent("grabbing", {
         this.el.removeState("grabbing")
       this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
-      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
-      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+      if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
+        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+      }
       this[_hand].grabbed = null
     }
   },

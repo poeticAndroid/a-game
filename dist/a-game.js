@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.21.0",
+  "version": "0.22.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -279,7 +279,8 @@ AFRAME.registerComponent("grabbing", {
             this[_hand].anchor.object3D.position.multiplyScalar(0.5)
           }
         }
-        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
+          this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
         if (this[_hand].ray) {
@@ -392,7 +393,8 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
       this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {
-        this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
+          this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
         this[_hand].isPhysical = true
       } else {
         this[_hand].isPhysical = false
@@ -468,8 +470,10 @@ AFRAME.registerComponent("grabbing", {
         this.el.removeState("grabbing")
       this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
-      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
-      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+      if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
+        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+      }
       this[_hand].grabbed = null
     }
   },
@@ -936,6 +940,7 @@ AFRAME.registerComponent("grabbable", {
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
     fingerFlex: { type: "array", default: [0.5] },
+    immovable: { type: "boolean", default: false },
   },
 
   init() {

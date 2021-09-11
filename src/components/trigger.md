@@ -12,7 +12,7 @@ Only works with `a-box`, `a-sphere` and `a-cylinder` entities.
 
 | Property | Description                                          | Default    |
 | -------- | ---------------------------------------------------- | ---------- |
-| objects  | selector for the type of objects to get triggered by | `[camera]` |
+| objects  | selector for the type of objects to get triggered by | `.head-bumper` |
 
 
 ## Events
