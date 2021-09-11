@@ -33,9 +33,11 @@ If `autoShape` is `true`, `shape` components will be added to all applicable des
 
 ## Methods
 
-| Method           | Description                                                                                     |
-| ---------------- | ----------------------------------------------------------------------------------------------- |
-| eval(expression) | Evaluate an expression in the worker, where `world` and `body` refer to their native instances. |
-| commit()         | Commit current position and orientation to the physics world.                                   |
+| Method                          | Description                                                                                     |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- |
+| eval(expression)                | Evaluate an expression in the worker, where `world` and `body` refer to their native instances. |
+| commit()                        | Commit current position and orientation to the physics world.                                   |
+| applyWorldImpulse(force, point) | Apply impulse to the body in world vectors.                                                     |
+| applyLocalImpulse(force, point) | Apply impulse to the body in local vectors.                                                     |
 
 Note: the `eval` method depends on the specific physics engine that the worker is based on..

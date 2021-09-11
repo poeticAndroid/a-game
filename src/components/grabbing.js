@@ -283,6 +283,24 @@ AFRAME.registerComponent("grabbing", {
           }
         }
       }
+
+      // Track velocity
+      this[_hand].lastGlovePos = this[_hand].lastGlovePos || THREE.Vector3.temp()
+      this[_hand].lastGrabbedPos = this[_hand].lastGrabbedPos || THREE.Vector3.temp()
+      this[_hand].gloveVelocity = this[_hand].gloveVelocity || THREE.Vector3.temp()
+      this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || THREE.Vector3.temp()
+      if (this[_hand].glove) {
+        this[_hand].glove.object3D.localToWorld(this[_hand].gloveVelocity.set(0, 0, 0))
+          .sub(this[_hand].lastGlovePos)
+          .multiplyScalar(500 / timeDelta)
+        this[_hand].glove.object3D.localToWorld(this[_hand].lastGlovePos.set(0, 0, 0))
+      }
+      if (this[_hand].grabbed) {
+        this[_hand].grabbed.object3D.localToWorld(this[_hand].grabbedVelocity.set(0, 0, 0))
+          .sub(this[_hand].lastGrabbedPos)
+          .multiplyScalar(500 / timeDelta)
+        this[_hand].grabbed.object3D.localToWorld(this[_hand].lastGrabbedPos.set(0, 0, 0))
+      }
     }
   },
 
@@ -366,11 +384,9 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.removeAttribute("animation__rot")
     this[_hand].anchor.removeAttribute("animation__pos")
     this[_hand].glove.setAttribute("visible", true)
-    setTimeout(() => {
-      this[_hand].anchor.removeAttribute("joint__grab")
-      this[_hand].anchor.setAttribute("position", "0 0 0")
-      this[_hand].anchor.setAttribute("rotation", "0 0 0")
-    }, 32)
+    this[_hand].anchor.removeAttribute("joint__grab")
+    this[_hand].anchor.setAttribute("position", "0 0 0")
+    this[_hand].anchor.setAttribute("rotation", "0 0 0")
     setTimeout(() => {
       // if (this[_hand].glove.getAttribute("body"))
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
@@ -382,6 +398,8 @@ AFRAME.registerComponent("grabbing", {
         this.el.removeState("grabbing")
       this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
+      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
+      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
       this[_hand].grabbed = null
     }
   },
@@ -492,7 +510,7 @@ AFRAME.registerComponent("grabbing", {
         }
       })
       this[_hand].buttonRay = palm.ensure(".button.ray", "a-entity", {
-        class: "button ray", position: "0 0.03125 0", rotation: hand === "left" ? "0 -8 0" : "0 8 0",
+        class: "button ray", position: "0 0.03125 0",
         raycaster: {
           objects: "[wall], [button]",
           far: 0.5,

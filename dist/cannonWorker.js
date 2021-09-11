@@ -164,6 +164,9 @@ function bodyCommand(params) {
       if (params[0]) body.sleep()
       else body.wakeUp()
       break
+    case "impulse":
+      body.applyImpulse(new CANNON.Vec3().copy(params[0]), new CANNON.Vec3().copy(params[1]))
+      break
     case "eval":
       eval("const body = bodies[" + id + "];" + params[0])
       break

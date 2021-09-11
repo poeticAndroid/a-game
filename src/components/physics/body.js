@@ -121,6 +121,17 @@ AFRAME.registerComponent("body", {
     this.sleeping = true
   },
 
+  applyWorldImpulse(force, point) {
+    let worker = this.el.sceneEl.systems.physics.worker
+    if (!worker) return
+    worker.postMessage("world body " + this.id + " impulse " + cmd.stringifyParam(force) + " " + cmd.stringifyParam(point))
+  },
+  applyLocalImpulse(force, point) {
+    let _point = this.el.object3D.localToWorld(THREE.Vector3.temp().copy(point))
+    let _force = this.el.object3D.localToWorld(THREE.Vector3.temp().copy(force)).sub(this.el.object3D.localToWorld(THREE.Vector3.temp().set(0, 0, 0)))
+    this.applyWorldImpulse(_force, _point)
+  },
+
   pause() {
     let worker = this.el.sceneEl.systems.physics.worker
     let bodies = this.el.sceneEl.systems.physics.bodies
