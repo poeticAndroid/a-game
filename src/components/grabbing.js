@@ -408,6 +408,7 @@ AFRAME.registerComponent("grabbing", {
       if (this[_hand].grabbed.components.grabbable?.data.kinematicGrab && !this[_hand].grabbed.components.grabbable?.data.immovable) {
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+        console.log(this[_hand].gloveVelocity.length(), this[_hand].grabbedVelocity.length())
       }
       this[_hand].grabbed = null
       if (hand === "head") {
