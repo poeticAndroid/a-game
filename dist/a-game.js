@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.27.0",
+  "version": "0.28.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -372,6 +372,7 @@ AFRAME.registerComponent("grabbing", {
         this[_hand].grabbedVelocity.copy(pos).sub(this[_hand].lastGrabbedPos).multiplyScalar(500 / timeDelta)
         this[_hand].lastGrabbedPos.copy(pos)
       }
+      if (hand === "head") this[_hand].gloveVelocity.copy(this[_hand].grabbedVelocity)
     }
   },
 
