@@ -7,7 +7,7 @@
   <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable
     onevent__reachable="property:color; value:yellow;" onevent__unreachable="property:color; value:blue;"
     onstate__grabbed="property:color; on:green; off:red;"></a-box>
-  <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable></a-box>
+  <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable="kinematicGrab:false;"></a-box>
   <a-box color="#c9f" position="-0.55 .55 -4" rotation="10 11 12" grabbable="kinematicGrab:true;"></a-box>
   <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4">
     <a-cylinder height="0.5" radius="0.125" visible="false"></a-cylinder>

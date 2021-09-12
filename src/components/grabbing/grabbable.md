@@ -17,6 +17,7 @@ Add the `grabbable` component to any object you want the player to be able to pi
 | fixed         | If `true` the object will have a fixed position and rotation when grabbed. | false   |
 | fixedPosition | Relative position in hand, if `fixed` is `true`.                           | 0 0 0   |
 | fingerFlex    | How much to flex each finger when grabbed.                                 | 0.5, 0.5, 0.5, 0.5, 0.5 |
+| immovable     | Make object immovable.                                                     | false |
 
 
 ## Events

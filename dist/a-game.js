@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.21.0",
+  "version": "0.25.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -111,7 +111,7 @@ AFRAME.registerComponent("grabbing", {
     }
 
     this._head.ray = this._head.hand.ensure(".grabbing-ray", "a-entity", {
-      class: "grabbing-ray", position: "0 -0.125 0",
+      class: "grabbing-ray",
       raycaster: {
         objects: "[wall], [grabbable]",
         autoRefresh: false,
@@ -119,7 +119,7 @@ AFRAME.registerComponent("grabbing", {
       }
     })
     this._head.buttonRay = this._head.hand.ensure(".button.ray", "a-entity", {
-      class: "button ray", position: "0 -0.125 0",
+      class: "button ray",
       raycaster: {
         objects: "[wall], [button]",
         far: 1,
@@ -279,7 +279,8 @@ AFRAME.registerComponent("grabbing", {
             this[_hand].anchor.object3D.position.multiplyScalar(0.5)
           }
         }
-        this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
+          this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
         if (this[_hand].ray) {
@@ -359,17 +360,16 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].lastGrabbedPos = this[_hand].lastGrabbedPos || THREE.Vector3.temp()
       this[_hand].gloveVelocity = this[_hand].gloveVelocity || THREE.Vector3.temp()
       this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || THREE.Vector3.temp()
+      let pos = THREE.Vector3.temp()
       if (this[_hand].glove) {
-        this[_hand].glove.object3D.localToWorld(this[_hand].gloveVelocity.set(0, 0, 0))
-          .sub(this[_hand].lastGlovePos)
-          .multiplyScalar(500 / timeDelta)
-        this[_hand].glove.object3D.localToWorld(this[_hand].lastGlovePos.set(0, 0, 0))
+        this[_hand].glove.object3D.localToWorld(pos.set(0, 0, 0))
+        this[_hand].gloveVelocity.copy(pos).sub(this[_hand].lastGlovePos).multiplyScalar(500 / timeDelta)
+        this[_hand].lastGlovePos.copy(pos)
       }
       if (this[_hand].grabbed) {
-        this[_hand].grabbed.object3D.localToWorld(this[_hand].grabbedVelocity.set(0, 0, 0))
-          .sub(this[_hand].lastGrabbedPos)
-          .multiplyScalar(500 / timeDelta)
-        this[_hand].grabbed.object3D.localToWorld(this[_hand].lastGrabbedPos.set(0, 0, 0))
+        this[_hand].grabbed.object3D.localToWorld(pos.set(0, 0, 0))
+        this[_hand].grabbedVelocity.copy(pos).sub(this[_hand].lastGrabbedPos).multiplyScalar(500 / timeDelta)
+        this[_hand].lastGrabbedPos.copy(pos)
       }
     }
   },
@@ -387,12 +387,18 @@ AFRAME.registerComponent("grabbing", {
     ray.refreshObjects()
     let hit = ray.intersections[0]
     if (hit && hit.el.getAttribute("grabbable") != null) {
+      if (hand === "head") this[_hand].ray.setAttribute("animation__pos", {
+        property: "position",
+        to: { x: 0, y: -0.125, z: 0 },
+        dur: 256
+      })
       this.dropObject(hit.el)
       this[_hand].grabbed = hit.el
       this[_hand].anchor.copyWorldPosRot(this[_hand].grabbed)
       this[_hand].anchor.components.body.commit()
       if (this[_hand].grabbed.components.body != null) {
-        this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
+          this[_hand].anchor.setAttribute("joint__grab", { body2: this[_hand].grabbed, type: "lock" })
         this[_hand].isPhysical = true
       } else {
         this[_hand].isPhysical = false
@@ -468,9 +474,15 @@ AFRAME.registerComponent("grabbing", {
         this.el.removeState("grabbing")
       this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
-      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
-      this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+      if (this[_hand].grabbed.components.grabbable?.data.kinematicGrab && !this[_hand].grabbed.components.grabbable?.data.immovable) {
+        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
+        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
+      }
       this[_hand].grabbed = null
+      if (hand === "head") {
+        this[_hand].ray.removeAttribute("animation__pos")
+        this[_hand].ray.object3D.position.y = 0
+      }
     }
   },
   dropObject(el) {
@@ -936,6 +948,7 @@ AFRAME.registerComponent("grabbable", {
     fixed: { type: "boolean", default: false },
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
     fingerFlex: { type: "array", default: [0.5] },
+    immovable: { type: "boolean", default: false },
   },
 
   init() {
@@ -1750,7 +1763,7 @@ AFRAME.registerComponent("locomotion", {
     if (!this._handEnabled) {
       this._teleportBeam.parentElement.removeChild(this._teleportBeam)
       this._teleportBeam = this._rightHand.ensure(".teleportBeam", "a-entity", {
-        class: "teleportBeam",
+        class: "teleportBeam", rotation: "-45 0 0",
         raycaster: {
           autoRefresh: false,
           objects: "[wall]",
