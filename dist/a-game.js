@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.29.0",
+  "version": "0.30.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -362,17 +362,17 @@ AFRAME.registerComponent("grabbing", {
       this[_hand].gloveVelocity = this[_hand].gloveVelocity || THREE.Vector3.temp()
       this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || THREE.Vector3.temp()
       let pos = THREE.Vector3.temp()
-      if (this[_hand].glove) {
-        this[_hand].glove.object3D.localToWorld(pos.set(0, 0, 0))
-        this[_hand].gloveVelocity.copy(pos).sub(this[_hand].lastGlovePos).multiplyScalar(500 / timeDelta)
-        this[_hand].lastGlovePos.copy(pos)
-      }
+      // if (this[_hand].glove) {
+      //   this[_hand].glove.object3D.localToWorld(pos.set(0, 0, 0))
+      //   this[_hand].gloveVelocity.copy(pos).sub(this[_hand].lastGlovePos).multiplyScalar(500 / timeDelta)
+      //   this[_hand].lastGlovePos.copy(pos)
+      // }
       if (this[_hand].grabbed) {
         this[_hand].grabbed.object3D.localToWorld(pos.set(0, 0, 0))
-        this[_hand].grabbedVelocity.copy(pos).sub(this[_hand].lastGrabbedPos).multiplyScalar(500 / timeDelta)
+        this[_hand].grabbedVelocity.copy(pos).sub(this[_hand].lastGrabbedPos).multiplyScalar(1000 / timeDelta)
         this[_hand].lastGrabbedPos.copy(pos)
       }
-      if (hand === "head") this[_hand].gloveVelocity.copy(this[_hand].grabbedVelocity)
+      // if (hand === "head") this[_hand].gloveVelocity.copy(this[_hand].grabbedVelocity)
     }
   },
 
@@ -477,9 +477,9 @@ AFRAME.registerComponent("grabbing", {
       this._restoreUserFlex(hand)
       this[_hand].grabbed.removeState("grabbed")
       if (this[_hand].grabbed.components.grabbable?.data.kinematicGrab && !this[_hand].grabbed.components.grabbable?.data.immovable) {
-        this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
+        // this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
-        console.log(this[_hand].gloveVelocity.length(), this[_hand].grabbedVelocity.length())
+        console.log("throwing impulse", this[_hand].gloveVelocity.length(), this[_hand].grabbedVelocity.length())
       }
       this[_hand].grabbed = null
       if (hand === "head") {
