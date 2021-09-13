@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -357,10 +357,10 @@ AFRAME.registerComponent("grabbing", {
       }
 
       // Track velocity
-      this[_hand].lastGlovePos = this[_hand].lastGlovePos || THREE.Vector3.temp()
-      this[_hand].lastGrabbedPos = this[_hand].lastGrabbedPos || THREE.Vector3.temp()
-      this[_hand].gloveVelocity = this[_hand].gloveVelocity || THREE.Vector3.temp()
-      this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || THREE.Vector3.temp()
+      this[_hand].lastGlovePos = this[_hand].lastGlovePos || new THREE.Vector3()
+      this[_hand].lastGrabbedPos = this[_hand].lastGrabbedPos || new THREE.Vector3()
+      this[_hand].gloveVelocity = this[_hand].gloveVelocity || new THREE.Vector3()
+      this[_hand].grabbedVelocity = this[_hand].grabbedVelocity || new THREE.Vector3()
       let pos = THREE.Vector3.temp()
       // if (this[_hand].glove) {
       //   this[_hand].glove.object3D.localToWorld(pos.set(0, 0, 0))
