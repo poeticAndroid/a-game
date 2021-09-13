@@ -297,7 +297,7 @@ AFRAME.registerComponent("grabbing", {
       //   this[_hand].lastGlovePos.copy(pos)
       // }
       if (this[_hand].grabbed) {
-        this[_hand].grabbed.object3D.localToWorld(pos.set(0, 0, 0))
+        this[_hand].grabbed.object3D.getWorldPosition(pos.set(0, 0, 0))
         this[_hand].grabbedVelocity.copy(pos).sub(this[_hand].lastGrabbedPos).multiplyScalar(1000 / timeDelta)
         this[_hand].lastGrabbedPos.copy(pos)
       }
@@ -408,7 +408,9 @@ AFRAME.registerComponent("grabbing", {
       if (this[_hand].grabbed.components.grabbable?.data.kinematicGrab && !this[_hand].grabbed.components.grabbable?.data.immovable) {
         // this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].gloveVelocity, this[_hand].lastGlovePos)
         this[_hand].grabbed.components.body?.applyWorldImpulse(this[_hand].grabbedVelocity, this[_hand].lastGrabbedPos)
-        console.log("throwing impulse", this[_hand].gloveVelocity.length(), this[_hand].grabbedVelocity.length())
+        console.log("throwing impulse",
+          // this[_hand].gloveVelocity.length(),
+          this[_hand].grabbedVelocity.length())
       }
       this[_hand].grabbed = null
       if (hand === "head") {
