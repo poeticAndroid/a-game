@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.32.1",
+  "version": "0.32.2",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -10,7 +10,7 @@ module.exports={
     "prepare": "npm run build",
     "clean": "rm dist/*.js || del dist\\*.js",
     "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
-    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
+    "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
     "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
@@ -92,6 +92,7 @@ AFRAME.registerComponent("grabbing", {
     this._btnFlex = {}
     this._keysDown = {}
     this._grabCount = 0
+    this._gamepadBtns = []
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -199,28 +200,38 @@ AFRAME.registerComponent("grabbing", {
 
   tick(time, timeDelta) {
     // handle gamepads
+    for (let i = 0; i < 16; i++)
+      this._gamepadBtns[i] = 0
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) {
-          this._setDevice("gamepad")
-          this.toggleGrab()
-        }
-        if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
-        if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
-        if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
-        if (gamepad.buttons[2].pressed) {
-          if (gamepad.buttons[12].pressed) this.moveHeadHand(0, -0.03125)
-          if (gamepad.buttons[13].pressed) this.moveHeadHand(0, 0.03125)
-          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, -0.03125)
-          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0.03125)
-        } else {
-          if (gamepad.buttons[12].pressed) this.moveHeadHand(-0.03125)
-          if (gamepad.buttons[13].pressed) this.moveHeadHand(0.03125)
-          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, 0, 0.03125)
-          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0, -0.03125)
-        }
+        for (let i = 0; i < 16; i++)
+          this._gamepadBtns[i] += gamepad.buttons[i]?.pressed || 0
       }
+    }
+
+    if ((this._gamepadBtns[4] || this._gamepadBtns[5]) && !this._grabBtn) {
+      this._setDevice("gamepad")
+      console.log("grabbing!", this._gamepadBtns[4], this._gamepadBtns[5], this._grabBtn)
+      this.grab()
+    }
+    if (this._grabBtn && !(this._gamepadBtns[4] || this._gamepadBtns[5])) {
+      console.log("dropping!", this._gamepadBtns[4], this._gamepadBtns[5], this._grabBtn)
+      this.drop()
+    }
+    if ((this._gamepadBtns[6] || this._gamepadBtns[7]) && !this._useBtn0) this.useDown()
+    if ((this._gamepadBtns[0]) && !this._useBtn1) this.useDown("head", 1)
+    if ((this._gamepadBtns[1]) && !this._useBtn2) this.useDown("head", 2)
+    if (this._gamepadBtns[2]) {
+      if (this._gamepadBtns[12]) this.moveHeadHand(0, -0.03125)
+      if (this._gamepadBtns[13]) this.moveHeadHand(0, 0.03125)
+      if (this._gamepadBtns[14]) this.moveHeadHand(0, 0, -0.03125)
+      if (this._gamepadBtns[15]) this.moveHeadHand(0, 0, 0.03125)
+    } else {
+      if (this._gamepadBtns[12]) this.moveHeadHand(-0.03125)
+      if (this._gamepadBtns[13]) this.moveHeadHand(0.03125)
+      if (this._gamepadBtns[14]) this.moveHeadHand(0, 0, 0, 0.03125)
+      if (this._gamepadBtns[15]) this.moveHeadHand(0, 0, 0, -0.03125)
     }
     this._grabBtn = false
     this._useBtn0 = false
@@ -229,10 +240,10 @@ AFRAME.registerComponent("grabbing", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        this._grabBtn = this._grabBtn || gamepad.buttons[4].pressed || gamepad.buttons[5].pressed
-        this._useBtn0 = this._useBtn0 || gamepad.buttons[6].pressed || gamepad.buttons[7].pressed
-        this._useBtn1 = this._useBtn1 || gamepad.buttons[0].pressed
-        this._useBtn2 = this._useBtn2 || gamepad.buttons[1].pressed
+        this._grabBtn = this._grabBtn || this._gamepadBtns[4] || this._gamepadBtns[5]
+        this._useBtn0 = this._useBtn0 || this._gamepadBtns[6] || this._gamepadBtns[7]
+        this._useBtn1 = this._useBtn1 || this._gamepadBtns[0]
+        this._useBtn2 = this._useBtn2 || this._gamepadBtns[1]
       }
     }
 
@@ -275,13 +286,14 @@ AFRAME.registerComponent("grabbing", {
       if (this[_hand].grabbed) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
-        for (let hit of ray.intersections) {
-          if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
-            this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+          for (let hit of ray.intersections) {
+            if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+              this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+            }
           }
-        }
-        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        }
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
         if (this[_hand].ray) {
@@ -430,7 +442,7 @@ AFRAME.registerComponent("grabbing", {
           to: rot,
           dur: 256
         })
-      } else {
+      } else if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
         this[_hand].anchor.setAttribute("animation__pos", {
           property: "object3D.position.z",
           to: this[_hand].anchor.object3D.position.z + delta,
@@ -691,13 +703,18 @@ AFRAME.registerComponent("grabbing", {
   },
 
   _onKeyDown(e) {
-    this._keysDown[e.code] = true
-    if (e.key === "e") {
+    if (e.code === "KeyE" && !this._keysDown[e.code]) {
       this._setDevice("desktop")
-      this.toggleGrab()
+      this.grab()
     }
+    this._keysDown[e.code] = true
   },
-  _onKeyUp(e) { this._keysDown[e.code] = false },
+  _onKeyUp(e) {
+    if (e.code === "KeyE" && this._keysDown[e.code]) {
+      this.drop()
+    }
+    this._keysDown[e.code] = false
+  },
   _onMouseDown(e) {
     this._setDevice("desktop")
     let btn = e.button
@@ -802,99 +819,86 @@ AFRAME.registerComponent("button", {
 },{}],5:[function(require,module,exports){
 /* global AFRAME, THREE */
 
+let currentClimb
+
 AFRAME.registerComponent("climbable", {
   dependencies: ["wall"],
   schema: {
   },
 
   init() {
-    this.el.setAttribute("grabbable", "physics:false; kinematicGrab:false;")
+    this.el.setAttribute("grabbable", "physics:false; kinematicGrab:false; immovable:true;")
     this._player = this.el.sceneEl.querySelector("[locomotion]")
+    this._localAnchor = new THREE.Vector3()
 
     this._onBump = this._onBump.bind(this)
-    this._onBumpThis = this._onBumpThis.bind(this)
-    this._autoGrab = true
-
-    setTimeout(() => {
-      this._quat = new THREE.Quaternion()
-      this._lpos = new THREE.Vector3()
-      this._wpos = new THREE.Vector3()
-      this._handpos = new THREE.Vector3()
-
-      this._quat.copy(this.el.object3D.quaternion)
-      this._lpos.copy(this.el.object3D.position)
-      this.el.object3D.getWorldPosition(this._wpos)
-      this._top = parseFloat(this.el.getAttribute("height") || 1) / 2 + 2
-    }, 256)
   },
 
   play() {
     this._player.addEventListener("bump", this._onBump)
-    this.el.addEventListener("bump", this._onBumpThis)
   },
   pause() {
     this._player.removeEventListener("bump", this._onBump)
-    this.el.removeEventListener("bump", this._onBumpThis)
     this._climbing = false
   },
 
   tick() {
-    if (!this._lpos) return
-    this.el.object3D.quaternion.copy(this._quat)
-    this.el.object3D.position.copy(this._lpos)
-
-    if (!this._climbing) return
-    let delta = THREE.Vector3.temp()
-    this._hand.object3D.getWorldPosition(delta)
-    delta.sub(this._handpos).multiplyScalar(-1)
-    if (this._handName === "head") {
-      delta.y = 0
-      delta.y = delta.length()
-      this._handpos.y += delta.y
-    }
+    if (!this._floating) return
     this._player.components.locomotion.stopFall()
+    if (!this._climbing) return
+    let worldAnchor = THREE.Vector3.temp().copy(this._localAnchor)
+    let handPos = THREE.Vector3.temp().set(0, 0, 0)
+    let delta = THREE.Vector3.temp()
+
+    this.el.object3D.localToWorld(worldAnchor)
+    this._hand.object3D.localToWorld(handPos)
+    delta.copy(worldAnchor).sub(handPos).multiplyScalar(0.5)
+
     this._player.components.locomotion.move(delta)
-    if (this._handpos.y - this._wpos.y > this._top) this._player.components.grabbing.dropObject(this.el)
   },
 
   events: {
     grab(e) {
+      if (currentClimb && currentClimb !== this.el) this._player.components.grabbing.dropObject(currentClimb)
+      currentClimb = this.el
       this._climbing = true
+      this._floating = true
       this._handName = e.detail.hand
       this._hand = e.detail.gloveElement.parentNode
-      this._hand.object3D.getWorldPosition(this._handpos)
-      if (e.detail.intersection.distance > (this._handName === "head" ? 0.5 : 0.25)) setTimeout(this._onBump, 260)
-      else this._player.components.locomotion.jump()
-      clearTimeout(this._autoCrouchTO)
-      this._autoCrouchTO = setTimeout(() => {
+      this._localAnchor.copy(e.detail.intersection.point)
+      this.el.object3D.worldToLocal(this._localAnchor)
+      if (this._handName === "head") {
+        this._hand = this._hand.querySelector(".anchor")
+        this._hand.object3D.position.set(0, 0, -e.detail.intersection.distance)
+      }
+      this._player.components.locomotion.jump()
+      setTimeout(() => {
         this.el.sceneEl.querySelector(".legs")?.object3D.position.copy(this._player.components.locomotion.headPos)
-      }, 1024)
+      })
+      clearTimeout(this._autoCrouchTO)
     },
     drop(e) {
       this._climbing = false
+      setTimeout(() => {
+        this.el.sceneEl.querySelector(".legs")?.object3D.position.copy(this._player.components.locomotion.headPos)
+      })
       clearTimeout(this._autoCrouchTO)
       this._autoCrouchTO = setTimeout(() => {
+        this._floating = false
         this._player.components.locomotion.toggleCrouch(true)
-        this._autoCrouchTO = setTimeout(() => {
-          this.el.sceneEl.querySelector(".legs")?.object3D.position.add(this._player.components.locomotion.centerPos).sub(this._player.components.locomotion.feetPos)
-        }, 512)
-      }, 256)
+      }, this._handName === "head" ? 1024 : 256)
+      currentClimb = null
     },
   },
 
   _onBump(e) {
-    if (this._autoGrab) return
+    this._climbing = false
+    clearTimeout(this._autoCrouchTO)
+    this._autoCrouchTO = setTimeout(() => {
+      this._floating = false
+    }, 1024)
     this._player.components.grabbing.dropObject(this.el)
-    clearTimeout(this._autoGrabTO)
-    this._autoGrabTO = setTimeout(() => {
-      this._autoGrab = true
-    }, 4096)
   },
-  _onBumpThis(e) {
-    if (!this._autoGrab) return
-    this._player.components.grabbing.grab()
-    this._autoGrab = false
-  }
 })
 
 },{}],6:[function(require,module,exports){
@@ -1411,10 +1415,13 @@ AFRAME.registerComponent("locomotion", {
   stopFall() {
     this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
     this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
-    this._vertVelocity = Math.max(this._vertVelocity, 0)
+    this._vertVelocity = 0
   },
 
   toggleCrouch(reset) {
+    if (!this.currentFloor) return setTimeout(() => {
+      this.toggleCrouch(reset)
+    }, 256)
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
     clearTimeout(this._crouchResetTO)
@@ -1698,15 +1705,15 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[3].pressed) {
+        if (gamepad.buttons[3]?.pressed) {
           this._setDevice("gamepad")
           buttons = buttons | 1
         }
-        if (gamepad.buttons[11].pressed) {
+        if (gamepad.buttons[11]?.pressed) {
           this._setDevice("gamepad")
           buttons = buttons | 1
         }
-        if (gamepad.buttons[10].pressed) {
+        if (gamepad.buttons[10]?.pressed) {
           this._setDevice("gamepad")
           buttons = buttons | 2
         }

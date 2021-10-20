@@ -21,6 +21,7 @@ AFRAME.registerComponent("grabbing", {
     this._btnFlex = {}
     this._keysDown = {}
     this._grabCount = 0
+    this._gamepadBtns = []
 
     this._hands = ["head", "left", "right"]
     this._head = {}
@@ -128,28 +129,38 @@ AFRAME.registerComponent("grabbing", {
 
   tick(time, timeDelta) {
     // handle gamepads
+    for (let i = 0; i < 16; i++)
+      this._gamepadBtns[i] = 0
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if ((gamepad.buttons[4].pressed || gamepad.buttons[5].pressed) && !this._grabBtn) {
-          this._setDevice("gamepad")
-          this.toggleGrab()
-        }
-        if ((gamepad.buttons[6].pressed || gamepad.buttons[7].pressed) && !this._useBtn0) this.useDown()
-        if ((gamepad.buttons[0].pressed) && !this._useBtn1) this.useDown("head", 1)
-        if ((gamepad.buttons[1].pressed) && !this._useBtn2) this.useDown("head", 2)
-        if (gamepad.buttons[2].pressed) {
-          if (gamepad.buttons[12].pressed) this.moveHeadHand(0, -0.03125)
-          if (gamepad.buttons[13].pressed) this.moveHeadHand(0, 0.03125)
-          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, -0.03125)
-          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0.03125)
-        } else {
-          if (gamepad.buttons[12].pressed) this.moveHeadHand(-0.03125)
-          if (gamepad.buttons[13].pressed) this.moveHeadHand(0.03125)
-          if (gamepad.buttons[14].pressed) this.moveHeadHand(0, 0, 0, 0.03125)
-          if (gamepad.buttons[15].pressed) this.moveHeadHand(0, 0, 0, -0.03125)
-        }
+        for (let i = 0; i < 16; i++)
+          this._gamepadBtns[i] += gamepad.buttons[i]?.pressed || 0
       }
+    }
+
+    if ((this._gamepadBtns[4] || this._gamepadBtns[5]) && !this._grabBtn) {
+      this._setDevice("gamepad")
+      console.log("grabbing!", this._gamepadBtns[4], this._gamepadBtns[5], this._grabBtn)
+      this.grab()
+    }
+    if (this._grabBtn && !(this._gamepadBtns[4] || this._gamepadBtns[5])) {
+      console.log("dropping!", this._gamepadBtns[4], this._gamepadBtns[5], this._grabBtn)
+      this.drop()
+    }
+    if ((this._gamepadBtns[6] || this._gamepadBtns[7]) && !this._useBtn0) this.useDown()
+    if ((this._gamepadBtns[0]) && !this._useBtn1) this.useDown("head", 1)
+    if ((this._gamepadBtns[1]) && !this._useBtn2) this.useDown("head", 2)
+    if (this._gamepadBtns[2]) {
+      if (this._gamepadBtns[12]) this.moveHeadHand(0, -0.03125)
+      if (this._gamepadBtns[13]) this.moveHeadHand(0, 0.03125)
+      if (this._gamepadBtns[14]) this.moveHeadHand(0, 0, -0.03125)
+      if (this._gamepadBtns[15]) this.moveHeadHand(0, 0, 0.03125)
+    } else {
+      if (this._gamepadBtns[12]) this.moveHeadHand(-0.03125)
+      if (this._gamepadBtns[13]) this.moveHeadHand(0.03125)
+      if (this._gamepadBtns[14]) this.moveHeadHand(0, 0, 0, 0.03125)
+      if (this._gamepadBtns[15]) this.moveHeadHand(0, 0, 0, -0.03125)
     }
     this._grabBtn = false
     this._useBtn0 = false
@@ -158,10 +169,10 @@ AFRAME.registerComponent("grabbing", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        this._grabBtn = this._grabBtn || gamepad.buttons[4].pressed || gamepad.buttons[5].pressed
-        this._useBtn0 = this._useBtn0 || gamepad.buttons[6].pressed || gamepad.buttons[7].pressed
-        this._useBtn1 = this._useBtn1 || gamepad.buttons[0].pressed
-        this._useBtn2 = this._useBtn2 || gamepad.buttons[1].pressed
+        this._grabBtn = this._grabBtn || this._gamepadBtns[4] || this._gamepadBtns[5]
+        this._useBtn0 = this._useBtn0 || this._gamepadBtns[6] || this._gamepadBtns[7]
+        this._useBtn1 = this._useBtn1 || this._gamepadBtns[0]
+        this._useBtn2 = this._useBtn2 || this._gamepadBtns[1]
       }
     }
 
@@ -204,13 +215,14 @@ AFRAME.registerComponent("grabbing", {
       if (this[_hand].grabbed) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
-        for (let hit of ray.intersections) {
-          if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
-            this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+        if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+          for (let hit of ray.intersections) {
+            if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+              this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+            }
           }
-        }
-        if (!this[_hand].grabbed.components.grabbable?.data.immovable)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+        }
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
         if (this[_hand].ray) {
@@ -359,7 +371,7 @@ AFRAME.registerComponent("grabbing", {
           to: rot,
           dur: 256
         })
-      } else {
+      } else if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
         this[_hand].anchor.setAttribute("animation__pos", {
           property: "object3D.position.z",
           to: this[_hand].anchor.object3D.position.z + delta,
@@ -620,13 +632,18 @@ AFRAME.registerComponent("grabbing", {
   },
 
   _onKeyDown(e) {
-    this._keysDown[e.code] = true
-    if (e.key === "e") {
+    if (e.code === "KeyE" && !this._keysDown[e.code]) {
       this._setDevice("desktop")
-      this.toggleGrab()
+      this.grab()
     }
+    this._keysDown[e.code] = true
   },
-  _onKeyUp(e) { this._keysDown[e.code] = false },
+  _onKeyUp(e) {
+    if (e.code === "KeyE" && this._keysDown[e.code]) {
+      this.drop()
+    }
+    this._keysDown[e.code] = false
+  },
   _onMouseDown(e) {
     this._setDevice("desktop")
     let btn = e.button

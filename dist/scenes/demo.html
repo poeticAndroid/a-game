@@ -1,6 +1,6 @@
 <a-main script="src:./scenes/demo.js">
   <a-sky src="#skyImg"></a-sky>
-  <a-entity start position="0 1 1"></a-entity>
+  <a-entity start position="0 12 -5"></a-entity>
   <a-box trigger onevent__trigger="entity:a-main; property:include; value:./scenes/demo.html;" position="0 -16 0"
     width="1024" depth="1024" visible="false"></a-box>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
@@ -59,8 +59,31 @@
     <a-sphere radius="0.125" receptacle="autoDrop:true;" position="-1 1 0"></a-sphere>
     <a-sphere radius="0.125" receptacle position="2 1 0"></a-sphere>
     <a-sphere radius="0.125" receptacle position="-2 1 0"></a-sphere>
-    <a-cylinder src="#granite" climbable height="20" position="0 10 4"></a-cylinder>
-    <a-cylinder src="#granite" floor height="0.125" position="0 20 4"></a-cylinder>
+    <a-cylinder src="#granite" climbable height="10" position="0 5 4"></a-cylinder>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 12 4"
+      animation="dur: 10000; property: position; to: 0 15 -5; dir: alternate; loop:true; easing:easeInOutQuad;"></a-box>
+    <a-box src="#granite" floor height="0.125" position="0 13 -5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 15 -5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 15.25 -5.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 15.5 -6"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 15.75 -6.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 16 -7"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 16.25 -7.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 16.5 -8"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 16.75 -8.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 17 -9"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 17.25 -9.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 17.5 -10"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 17.75 -10.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 18 -11"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 18.25 -11.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 18.5 -12"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 18.75 -12.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 19 -13"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 19.25 -13.5"></a-box>
+    <a-box src="#granite" climbable floor depth="0.125" height="0.125" position="0 19.5 -14"></a-box>
+    <a-box src="#granite" floor height="0.125" position="0 17.5 -14"></a-box>
+    <a-cylinder src="#granite" floor height="0.125" position="0 10 4"></a-cylinder>
     <a-box button onstate__pressed="property:color; off:green; on:lime;" scale="0.125 0.125 0.125" position="4 1 -4">
     </a-box>
   </a-entity>
