@@ -241,10 +241,13 @@ AFRAME.registerComponent("locomotion", {
   stopFall() {
     this._legs.object3D.position.x = this.feetPos.x = this.headPos.x
     this._legs.object3D.position.z = this.feetPos.z = this.headPos.z
-    this._vertVelocity = Math.max(this._vertVelocity, 0)
+    this._vertVelocity = 0
   },
 
   toggleCrouch(reset) {
+    if (!this.currentFloor) return setTimeout(() => {
+      this.toggleCrouch(reset)
+    }, 256)
     let head2toe = this.headPos.y - this.feetPos.y
     let delta
     clearTimeout(this._crouchResetTO)
@@ -528,15 +531,15 @@ AFRAME.registerComponent("locomotion", {
     for (i = 0, len = navigator.getGamepads().length; i < len; i++) {
       gamepad = navigator.getGamepads()[i]
       if (gamepad) {
-        if (gamepad.buttons[3].pressed) {
+        if (gamepad.buttons[3]?.pressed) {
           this._setDevice("gamepad")
           buttons = buttons | 1
         }
-        if (gamepad.buttons[11].pressed) {
+        if (gamepad.buttons[11]?.pressed) {
           this._setDevice("gamepad")
           buttons = buttons | 1
         }
-        if (gamepad.buttons[10].pressed) {
+        if (gamepad.buttons[10]?.pressed) {
           this._setDevice("gamepad")
           buttons = buttons | 2
         }
