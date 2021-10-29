@@ -217,6 +217,9 @@ AFRAME.registerComponent("locomotion", {
         delta.copy(this.feetPos).sub(this.lastStep)
       }
     }
+
+    // Update The Matrix! 🐱‍💻
+    this.el.object3D.updateWorldMatrix(true, true)
   },
 
   teleport(pos, force) {
