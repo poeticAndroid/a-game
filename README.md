@@ -6,12 +6,12 @@ Essential game components for [A-Frame](https://aframe.io/)!
 <html>
   <head>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/a-game@0.34.0/dist/a-game.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/a-game@0.35.0/dist/a-game.min.js"></script>
   </head>
   <body>
     <a-scene physics>
       <a-entity include="./scenes/_assets.html"></a-entity>
-      <a-player alocomotion grabbing></a-player>
+      <a-player locomotion grabbing></a-player>
       <a-main include="./scenes/level1.html">
         <a-box floor color="gray" width="32" height="0.25" depth="32"></a-box>
       </a-main>
@@ -39,10 +39,10 @@ Essential game components for [A-Frame](https://aframe.io/)!
    - [grabbable](./src/components/grabbing/grabbable.md)
    - [receptacle](./src/components/grabbing/receptacle.md)
  - [include](./src/components/include.md)
- - [alocomotion](./src/components/alocomotion.md)
-   - [floor](./src/components/alocomotion/floor.md)
-   - [start](./src/components/alocomotion/start.md)
-   - [wall](./src/components/alocomotion/wall.md)
+ - [locomotion](./src/components/locomotion.md)
+   - [floor](./src/components/locomotion/floor.md)
+   - [start](./src/components/locomotion/start.md)
+   - [wall](./src/components/locomotion/wall.md)
  - [onevent](./src/components/onevent.md)
  - [onstate](./src/components/onstate.md)
  - [physics](./src/components/physics.md)
