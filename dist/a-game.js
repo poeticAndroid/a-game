@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.33.2",
+  "version": "0.33.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -2016,7 +2016,7 @@ const pkg = require("../../package")
 
 AFRAME.registerSystem("physics", {
   schema: {
-    workerUrl: { type: "string", default: `https://cdn.jsdelivr.net/gh/poeticAndroid/a-game@v${pkg.version}/dist/cannonWorker.min.js` },
+    workerUrl: { type: "string", default: `https://cdn.jsdelivr.net/npm/a-game@${pkg.version}/dist/cannonWorker.min.js` },
     gravity: { type: "vec3", default: { x: 0, y: -10, z: 0 } },
     debug: { type: "boolean", default: false }
   },
