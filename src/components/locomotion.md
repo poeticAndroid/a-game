@@ -25,9 +25,9 @@ This makes it possible to move around the using the following controls.
 | Property         | Description                                                      | Default |
 | ---------------- | ---------------------------------------------------------------- | ------- |
 | speed            | Speed of movement                                                | 4       |
-| stepLength       | Distance between `step` events                                   | 4       |
+| stepLength       | Distance between `step` events                                   | 1       |
 | teleportDistance | Maximum teleportation distance                                   | 5       |
-| jumpForce        | Amount of force to jump (will disable teleportation)             | 0       |
+| jumpForce        | Amount of force to jump                                          | 4       |
 | gravity          | Amount of gravity when jumping and falling                       | 10      |
 | godMode          | Enable ability to fly through walls and floors in any direction  | false   |
 
