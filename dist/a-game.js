@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.35.2",
+  "version": "0.35.3",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -293,7 +293,10 @@ AFRAME.registerComponent("grabbing", {
               this[_hand].anchor.object3D.position.multiplyScalar(0.5)
             }
           }
+          let delta = THREE.Vector3.temp().copy(this[_hand].grabbed.object3D.position)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+          delta.sub(this[_hand].grabbed.object3D.position)
+          if (delta.length() > 1) this.drop(hand)
         }
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
