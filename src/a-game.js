@@ -13,6 +13,7 @@ setTimeout(() => {
 require("./components/grabbing")
 require("./components/include")
 require("./components/injectplayer")
+require("./components/limit")
 require("./components/locomotion")
 require("./components/onevent")
 require("./components/onstate")

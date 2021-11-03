@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.35.0",
+  "version": "0.35.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -12,7 +12,7 @@ module.exports={
     "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -54,6 +54,7 @@ setTimeout(() => {
 require("./components/grabbing")
 require("./components/include")
 require("./components/injectplayer")
+require("./components/limit")
 require("./components/locomotion")
 require("./components/onevent")
 require("./components/onstate")
@@ -68,7 +69,7 @@ require("./primitives/a-player")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":9,"./components/injectplayer":10,"./components/locomotion":11,"./components/onevent":15,"./components/onstate":16,"./components/physics":17,"./components/script":21,"./components/trigger":22,"./libs/betterRaycaster":23,"./libs/copyWorldPosRot":25,"./libs/ensureElement":26,"./libs/pools":27,"./libs/touchGestures":28,"./primitives/a-hand":29,"./primitives/a-main":30,"./primitives/a-player":31}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":9,"./components/injectplayer":10,"./components/limit":11,"./components/locomotion":12,"./components/onevent":16,"./components/onstate":17,"./components/physics":18,"./components/script":22,"./components/trigger":23,"./libs/betterRaycaster":24,"./libs/copyWorldPosRot":26,"./libs/ensureElement":27,"./libs/pools":28,"./libs/touchGestures":29,"./primitives/a-hand":30,"./primitives/a-main":31,"./primitives/a-player":32}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -1174,6 +1175,64 @@ AFRAME.registerComponent("injectplayer", {
 },{}],11:[function(require,module,exports){
 /* global AFRAME, THREE */
 
+AFRAME.registerComponent("limit", {
+  multiple: true,
+  schema: {
+    minPos: { type: "vec3" },
+    maxPos: { type: "vec3" },
+    rotationRange: { type: "vec3" },
+    // minQuat: { type: "vec4", default: { x: 0, y: 0, z: 0, w: 1 } },
+    // maxQuat: { type: "vec4", default: { x: 0, y: 0, z: 0, w: 1 } },
+  },
+
+  tick() {
+    let delta = THREE.Vector3.temp()
+    let pos = this.el.object3D.position
+    let minPos = this.data.minPos
+    let maxPos = this.data.maxPos
+    let quat = this.el.object3D.quaternion
+    let minQuat = THREE.Quaternion.temp().set(
+      -Math.abs(this.data.rotationRange.x),
+      -Math.abs(this.data.rotationRange.y),
+      -Math.abs(this.data.rotationRange.z),
+      -1)
+    let maxQuat = THREE.Quaternion.temp().set(
+      Math.abs(this.data.rotationRange.x),
+      Math.abs(this.data.rotationRange.y),
+      Math.abs(this.data.rotationRange.z),
+      1)
+    delta.copy(pos)
+    pos.set(
+      Math.min(Math.max(minPos.x, pos.x), maxPos.x),
+      Math.min(Math.max(minPos.y, pos.y), maxPos.y),
+      Math.min(Math.max(minPos.z, pos.z), maxPos.z)
+    )
+    quat.set(
+      Math.min(Math.max(minQuat.x, quat.x), maxQuat.x),
+      Math.min(Math.max(minQuat.y, quat.y), maxQuat.y),
+      Math.min(Math.max(minQuat.z, quat.z), maxQuat.z),
+      Math.min(Math.max(minQuat.w, quat.w), maxQuat.w)
+    ).normalize()
+    delta.sub(pos)
+    if (delta.length() > 0) {
+      setTimeout(() => {
+        this.el.components.body?.commit()
+      })
+      this.el.emit("limited")
+    }
+  },
+
+  events: {
+    drop(e) {
+
+    }
+  }
+
+})
+
+},{}],12:[function(require,module,exports){
+/* global AFRAME, THREE */
+
 AFRAME.registerComponent("locomotion", {
   dependencies: ["position", "injectplayer"],
   schema: {
@@ -1873,7 +1932,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":12,"./locomotion/start":13,"./locomotion/wall":14}],12:[function(require,module,exports){
+},{"./locomotion/floor":13,"./locomotion/start":14,"./locomotion/wall":15}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1886,7 +1945,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1907,7 +1966,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1920,7 +1979,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onevent", {
@@ -1963,7 +2022,7 @@ AFRAME.registerComponent("onevent", {
   }
 })
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onstate", {
@@ -2007,7 +2066,7 @@ AFRAME.registerComponent("onstate", {
   }
 })
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -2122,7 +2181,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":24,"./physics/body":18,"./physics/joint":19,"./physics/shape":20}],18:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":25,"./physics/body":19,"./physics/joint":20,"./physics/shape":21}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2348,7 +2407,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":24}],19:[function(require,module,exports){
+},{"../../libs/cmdCodec":25}],20:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2432,7 +2491,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":24}],20:[function(require,module,exports){
+},{"../../libs/cmdCodec":25}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2513,7 +2572,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":24}],21:[function(require,module,exports){
+},{"../../libs/cmdCodec":25}],22:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("script", {
@@ -2586,7 +2645,7 @@ AFRAME.registerComponent("script", {
   },
 })
 
-},{}],22:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("trigger", {
@@ -2673,7 +2732,7 @@ AFRAME.registerComponent("trigger", {
 
 })
 
-},{}],23:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
@@ -2701,7 +2760,7 @@ function deepMatch(selector) {
   let deep = (selector + ", ").replaceAll(",", " *,")
   return deep + selector
 }
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -2722,7 +2781,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],25:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -2740,7 +2799,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -2755,7 +2814,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],27:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -2781,7 +2840,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],28:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -2875,7 +2934,7 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],29:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -2884,11 +2943,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],30:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],31:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {
