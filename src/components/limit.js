@@ -1,13 +1,10 @@
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("limit", {
-  multiple: true,
   schema: {
     minPos: { type: "vec3" },
     maxPos: { type: "vec3" },
     rotationRange: { type: "vec3" },
-    // minQuat: { type: "vec4", default: { x: 0, y: 0, z: 0, w: 1 } },
-    // maxQuat: { type: "vec4", default: { x: 0, y: 0, z: 0, w: 1 } },
   },
 
   tick() {

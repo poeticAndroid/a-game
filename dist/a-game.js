@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.35.3",
+  "version": "0.35.4",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -1179,13 +1179,10 @@ AFRAME.registerComponent("injectplayer", {
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("limit", {
-  multiple: true,
   schema: {
     minPos: { type: "vec3" },
     maxPos: { type: "vec3" },
     rotationRange: { type: "vec3" },
-    // minQuat: { type: "vec4", default: { x: 0, y: 0, z: 0, w: 1 } },
-    // maxQuat: { type: "vec4", default: { x: 0, y: 0, z: 0, w: 1 } },
   },
 
   tick() {
