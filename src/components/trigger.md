@@ -1,4 +1,4 @@
-# trigger.js
+# trigger
 
 Trigger an event when certain objects enter or leave this object.
 Only works with `a-box`, `a-sphere` and `a-cylinder` entities.

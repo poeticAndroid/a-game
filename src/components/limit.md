@@ -1,4 +1,4 @@
-# limit.js
+# limit
 
 Constrain an entity's position to a given range.
 

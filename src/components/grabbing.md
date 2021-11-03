@@ -1,4 +1,4 @@
-# grabbing.js
+# grabbing
 
 Components to facilitate grabbable and usable items.
 
