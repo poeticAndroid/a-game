@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.36.0",
+  "version": "0.37.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -45,7 +45,7 @@ require("./libs/ensureElement")
 require("./libs/touchGestures")
 require("./libs/betterRaycaster")
 
-setTimeout(() => {
+addEventListener('DOMContentLoaded', e => {
   document.body.addEventListener("swipeup", e => {
     document.body.requestFullscreen()
   })
@@ -529,6 +529,8 @@ AFRAME.registerComponent("grabbing", {
       this[_hand]._lastClick = this[_hand]._lastButton
       this.emit("press", this[_hand].glove, this[_hand]._lastClick, { button: button })
       this[_hand]._lastClick.addState("pressed")
+    } else {
+      this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
     }
   },
   useUp(hand = "head", button = 0) {
@@ -541,6 +543,8 @@ AFRAME.registerComponent("grabbing", {
       this.emit("unpress", this[_hand].glove, this[_hand]._lastClick)
       this[_hand]._lastClick.removeState("pressed")
       this[_hand]._lastClick = null
+    } else {
+      this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
     }
   },
   moveHeadHand(pz = 0, rx = 0, ry = 0, rz = 0) {
