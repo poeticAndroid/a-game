@@ -12,6 +12,7 @@ setTimeout(() => {
 
 require("./components/grabbing")
 require("./components/include")
+require("./components/injectglove")
 require("./components/injectplayer")
 require("./components/limit")
 require("./components/locomotion")
@@ -21,6 +22,7 @@ require("./components/physics")
 require("./components/script")
 require("./components/trigger")
 
+require("./primitives/a-glove")
 require("./primitives/a-hand")
 require("./primitives/a-main")
 require("./primitives/a-player")

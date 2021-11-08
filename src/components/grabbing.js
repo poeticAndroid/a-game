@@ -31,8 +31,8 @@ AFRAME.registerComponent("grabbing", {
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
     this._head.glove = this._head.hand.ensure(".hitbox", "a-sphere", { class: "hitbox", body: "type:kinematic;", radius: 0.25 })
-    this._left.glove = this._ensureGlove(this._left.hand)
-    this._right.glove = this._ensureGlove(this._right.hand)
+    this._left.glove = this._left.hand.ensure("a-glove")
+    this._right.glove = this._right.hand.ensure("a-glove")
 
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
@@ -555,61 +555,6 @@ AFRAME.registerComponent("grabbing", {
     this.update()
   },
 
-  _ensureGlove(el) {
-    let hand = el.getAttribute("side")
-    let color = el.getAttribute("color") || "lightblue"
-    return el.ensure(".glove", "a-entity", {
-      "class": "glove",
-      "fingerflex": {
-        min: hand === "left" ? -10 : 10,
-        max: hand === "left" ? -90 : 90,
-      }
-    }, `<a-box class="palm" color="${color}" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
-      depth="0.08">
-      <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
-        <a-entity class="thumb bend">
-          <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            <a-entity class="bend" position="0 0 -0.02">
-              <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-              </a-box>
-            </a-entity>
-          </a-box>
-        </a-entity>
-      </a-entity>
-      <a-entity class="index bend" position="0 0.03 -0.04" rotation="3 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <a-entity class="middle bend" position="0 0.01 -0.04" rotation="1 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="-1 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <a-entity class="little bend" position="0 -0.03 -0.04" rotation="-3 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-    </a-box>`)
-  },
   _flexFinger(hand, finger, flex, priority = false) {
     let _hand = "_" + hand
     this[_hand].userFlex = this[_hand].userFlex || []
