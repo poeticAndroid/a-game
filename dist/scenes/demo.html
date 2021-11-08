@@ -1,18 +1,20 @@
 <a-main script="src:./scenes/demo.js">
   <a-sky src="#skyImg"></a-sky>
-  <a-entity start position="0 12 -5"></a-entity>
+  <a-entity start position="0 2 0"></a-entity>
   <a-box trigger onevent__trigger="entity:a-main; property:include; value:./scenes/demo.html;" position="0 -16 0"
     width="1024" depth="1024" visible="false"></a-box>
   <a-box rotation="-90 0 0" src="#floorImg" width="16" height="16" depth="0.01" floor></a-box>
   <a-box color="#9fc" position="1.55 .55 -3" scale=".5 .5 .5" grabbable
     onevent__reachable="property:color; value:yellow;" onevent__unreachable="property:color; value:blue;"
-    onstate__grabbed="property:color; on:green; off:red;"></a-box>
+    onstate__grabbed="property:color; on:green; off:red;">
+  </a-box>
   <a-box color="#fc9" position="0 1.55 -4" rotation="10 11 12" height="0.4" grabbable="kinematicGrab:false;"></a-box>
   <a-box color="#c9f" position="-0.55 .55 -4" rotation="10 11 12" grabbable="kinematicGrab:true;"></a-box>
   <a-gltf-model grabbable src="#cat" position="0 30 -3" rotation="1 2 4">
     <a-cylinder height="0.5" radius="0.125" visible="false"></a-cylinder>
   </a-gltf-model>
-  <a-gltf-model grabbable="physics:false;" src="#bunny" position="0 2 -3" scale=".03125 .03125 .03125"></a-gltf-model>
+  <a-gltf-model grabbable="physics:false;" src="#bunny" position="0 2 -3" scale=".03125 .03125 .03125"
+    limit="minPos:-4 0 -4; maxPos:4 4 4; rotationRange:0 1 0;"></a-gltf-model>
   <a-gltf-model grabbable="fixed:true;fixedPosition:-0.015625 0 0;kinematicGrab:true;fingerFlex:0, 0, 1;" src="#gunMdl"
     sound="on:usedown; src:#shot; poolSize:8;" position="0 11.5 -1" rotation="1 2 4" scale=".05 .05 .05">
     <a-box visible="false" width="0.75" height="3" position="0 0 0.25" rotation="-20 0 0"></a-box>

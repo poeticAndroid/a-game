@@ -1,4 +1,4 @@
-# onstate.js
+# onstate
 
 Change a property when an state is added or removed.
 

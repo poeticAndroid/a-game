@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.35.0",
+  "version": "0.36.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -53,7 +53,9 @@ setTimeout(() => {
 
 require("./components/grabbing")
 require("./components/include")
+require("./components/injectglove")
 require("./components/injectplayer")
+require("./components/limit")
 require("./components/locomotion")
 require("./components/onevent")
 require("./components/onstate")
@@ -61,6 +63,7 @@ require("./components/physics")
 require("./components/script")
 require("./components/trigger")
 
+require("./primitives/a-glove")
 require("./primitives/a-hand")
 require("./primitives/a-main")
 require("./primitives/a-player")
@@ -68,7 +71,7 @@ require("./primitives/a-player")
 const pkg = require("../package")
 console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepage})`)
 
-},{"../package":1,"./components/grabbing":3,"./components/include":9,"./components/injectplayer":10,"./components/locomotion":11,"./components/onevent":15,"./components/onstate":16,"./components/physics":17,"./components/script":21,"./components/trigger":22,"./libs/betterRaycaster":23,"./libs/copyWorldPosRot":25,"./libs/ensureElement":26,"./libs/pools":27,"./libs/touchGestures":28,"./primitives/a-hand":29,"./primitives/a-main":30,"./primitives/a-player":31}],3:[function(require,module,exports){
+},{"../package":1,"./components/grabbing":3,"./components/include":9,"./components/injectglove":10,"./components/injectplayer":11,"./components/limit":12,"./components/locomotion":13,"./components/onevent":17,"./components/onstate":18,"./components/physics":19,"./components/script":23,"./components/trigger":24,"./libs/betterRaycaster":25,"./libs/copyWorldPosRot":27,"./libs/ensureElement":28,"./libs/pools":29,"./libs/touchGestures":30,"./primitives/a-glove":31,"./primitives/a-hand":32,"./primitives/a-main":33,"./primitives/a-player":34}],3:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("grabbing", {
@@ -102,8 +105,8 @@ AFRAME.registerComponent("grabbing", {
     this._left.hand = this.el.querySelector("a-hand[side=\"left\"]")
     this._right.hand = this.el.querySelector("a-hand[side=\"right\"]")
     this._head.glove = this._head.hand.ensure(".hitbox", "a-sphere", { class: "hitbox", body: "type:kinematic;", radius: 0.25 })
-    this._left.glove = this._ensureGlove(this._left.hand)
-    this._right.glove = this._ensureGlove(this._right.hand)
+    this._left.glove = this._left.hand.ensure("a-glove")
+    this._right.glove = this._right.hand.ensure("a-glove")
 
     this._left.glove.setAttribute("visible", false)
     this._right.glove.setAttribute("visible", false)
@@ -292,7 +295,10 @@ AFRAME.registerComponent("grabbing", {
               this[_hand].anchor.object3D.position.multiplyScalar(0.5)
             }
           }
+          let delta = THREE.Vector3.temp().copy(this[_hand].grabbed.object3D.position)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
+          delta.sub(this[_hand].grabbed.object3D.position)
+          if (delta.length() > 1) this.drop(hand)
         }
         if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
       } else {
@@ -550,8 +556,8 @@ AFRAME.registerComponent("grabbing", {
     for (let _hand of this._hands) {
       if (this["_" + _hand].glove === glove) e.hand = _hand
     }
-    glove.emit(eventtype, e)
-    if (grabbed) grabbed.emit(eventtype, e)
+    glove.emit(eventtype, e, true)
+    if (grabbed) grabbed.emit(eventtype, e, true)
   },
 
   events: {
@@ -623,61 +629,6 @@ AFRAME.registerComponent("grabbing", {
     this.update()
   },
 
-  _ensureGlove(el) {
-    let hand = el.getAttribute("side")
-    let color = el.getAttribute("color") || "lightblue"
-    return el.ensure(".glove", "a-entity", {
-      "class": "glove",
-      "fingerflex": {
-        min: hand === "left" ? -10 : 10,
-        max: hand === "left" ? -90 : 90,
-      }
-    }, `<a-box class="palm" color="${color}" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
-      depth="0.08">
-      <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
-        <a-entity class="thumb bend">
-          <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            <a-entity class="bend" position="0 0 -0.02">
-              <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-              </a-box>
-            </a-entity>
-          </a-box>
-        </a-entity>
-      </a-entity>
-      <a-entity class="index bend" position="0 0.03 -0.04" rotation="3 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <a-entity class="middle bend" position="0 0.01 -0.04" rotation="1 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="-1 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-      <a-entity class="little bend" position="0 -0.03 -0.04" rotation="-3 0 0">
-        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-          <a-entity class="bend" position="0 0 -0.02">
-            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
-            </a-box>
-          </a-entity>
-        </a-box>
-      </a-entity>
-    </a-box>`)
-  },
   _flexFinger(hand, finger, flex, priority = false) {
     let _hand = "_" + hand
     this[_hand].userFlex = this[_hand].userFlex || []
@@ -1158,6 +1109,76 @@ AFRAME.registerComponent("include", {
 },{}],10:[function(require,module,exports){
 /* global AFRAME, THREE */
 
+AFRAME.registerComponent("injectglove", {
+  init() {
+    if (!this.el.innerHTML.trim()) this.defaultGlove()
+    let hand = this.el.getAttribute("side") || this.el.parentNode.getAttribute("side")
+    this.el.ensure(".palm", "a-entity", {
+      class: "palm",
+      position: `${hand === "left" ? -0.01 : 0.01} -0.03 0.08`,
+      rotation: "-35 0 0"
+    })
+    this.el.ensure("a-hand[side=\"right\"]", "a-hand", { side: "right" })
+  },
+
+  defaultGlove() {
+    let hand = this.el.getAttribute("side") || this.el.parentNode.getAttribute("side")
+    let color = this.el.getAttribute("color") || this.el.parentNode.getAttribute("color") || "lightblue"
+    if (!this.el.getAttribute("fingerflex")) this.el.setAttribute("fingerflex", {
+      min: hand === "left" ? -10 : 10,
+      max: hand === "left" ? -90 : 90,
+    })
+    this.el.innerHTML = `<a-box class="palm" color="${color}" position="${hand === "left" ? -0.01 : 0.01} -0.03 0.08" rotation="-35 0 0" width="0.02" height="0.08"
+      depth="0.08">
+      <a-entity position="0 0.04 0.02" rotation="80 0 ${hand === "left" ? -45 : 45}">
+        <a-entity class="thumb bend">
+          <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            <a-entity class="bend" position="0 0 -0.02">
+              <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+              </a-box>
+            </a-entity>
+          </a-box>
+        </a-entity>
+      </a-entity>
+      <a-entity class="index bend" position="0 0.03 -0.04" rotation="3 0 0">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="middle bend" position="0 0.01 -0.04" rotation="1 0 0">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="ring bend" position="0 -0.01 -0.04" rotation="-1 0 0">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+      <a-entity class="little bend" position="0 -0.03 -0.04" rotation="-3 0 0">
+        <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+          <a-entity class="bend" position="0 0 -0.02">
+            <a-box color="${color}" position="0 0 -0.02" width="0.02" height="0.02" depth="0.04">
+            </a-box>
+          </a-entity>
+        </a-box>
+      </a-entity>
+    </a-box>`
+  },
+})
+
+},{}],11:[function(require,module,exports){
+/* global AFRAME, THREE */
+
 AFRAME.registerComponent("injectplayer", {
 
   init() {
@@ -1171,7 +1192,62 @@ AFRAME.registerComponent("injectplayer", {
   }
 })
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerComponent("limit", {
+  schema: {
+    minPos: { type: "vec3" },
+    maxPos: { type: "vec3" },
+    rotationRange: { type: "vec3" },
+  },
+
+  tick() {
+    let delta = THREE.Vector3.temp()
+    let pos = this.el.object3D.position
+    let minPos = this.data.minPos
+    let maxPos = this.data.maxPos
+    let quat = this.el.object3D.quaternion
+    let minQuat = THREE.Quaternion.temp().set(
+      -Math.abs(this.data.rotationRange.x),
+      -Math.abs(this.data.rotationRange.y),
+      -Math.abs(this.data.rotationRange.z),
+      -1)
+    let maxQuat = THREE.Quaternion.temp().set(
+      Math.abs(this.data.rotationRange.x),
+      Math.abs(this.data.rotationRange.y),
+      Math.abs(this.data.rotationRange.z),
+      1)
+    delta.copy(pos)
+    pos.set(
+      Math.min(Math.max(minPos.x, pos.x), maxPos.x),
+      Math.min(Math.max(minPos.y, pos.y), maxPos.y),
+      Math.min(Math.max(minPos.z, pos.z), maxPos.z)
+    )
+    quat.set(
+      Math.min(Math.max(minQuat.x, quat.x), maxQuat.x),
+      Math.min(Math.max(minQuat.y, quat.y), maxQuat.y),
+      Math.min(Math.max(minQuat.z, quat.z), maxQuat.z),
+      Math.min(Math.max(minQuat.w, quat.w), maxQuat.w)
+    ).normalize()
+    delta.sub(pos)
+    if (delta.length() > 0) {
+      setTimeout(() => {
+        this.el.components.body?.commit()
+      })
+      this.el.emit("limited")
+    }
+  },
+
+  events: {
+    drop(e) {
+
+    }
+  }
+
+})
+
+},{}],13:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("locomotion", {
@@ -1873,7 +1949,7 @@ require("./locomotion/floor")
 require("./locomotion/wall")
 require("./locomotion/start")
 
-},{"./locomotion/floor":12,"./locomotion/start":13,"./locomotion/wall":14}],12:[function(require,module,exports){
+},{"./locomotion/floor":14,"./locomotion/start":15,"./locomotion/wall":16}],14:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("floor", {
@@ -1886,7 +1962,7 @@ AFRAME.registerComponent("floor", {
   }
 })
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("start", {
@@ -1907,7 +1983,7 @@ AFRAME.registerComponent("start", {
   }
 })
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("wall", {
@@ -1920,7 +1996,7 @@ AFRAME.registerComponent("wall", {
   }
 })
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onevent", {
@@ -1963,7 +2039,7 @@ AFRAME.registerComponent("onevent", {
   }
 })
 
-},{}],16:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("onstate", {
@@ -2007,7 +2083,7 @@ AFRAME.registerComponent("onstate", {
   }
 })
 
-},{}],17:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../libs/cmdCodec")
@@ -2122,7 +2198,7 @@ require("./physics/body")
 require("./physics/shape")
 require("./physics/joint")
 
-},{"../../package":1,"../libs/cmdCodec":24,"./physics/body":18,"./physics/joint":19,"./physics/shape":20}],18:[function(require,module,exports){
+},{"../../package":1,"../libs/cmdCodec":26,"./physics/body":20,"./physics/joint":21,"./physics/shape":22}],20:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2348,7 +2424,7 @@ AFRAME.registerComponent("body", {
 })
 
 
-},{"../../libs/cmdCodec":24}],19:[function(require,module,exports){
+},{"../../libs/cmdCodec":26}],21:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2432,7 +2508,7 @@ AFRAME.registerComponent("joint", {
 })
 
 
-},{"../../libs/cmdCodec":24}],20:[function(require,module,exports){
+},{"../../libs/cmdCodec":26}],22:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const cmd = require("../../libs/cmdCodec")
@@ -2513,7 +2589,7 @@ AFRAME.registerComponent("shape", {
 })
 
 
-},{"../../libs/cmdCodec":24}],21:[function(require,module,exports){
+},{"../../libs/cmdCodec":26}],23:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("script", {
@@ -2586,7 +2662,7 @@ AFRAME.registerComponent("script", {
   },
 })
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerComponent("trigger", {
@@ -2673,7 +2749,7 @@ AFRAME.registerComponent("trigger", {
 
 })
 
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
@@ -2701,7 +2777,7 @@ function deepMatch(selector) {
   let deep = (selector + ", ").replaceAll(",", " *,")
   return deep + selector
 }
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 module.exports = {
   parse(cmd) {
     let words = cmd.split(" ")
@@ -2722,7 +2798,7 @@ module.exports = {
     return JSON.stringify(val).replaceAll(" ", "\\u0020").replaceAll("\"_", "\"")
   }
 }
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
@@ -2740,7 +2816,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
 }
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
   let _childEl, attr, val
   _childEl = this.querySelector(selector)
@@ -2755,7 +2831,7 @@ Element.prototype.ensure = function (selector, name = selector, attrs = {}, inne
   }
   return _childEl
 }
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 function makePool(Class) {
@@ -2781,7 +2857,7 @@ makePool(THREE.Quaternion)
 makePool(THREE.Matrix3)
 makePool(THREE.Matrix4)
 
-},{}],28:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 let _addEventListener = Element.prototype.addEventListener
 let _removeEventListener = Element.prototype.removeEventListener
 let init = el => {
@@ -2875,7 +2951,16 @@ Element.prototype.removeEventListener = function (eventtype, handler) {
   }
 }
 
-},{}],29:[function(require,module,exports){
+},{}],31:[function(require,module,exports){
+/* global AFRAME, THREE */
+
+AFRAME.registerPrimitive("a-glove", {
+  defaultComponents: {
+    injectglove: {}
+  }
+})
+
+},{}],32:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-hand", {
@@ -2884,11 +2969,11 @@ AFRAME.registerPrimitive("a-hand", {
   }
 })
 
-},{}],30:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-main", {})
-},{}],31:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /* global AFRAME, THREE */
 
 AFRAME.registerPrimitive("a-player", {

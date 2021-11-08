@@ -1,4 +1,4 @@
-# onevent.js
+# onevent
 
 Change a property when an event happens.
 
