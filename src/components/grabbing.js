@@ -482,8 +482,8 @@ AFRAME.registerComponent("grabbing", {
     for (let _hand of this._hands) {
       if (this["_" + _hand].glove === glove) e.hand = _hand
     }
-    glove.emit(eventtype, e)
-    if (grabbed) grabbed.emit(eventtype, e)
+    glove.emit(eventtype, e, true)
+    if (grabbed) grabbed.emit(eventtype, e, true)
   },
 
   events: {

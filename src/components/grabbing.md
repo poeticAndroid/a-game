@@ -47,6 +47,7 @@ This makes it possible to grab and use grabbable objects using the following con
 ## Events
 
 These events are emitted by both the glove and the `grabbable` that it's grabbing, if any.
+Events will bubble.
 
 | Event       | Description                |
 | ----------- | -------------------------- |

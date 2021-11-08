@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.35.5",
+  "version": "0.35.6",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -556,8 +556,8 @@ AFRAME.registerComponent("grabbing", {
     for (let _hand of this._hands) {
       if (this["_" + _hand].glove === glove) e.hand = _hand
     }
-    glove.emit(eventtype, e)
-    if (grabbed) grabbed.emit(eventtype, e)
+    glove.emit(eventtype, e, true)
+    if (grabbed) grabbed.emit(eventtype, e, true)
   },
 
   events: {
