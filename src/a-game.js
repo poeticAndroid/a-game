@@ -4,7 +4,7 @@ require("./libs/ensureElement")
 require("./libs/touchGestures")
 require("./libs/betterRaycaster")
 
-setTimeout(() => {
+addEventListener('DOMContentLoaded', e => {
   document.body.addEventListener("swipeup", e => {
     document.body.requestFullscreen()
   })
