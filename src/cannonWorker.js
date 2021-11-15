@@ -47,7 +47,7 @@ function onMessage(e) {
         body.quaternion.copy(quat)
       }
     }
-    if (now - lastStep < 128) {
+    if (now - lastStep < 20) {
       world.step((now - lastStep) / 1000)
     }
     for (let mid = 0; mid < movingBodies.length; mid++) {
@@ -260,8 +260,6 @@ function shapeCommand(body, params) {
       break
   }
 }
-
-
 
 
 function onCollide(e) {
