@@ -10,13 +10,13 @@ Add the `grabbing` component to your player rig like so:
 
 This makes it possible to grab and use grabbable objects using the following controls.
 
-| Action      | Controller           | Desktop          | Touch    |
-| ----------- | -------------------- | ---------------- | -------- |
-| Grab/drop   | Grip/shoulder Button | E                | Long tap |
-| Primary use | Trigger              | Left click       | Tap      |
-| Secondary   | A                    | Right click      |
-| Tertiary    | B                    | Middle click     |
-| Move hand   | X + D-pad            | 1/2/3 + scroll wheel |
+| Action           | Controller           | Desktop          | Touch    |
+| ---------------- | -------------------- | ---------------- | -------- |
+| Grab/drop        | Grip/shoulder Button | E                | Long tap |
+| Primary use      | Trigger              | Left click       | Tap      |
+| Secondary        | A                    | Right click      |
+| Tertiary         | B                    | Middle click     |
+| Move/rotate hand | X + D-pad            | 1/2/3 + scroll wheel |
 
 
 ## Properties

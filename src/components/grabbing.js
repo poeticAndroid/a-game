@@ -241,7 +241,14 @@ AFRAME.registerComponent("grabbing", {
               this._flexFinger(hand, 5, -0.125, true)
               this._flexFinger(hand, 0, 0, true)
             }
-            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance / 2
+            if (this[_hand].reticle) {
+              this[_hand].reticle.object3D.position.z = -hit.distance / 2
+              this[_hand].reticle.object3D.scale.set(
+                hit.distance / 8,
+                hit.distance / 8,
+                hit.distance / 8
+              )
+            }
           } else {
             if (this[_hand]._lastHit) {
               this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
@@ -283,7 +290,14 @@ AFRAME.registerComponent("grabbing", {
               }
               this[_hand]._lastPress = null
             }
-            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
+            if (this[_hand].buttonReticle) {
+              this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
+              this[_hand].buttonReticle.object3D.scale.set(
+                hit.distance / 8,
+                hit.distance / 8,
+                hit.distance / 8
+              )
+            }
           } else {
             if (this[_hand]._lastPress) {
               this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)

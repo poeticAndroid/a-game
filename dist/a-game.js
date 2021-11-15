@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.37.0",
+  "version": "0.37.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -12,7 +12,7 @@ module.exports={
     "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -315,7 +315,14 @@ AFRAME.registerComponent("grabbing", {
               this._flexFinger(hand, 5, -0.125, true)
               this._flexFinger(hand, 0, 0, true)
             }
-            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance / 2
+            if (this[_hand].reticle) {
+              this[_hand].reticle.object3D.position.z = -hit.distance / 2
+              this[_hand].reticle.object3D.scale.set(
+                hit.distance / 8,
+                hit.distance / 8,
+                hit.distance / 8
+              )
+            }
           } else {
             if (this[_hand]._lastHit) {
               this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
@@ -357,7 +364,14 @@ AFRAME.registerComponent("grabbing", {
               }
               this[_hand]._lastPress = null
             }
-            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
+            if (this[_hand].buttonReticle) {
+              this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
+              this[_hand].buttonReticle.object3D.scale.set(
+                hit.distance / 8,
+                hit.distance / 8,
+                hit.distance / 8
+              )
+            }
           } else {
             if (this[_hand]._lastPress) {
               this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)
