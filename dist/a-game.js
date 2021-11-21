@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.38.1",
+  "version": "0.38.2",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -132,24 +132,12 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._head.reticle = this._head.ray.ensure(".reticle", "a-box", {
+    this._head.reticle = this._head.hand.ensure(".reticle", "a-plane", {
       class: "reticle",
-      depth: 0,
-      width: 0.5,
-      height: 0.25,
-      color: "black",
-      position: "0 0 -1",
-      scale: "0.125 0.125 0.125"
-    }, `<a-text align="center" value="grab"></a-text>`)
-    this._head.buttonReticle = this._head.buttonRay.ensure(".reticle", "a-box", {
-      class: "reticle",
-      depth: 0,
-      width: 0.625,
-      height: 0.25,
-      color: "black",
-      position: "0 0 -1",
-      scale: "0.125 0.125 0.125"
-    }, `<a-text align="center" value="press"></a-text>`)
+      material: "transparent:true; shader:flat;",
+      position: "0 0 -0.0078125",
+      scale: "0.00048828125 0.00048828125 0.00048828125"
+    })
     this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
@@ -286,6 +274,7 @@ AFRAME.registerComponent("grabbing", {
       }
 
       // handle grabbables
+      let reticleMode = "default"
       if (this[_hand].grabbed) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
@@ -300,7 +289,7 @@ AFRAME.registerComponent("grabbing", {
           delta.sub(this[_hand].grabbed.object3D.position)
           if (delta.length() > 1) this.drop(hand)
         }
-        if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
+        if (this[_hand].reticle) this._setReticle(null)
       } else {
         if (this[_hand].ray) {
           let ray = this[_hand].ray.components.raycaster
@@ -316,12 +305,7 @@ AFRAME.registerComponent("grabbing", {
               this._flexFinger(hand, 0, 0, true)
             }
             if (this[_hand].reticle) {
-              this[_hand].reticle.object3D.position.z = -hit.distance / 2
-              this[_hand].reticle.object3D.scale.set(
-                hit.distance / 8,
-                hit.distance / 8,
-                hit.distance / 8
-              )
+              reticleMode = "grab"
             }
           } else {
             if (this[_hand]._lastHit) {
@@ -329,7 +313,6 @@ AFRAME.registerComponent("grabbing", {
               this._restoreUserFlex(hand)
             }
             this[_hand]._lastHit = null
-            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
           }
         }
 
@@ -364,13 +347,8 @@ AFRAME.registerComponent("grabbing", {
               }
               this[_hand]._lastPress = null
             }
-            if (this[_hand].buttonReticle) {
-              this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
-              this[_hand].buttonReticle.object3D.scale.set(
-                hit.distance / 8,
-                hit.distance / 8,
-                hit.distance / 8
-              )
+            if (this[_hand].reticle) {
+              reticleMode = "push"
             }
           } else {
             if (this[_hand]._lastPress) {
@@ -383,9 +361,9 @@ AFRAME.registerComponent("grabbing", {
               this._restoreUserFlex(hand)
             }
             this[_hand]._lastButton = null
-            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = 1
           }
         }
+        if (this[_hand].reticle) this._setReticle(reticleMode)
       }
 
       // Track velocity
@@ -578,27 +556,19 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e, true)
   },
 
-  events: {
-    stateadded(e) {
-      if (this.el.is("desktop")) {
-        this._setReticleText(this._head.reticle, "[E]")
-        this._setReticleText(this._head.buttonReticle, "Click")
-      }
-      if (this.el.is("touch")) {
-        this._setReticleText(this._head.reticle, "hold")
-        this._setReticleText(this._head.buttonReticle, "tap")
-      }
-      if (this.el.is("gamepad")) {
-        this._setReticleText(this._head.reticle, "[RB]")
-        this._setReticleText(this._head.buttonReticle, "(A)")
-      }
+  _setReticle(mode) {
+    if (this._head._reticleMode === mode) return
+    let src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAUKAAIALAAAAAAQABAAAAIYlI+py+0PGwARhECdvVjz7oHPFJXmiUIFADs="
+    switch (mode) {
+      case "grab":
+        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgACACwAAAAAEAAQAAACNZQvAMi5EIJaDEqLa1R7J4R1l3SEkvg80YpiFstyIuwlNE3Z95q/d27wwYDBX6M4PDomk0MBADs="
+        break
+      case "push":
+        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAUKAAIALAAAAAAQABAAAAIylA1wywIRVGMvTgrlRTltl3Wao1RmB0YVxEYqu7ZwGstWbWdcPh94O0rZgjsZEZFIagoAOw=="
+        break
     }
-  },
-
-  _setReticleText(reticle, text) {
-    reticle.setAttribute("width", text.length * 0.125)
-    let txt = reticle.querySelector("a-text")
-    txt.setAttribute("value", text)
+    this._head.reticle.setAttribute("src", src)
+    this._head._reticleMode = mode
   },
 
   _enableHands() {
