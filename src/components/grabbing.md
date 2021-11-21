@@ -66,9 +66,14 @@ Events will bubble.
 
 ## States
 
-| State    | Description                  |
-| -------- | ---------------------------- |
-| grabbing | currently grabbing something |
+| State        | Description                           |
+| ------------ | ------------------------------------- |
+| grabbing     | currently grabbing something          |
+| noinput      | Input method has yet to be determined |
+| desktop      | Player is using mouse and keyboard    |
+| touch        | Player is using touch screen          |
+| gamepad      | Player is using gamepad               |
+| vrcontroller | Player is using VR controllers        |
 
 
 ## Related components

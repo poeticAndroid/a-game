@@ -51,6 +51,17 @@ This makes it possible to move around the using the following controls.
 | bump  | Player bumps into wall                       |
 
 
+## States
+
+| State        | Description                           |
+| ------------ | ------------------------------------- |
+| noinput      | Input method has yet to be determined |
+| desktop      | Player is using mouse and keyboard    |
+| touch        | Player is using touch screen          |
+| gamepad      | Player is using gamepad               |
+| vrcontroller | Player is using VR controllers        |
+
+
 ## Related components
 
  - [floor](./locomotion/floor.md)
