@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.38.0",
+  "version": "0.38.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -12,7 +12,7 @@ module.exports={
     "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
