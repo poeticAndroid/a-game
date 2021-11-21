@@ -483,14 +483,15 @@ AFRAME.registerComponent("grabbing", {
   },
 
   _setReticle(mode) {
+    if (!this._head.reticle) return
     if (this._head._reticleMode === mode) return
-    let src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAUKAAIALAAAAAAQABAAAAIYlI+py+0PGwARhECdvVjz7oHPFJXmiUIFADs="
+    let src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH5BAUKAAIALAAAAAAQABAAAAIVlI+py+0PIwQgghDqu9lqCYbiSBoFADs="
     switch (mode) {
       case "grab":
-        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH/C05FVFNDQVBFMi4wAwEAAAAh+QQFCgACACwAAAAAEAAQAAACNZQvAMi5EIJaDEqLa1R7J4R1l3SEkvg80YpiFstyIuwlNE3Z95q/d27wwYDBX6M4PDomk0MBADs="
+        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH5BAUKAAIALAAAAAAQABAAAAI1lC8AyLkQgloMSotrVHsnhHWXdISS+DzRimIWy3Ii7CU0Tdn3mr93bvDBgMFfozg8OiaTQwEAOw=="
         break
       case "push":
-        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH+EUNyZWF0ZWQgd2l0aCBHSU1QACH5BAUKAAIALAAAAAAQABAAAAIylA1wywIRVGMvTgrlRTltl3Wao1RmB0YVxEYqu7ZwGstWbWdcPh94O0rZgjsZEZFIagoAOw=="
+        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH5BAUKAAIALAAAAAAQABAAAAIylA1wywIRVGMvTgrlRTltl3Wao1RmB0YVxEYqu7ZwGstWbWdcPh94O0rZgjsZEZFIagoAOw=="
         break
     }
     this._head.reticle.setAttribute("src", src)
@@ -540,6 +541,9 @@ AFRAME.registerComponent("grabbing", {
 
     this._head.ray = null
     this._head.buttonRay = null
+    this._head.reticle.setAttribute("position", "0 0 1")
+    this._head.reticle.setAttribute("visible", "false")
+    this._head.reticle = null
     this.update()
   },
 
