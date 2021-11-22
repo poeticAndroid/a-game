@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.38.4",
+  "version": "0.38.5",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -77,7 +77,8 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepa
 AFRAME.registerComponent("grabbing", {
   schema: {
     hideOnGrab: { type: "boolean", default: false },
-    grabDistance: { type: "number", default: 1 }
+    grabDistance: { type: "number", default: 1 },
+    forceGrab: { type: "boolean", default: true },
   },
 
   init() {
@@ -399,7 +400,7 @@ AFRAME.registerComponent("grabbing", {
     ray.refreshObjects()
     let hit = ray.intersections[0]
     if (hit && hit.el.getAttribute("grabbable") != null) {
-      if (hand === "head") this[_hand].ray.setAttribute("animation__pos", {
+      if (hand === "head" && this.data.forceGrab) this[_hand].ray.setAttribute("animation__pos", {
         property: "position",
         to: { x: 0, y: -0.125, z: 0 },
         dur: 256
@@ -440,7 +441,7 @@ AFRAME.registerComponent("grabbing", {
           to: rot,
           dur: 256
         })
-      } else if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+      } else if (this.data.forceGrab && !this[_hand].grabbed.components.grabbable?.data.immovable) {
         this[_hand].anchor.setAttribute("animation__pos", {
           property: "object3D.position.z",
           to: this[_hand].anchor.object3D.position.z + delta,
