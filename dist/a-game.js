@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.38.7",
+  "version": "0.38.8",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -385,6 +385,9 @@ AFRAME.registerComponent("grabbing", {
       }
       if (hand === "head") this[_hand].gloveVelocity.copy(this[_hand].grabbedVelocity)
     }
+
+    // Update The Matrix! 🐱‍💻
+    this.el.object3D.updateWorldMatrix(true, true)
   },
 
   toggleGrab(hand = "head") {
@@ -906,11 +909,35 @@ AFRAME.registerComponent("grabbable", {
   },
 
   events: {
-    grab() {
+    grab(e) {
+      if (e.detail.hand !== "head") {
+        this._grabbed = e.detail
+        this._glove = e.detail.gloveElement
+        this._anchor = this._glove.querySelector(".anchor")
+      }
       if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "kinematic")
     },
-    drop() {
+    drop(e) {
+      this._grabbed = false
       if (this.data.physics) this.el.setAttribute("body", "type", "dynamic")
+    },
+    limited(e) {
+      if (this._grabbed) {
+        let delta = THREE.Vector3.temp()
+        let quat = THREE.Quaternion.temp()
+        this._glove.copyWorldPosRot(this.el)
+        let el = this._anchor
+        while (el !== this._glove) {
+          quat.copy(el.object3D.quaternion).conjugate()
+          this._glove.object3D.quaternion.multiply(quat)
+          el = el.parentNode
+        }
+        this._glove.object3D.updateWorldMatrix(true, true)
+        delta.copy(this._anchor.object3D.position)
+        this._anchor.object3D.parent.localToWorld(delta)
+        this._glove.object3D.worldToLocal(delta)
+        this._glove.object3D.position.sub(delta)
+      }
     },
   }
 })
@@ -1192,7 +1219,7 @@ AFRAME.registerComponent("limit", {
   schema: {
     minPos: { type: "vec3" },
     maxPos: { type: "vec3" },
-    rotationRange: { type: "vec3" },
+    rotationRange: { type: "vec3", default: { x: 1, y: 1, z: 1 } },
   },
 
   tick() {
@@ -1228,6 +1255,7 @@ AFRAME.registerComponent("limit", {
       setTimeout(() => {
         this.el.components.body?.commit()
       })
+      this.el.object3D.updateWorldMatrix(true, true)
       this.el.emit("limited")
     }
   },
@@ -2808,6 +2836,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   dest.quaternion.multiply(quat.conjugate().normalize())
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
+  dest.updateWorldMatrix(true, true)
 }
 },{}],28:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {

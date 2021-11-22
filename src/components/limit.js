@@ -4,7 +4,7 @@ AFRAME.registerComponent("limit", {
   schema: {
     minPos: { type: "vec3" },
     maxPos: { type: "vec3" },
-    rotationRange: { type: "vec3" },
+    rotationRange: { type: "vec3", default: { x: 1, y: 1, z: 1 } },
   },
 
   tick() {
@@ -40,6 +40,7 @@ AFRAME.registerComponent("limit", {
       setTimeout(() => {
         this.el.components.body?.commit()
       })
+      this.el.object3D.updateWorldMatrix(true, true)
       this.el.emit("limited")
     }
   },

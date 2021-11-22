@@ -311,6 +311,9 @@ AFRAME.registerComponent("grabbing", {
       }
       if (hand === "head") this[_hand].gloveVelocity.copy(this[_hand].grabbedVelocity)
     }
+
+    // Update The Matrix! 🐱‍💻
+    this.el.object3D.updateWorldMatrix(true, true)
   },
 
   toggleGrab(hand = "head") {
