@@ -21,10 +21,11 @@ This makes it possible to grab and use grabbable objects using the following con
 
 ## Properties
 
-| Property     | Description                          | Default |
-| ------------ | ------------------------------------ | ------- |
-| hideOnGrab   | Hide the glove when grabbing         | false   |
-| grabDistance | Maximum distance to grab object from | 1       |
+| Property     | Description                                   | Default |
+| ------------ | --------------------------------------------- | ------- |
+| hideOnGrab   | Hide the glove when grabbing                  | false   |
+| grabDistance | Maximum distance to grab object from          | 1       |
+| forceGrab    | Make object attract to your hand when grabbed | true    |
 
 
 ## Methods
