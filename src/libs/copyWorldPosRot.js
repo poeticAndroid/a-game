@@ -14,4 +14,5 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   dest.quaternion.multiply(quat.conjugate().normalize())
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
+  dest.updateWorldMatrix(true, true)
 }

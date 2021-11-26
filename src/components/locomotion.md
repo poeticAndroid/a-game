@@ -14,9 +14,9 @@ This makes it possible to move around the using the following controls.
 | --------------------------------------- | ---------------------- | ------- | --------------------------- |
 | Move                                    | Left stick             | WASD    | Left side swipe             |
 | Rotate                                  | Right stick left/right | Arrows  | Right side swipe left/right |
-| Teleport                                | Right stick up         | Q       | Right side swipe up         |
+| Teleport/Move up                        | Right stick up         | Q       | Right side swipe up         |
 | Jump                                    | Y or Click right stick | Space   |
-| Crouch                                  | Right stick down       | C       | Right side swipe down       |
+| Crouch/Move down                        | Right stick down       | C       | Right side swipe down       |
 | Toggle god mode (if enabled)            | Click left stick       | G       |
 
 
@@ -49,6 +49,17 @@ This makes it possible to move around the using the following controls.
 | ----- | -------------------------------------------- |
 | step  | Every time the player takes a simulated step |
 | bump  | Player bumps into wall                       |
+
+
+## States
+
+| State        | Description                           |
+| ------------ | ------------------------------------- |
+| noinput      | Input method has yet to be determined |
+| desktop      | Player is using mouse and keyboard    |
+| touch        | Player is using touch screen          |
+| gamepad      | Player is using gamepad               |
+| vrcontroller | Player is using VR controllers        |
 
 
 ## Related components

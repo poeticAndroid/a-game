@@ -10,21 +10,22 @@ Add the `grabbing` component to your player rig like so:
 
 This makes it possible to grab and use grabbable objects using the following controls.
 
-| Action      | Controller           | Desktop          | Touch    |
-| ----------- | -------------------- | ---------------- | -------- |
-| Grab/drop   | Grip/shoulder Button | E                | Long tap |
-| Primary use | Trigger              | Left click       | Tap      |
-| Secondary   | A                    | Right click      |
-| Tertiary    | B                    | Middle click     |
-| Move hand   | X + D-pad            | 1/2/3 + scroll wheel |
+| Action           | Controller           | Desktop          | Touch    |
+| ---------------- | -------------------- | ---------------- | -------- |
+| Grab/drop        | Grip/shoulder Button | E                | Long tap |
+| Primary use      | Trigger              | Left click       | Tap      |
+| Secondary        | A                    | Right click      |
+| Tertiary         | B                    | Middle click     |
+| Move/rotate hand | X + D-pad            | 1/2/3 + scroll wheel |
 
 
 ## Properties
 
-| Property     | Description                          | Default |
-| ------------ | ------------------------------------ | ------- |
-| hideOnGrab   | Hide the glove when grabbing         | false   |
-| grabDistance | Maximum distance to grab object from | 1       |
+| Property     | Description                                   | Default |
+| ------------ | --------------------------------------------- | ------- |
+| hideOnGrab   | Hide the glove when grabbing                  | false   |
+| grabDistance | Maximum distance to grab object from          | 1       |
+| attractHand  | Make object attract to your hand when grabbed | true    |
 
 
 ## Methods
@@ -66,9 +67,14 @@ Events will bubble.
 
 ## States
 
-| State    | Description                  |
-| -------- | ---------------------------- |
-| grabbing | currently grabbing something |
+| State        | Description                           |
+| ------------ | ------------------------------------- |
+| grabbing     | currently grabbing something          |
+| noinput      | Input method has yet to be determined |
+| desktop      | Player is using mouse and keyboard    |
+| touch        | Player is using touch screen          |
+| gamepad      | Player is using gamepad               |
+| vrcontroller | Player is using VR controllers        |
 
 
 ## Related components

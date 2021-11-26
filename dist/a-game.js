@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.37.0",
+  "version": "0.39.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -77,7 +77,8 @@ console.log(`${pkg.title} Version ${pkg.version} by ${pkg.author}\n(${pkg.homepa
 AFRAME.registerComponent("grabbing", {
   schema: {
     hideOnGrab: { type: "boolean", default: false },
-    grabDistance: { type: "number", default: 1 }
+    grabDistance: { type: "number", default: 1 },
+    attractHand: { type: "boolean", default: true },
   },
 
   init() {
@@ -132,24 +133,12 @@ AFRAME.registerComponent("grabbing", {
         // showLine: true,
       }
     })
-    this._head.reticle = this._head.ray.ensure(".reticle", "a-box", {
+    this._head.reticle = this._head.hand.ensure(".reticle", "a-plane", {
       class: "reticle",
-      depth: 0,
-      width: 0.5,
-      height: 0.25,
-      color: "black",
-      position: "0 0 -1",
-      scale: "0.125 0.125 0.125"
-    }, `<a-text align="center" value="grab"></a-text>`)
-    this._head.buttonReticle = this._head.buttonRay.ensure(".reticle", "a-box", {
-      class: "reticle",
-      depth: 0,
-      width: 0.625,
-      height: 0.25,
-      color: "black",
-      position: "0 0 -1",
-      scale: "0.125 0.125 0.125"
-    }, `<a-text align="center" value="press"></a-text>`)
+      material: "transparent:true; shader:flat;",
+      position: "0 0 -0.0078125",
+      scale: "0.00048828125 0.00048828125 0.00048828125"
+    })
     this._head.anchor = this._head.ray.ensure(".grabbing.anchor", "a-entity", { class: "grabbing anchor", visible: false, body: "type:kinematic;autoShape:false;" })
   },
 
@@ -286,6 +275,7 @@ AFRAME.registerComponent("grabbing", {
       }
 
       // handle grabbables
+      let reticleMode = "default"
       if (this[_hand].grabbed) {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
@@ -300,7 +290,7 @@ AFRAME.registerComponent("grabbing", {
           delta.sub(this[_hand].grabbed.object3D.position)
           if (delta.length() > 1) this.drop(hand)
         }
-        if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
+        if (this[_hand].reticle) this._setReticle(null)
       } else {
         if (this[_hand].ray) {
           let ray = this[_hand].ray.components.raycaster
@@ -315,14 +305,15 @@ AFRAME.registerComponent("grabbing", {
               this._flexFinger(hand, 5, -0.125, true)
               this._flexFinger(hand, 0, 0, true)
             }
-            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = -hit.distance / 2
+            if (this[_hand].reticle) {
+              reticleMode = "grab"
+            }
           } else {
             if (this[_hand]._lastHit) {
               this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
               this._restoreUserFlex(hand)
             }
             this[_hand]._lastHit = null
-            if (this[_hand].reticle) this[_hand].reticle.object3D.position.z = 1
           }
         }
 
@@ -357,7 +348,9 @@ AFRAME.registerComponent("grabbing", {
               }
               this[_hand]._lastPress = null
             }
-            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = -hit.distance / 2
+            if (this[_hand].reticle) {
+              reticleMode = "push"
+            }
           } else {
             if (this[_hand]._lastPress) {
               this.emit("unpress", this[_hand].glove, this[_hand]._lastPress)
@@ -369,9 +362,9 @@ AFRAME.registerComponent("grabbing", {
               this._restoreUserFlex(hand)
             }
             this[_hand]._lastButton = null
-            if (this[_hand].buttonReticle) this[_hand].buttonReticle.object3D.position.z = 1
           }
         }
+        if (this[_hand].reticle) this._setReticle(reticleMode)
       }
 
       // Track velocity
@@ -392,6 +385,9 @@ AFRAME.registerComponent("grabbing", {
       }
       if (hand === "head") this[_hand].gloveVelocity.copy(this[_hand].grabbedVelocity)
     }
+
+    // Update The Matrix! 🐱‍💻
+    this.el.object3D.updateWorldMatrix(true, true)
   },
 
   toggleGrab(hand = "head") {
@@ -407,7 +403,7 @@ AFRAME.registerComponent("grabbing", {
     ray.refreshObjects()
     let hit = ray.intersections[0]
     if (hit && hit.el.getAttribute("grabbable") != null) {
-      if (hand === "head") this[_hand].ray.setAttribute("animation__pos", {
+      if (hand === "head" && this.data.attractHand) this[_hand].ray.setAttribute("animation__pos", {
         property: "position",
         to: { x: 0, y: -0.125, z: 0 },
         dur: 256
@@ -448,7 +444,7 @@ AFRAME.registerComponent("grabbing", {
           to: rot,
           dur: 256
         })
-      } else if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
+      } else if (this.data.attractHand && !this[_hand].grabbed.components.grabbable?.data.immovable) {
         this[_hand].anchor.setAttribute("animation__pos", {
           property: "object3D.position.z",
           to: this[_hand].anchor.object3D.position.z + delta,
@@ -564,27 +560,20 @@ AFRAME.registerComponent("grabbing", {
     if (grabbed) grabbed.emit(eventtype, e, true)
   },
 
-  events: {
-    stateadded(e) {
-      if (this.el.is("desktop")) {
-        this._setReticleText(this._head.reticle, "[E]")
-        this._setReticleText(this._head.buttonReticle, "Click")
-      }
-      if (this.el.is("touch")) {
-        this._setReticleText(this._head.reticle, "hold")
-        this._setReticleText(this._head.buttonReticle, "tap")
-      }
-      if (this.el.is("gamepad")) {
-        this._setReticleText(this._head.reticle, "[RB]")
-        this._setReticleText(this._head.buttonReticle, "(A)")
-      }
+  _setReticle(mode) {
+    if (!this._head.reticle) return
+    if (this._head._reticleMode === mode) return
+    let src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH5BAUKAAIALAAAAAAQABAAAAIVlI+py+0PIwQgghDqu9lqCYbiSBoFADs="
+    switch (mode) {
+      case "grab":
+        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH5BAUKAAIALAAAAAAQABAAAAI1lC8AyLkQgloMSotrVHsnhHWXdISS+DzRimIWy3Ii7CU0Tdn3mr93bvDBgMFfozg8OiaTQwEAOw=="
+        break
+      case "push":
+        src = "data:image/gif;base64,R0lGODlhEAAQAPD/AAAAAP///yH5BAUKAAIALAAAAAAQABAAAAIylA1wywIRVGMvTgrlRTltl3Wao1RmB0YVxEYqu7ZwGstWbWdcPh94O0rZgjsZEZFIagoAOw=="
+        break
     }
-  },
-
-  _setReticleText(reticle, text) {
-    reticle.setAttribute("width", text.length * 0.125)
-    let txt = reticle.querySelector("a-text")
-    txt.setAttribute("value", text)
+    this._head.reticle.setAttribute("src", src)
+    this._head._reticleMode = mode
   },
 
   _enableHands() {
@@ -630,6 +619,9 @@ AFRAME.registerComponent("grabbing", {
 
     this._head.ray = null
     this._head.buttonRay = null
+    this._head.reticle.setAttribute("position", "0 0 1")
+    this._head.reticle.setAttribute("visible", "false")
+    this._head.reticle = null
     this.update()
   },
 
@@ -917,11 +909,35 @@ AFRAME.registerComponent("grabbable", {
   },
 
   events: {
-    grab() {
+    grab(e) {
+      if (e.detail.hand !== "head") {
+        this._grabbed = e.detail
+        this._glove = e.detail.gloveElement
+        this._anchor = this._glove.querySelector(".anchor")
+      }
       if (this.data.kinematicGrab) this.el.setAttribute("body", "type", "kinematic")
     },
-    drop() {
+    drop(e) {
+      this._grabbed = false
       if (this.data.physics) this.el.setAttribute("body", "type", "dynamic")
+    },
+    limited(e) {
+      if (this._grabbed) {
+        let delta = THREE.Vector3.temp()
+        let quat = THREE.Quaternion.temp()
+        this._glove.copyWorldPosRot(this.el)
+        let el = this._anchor
+        while (el !== this._glove) {
+          quat.copy(el.object3D.quaternion).conjugate()
+          this._glove.object3D.quaternion.multiply(quat)
+          el = el.parentNode
+        }
+        this._glove.object3D.updateWorldMatrix(true, true)
+        delta.copy(this._anchor.object3D.position)
+        this._anchor.object3D.parent.localToWorld(delta)
+        this._glove.object3D.worldToLocal(delta)
+        this._glove.object3D.position.sub(delta)
+      }
     },
   }
 })
@@ -1203,7 +1219,7 @@ AFRAME.registerComponent("limit", {
   schema: {
     minPos: { type: "vec3" },
     maxPos: { type: "vec3" },
-    rotationRange: { type: "vec3" },
+    rotationRange: { type: "vec3", default: { x: 1, y: 1, z: 1 } },
   },
 
   tick() {
@@ -1239,6 +1255,7 @@ AFRAME.registerComponent("limit", {
       setTimeout(() => {
         this.el.components.body?.commit()
       })
+      this.el.object3D.updateWorldMatrix(true, true)
       this.el.emit("limited")
     }
   },
@@ -2819,6 +2836,7 @@ AFRAME.AEntity.prototype.copyWorldPosRot = function (srcEl) {
   dest.quaternion.multiply(quat.conjugate().normalize())
   src.getWorldQuaternion(quat)
   dest.quaternion.multiply(quat.normalize())
+  dest.updateWorldMatrix(true, true)
 }
 },{}],28:[function(require,module,exports){
 Element.prototype.ensure = function (selector, name = selector, attrs = {}, innerHTML = "") {
