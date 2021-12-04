@@ -488,7 +488,7 @@ AFRAME.registerComponent("locomotion", {
         ray = this._teleportBeam.components.raycaster
         ray.refreshObjects()
         hit = ray.intersections[0]
-        if (hit && hit.el.getAttribute("floor") != null) {
+        if (hit && hit.el.components.floor) {
           let straight = THREE.Vector3.temp()
           let delta = THREE.Vector3.temp()
           let matrix = THREE.Matrix3.temp()

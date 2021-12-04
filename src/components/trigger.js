@@ -16,10 +16,10 @@ AFRAME.registerComponent("trigger", {
   tick() {
     if (!this.objects) return this.refreshObjects()
     let local = THREE.Vector3.temp()
-    let width = parseFloat(this.el.getAttribute("width") || 1)
-    let height = parseFloat(this.el.getAttribute("height") || 1)
-    let depth = parseFloat(this.el.getAttribute("depth") || 1)
-    let radius = parseFloat(this.el.getAttribute("radius") || 1)
+    let width = this.el.components.geometry.data.width
+    let height = this.el.components.geometry.data.height
+    let depth = this.el.components.geometry.data.depth
+    let radius = this.el.components.geometry.data.radius
     let inside
     for (let obj of this.objects) {
       obj.object3D.localToWorld(local.set(0, 0, 0))

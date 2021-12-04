@@ -209,7 +209,7 @@ AFRAME.registerComponent("grabbing", {
         if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
           if (this[_hand].grabbed.components.grabbable?.data.avoidWalls) {
             for (let hit of ray.intersections) {
-              if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+              if (hit && hit.el.components.wall && hit.distance < -this[_hand].anchor.object3D.position.z) {
                 this[_hand].anchor.object3D.position.multiplyScalar(0.5)
               }
             }
@@ -225,7 +225,7 @@ AFRAME.registerComponent("grabbing", {
           let ray = this[_hand].ray.components.raycaster
           ray.refreshObjects()
           let hit = ray.intersections[0]
-          if (hit && hit.el.getAttribute("grabbable") != null) {
+          if (hit && hit.el.components.grabbable) {
             if (this[_hand]._lastHit !== hit.el) {
               if (this[_hand]._lastHit)
                 this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
@@ -251,7 +251,7 @@ AFRAME.registerComponent("grabbing", {
           let ray = this[_hand].buttonRay.components.raycaster
           ray.refreshObjects()
           let hit = ray.intersections[0]
-          if (hit && hit.el.getAttribute("button") != null) {
+          if (hit && hit.el.components.button != null) {
             if (this[_hand]._lastButton !== hit.el) {
               if (this[_hand]._lastButton)
                 this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
@@ -331,7 +331,7 @@ AFRAME.registerComponent("grabbing", {
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
-    if (hit && hit.el.getAttribute("grabbable") != null) {
+    if (hit && hit.el.components.grabbable) {
       if (hand === "head" && this.data.attractHand) this[_hand].ray.setAttribute("animation__pos", {
         property: "position",
         to: { x: 0, y: -0.125, z: 0 },
@@ -382,7 +382,7 @@ AFRAME.registerComponent("grabbing", {
       }
       if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
-      // if (this[_hand].glove.getAttribute("body"))
+      // if (this[_hand].glove.components.body)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
       this._grabCount = Math.min(2, this._grabCount + 1)
@@ -409,7 +409,7 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.setAttribute("position", "0 0 0")
     this[_hand].anchor.setAttribute("rotation", "0 0 0")
     setTimeout(() => {
-      // if (this[_hand].glove.getAttribute("body"))
+      // if (this[_hand].glove.components.body)
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
     if (this[_hand].grabbed) {
