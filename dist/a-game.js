@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.39.0",
+  "version": "0.40.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -79,6 +79,7 @@ AFRAME.registerComponent("grabbing", {
     hideOnGrab: { type: "boolean", default: false },
     grabDistance: { type: "number", default: 1 },
     attractHand: { type: "boolean", default: true },
+    avoidWalls: { type: "boolean", default: true },
   },
 
   init() {
@@ -249,7 +250,7 @@ AFRAME.registerComponent("grabbing", {
       let _hand = "_" + hand
 
       // keep hands out of walls
-      if (this[_hand]._occlusionRay) {
+      if (this.data.avoidWalls && this[_hand]._occlusionRay) {
         let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
         this[_hand].glove.copyWorldPosRot(this[_hand].hand)
 
@@ -280,9 +281,11 @@ AFRAME.registerComponent("grabbing", {
         let ray = this[_hand].ray.components.raycaster
         ray.refreshObjects()
         if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
-          for (let hit of ray.intersections) {
-            if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
-              this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+          if (this[_hand].grabbed.components.grabbable?.data.avoidWalls) {
+            for (let hit of ray.intersections) {
+              if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+                this[_hand].anchor.object3D.position.multiplyScalar(0.5)
+              }
             }
           }
           let delta = THREE.Vector3.temp().copy(this[_hand].grabbed.object3D.position)
@@ -902,6 +905,7 @@ AFRAME.registerComponent("grabbable", {
     fixedPosition: { type: "vec3", default: { x: 0, y: 0, z: 0 } },
     fingerFlex: { type: "array", default: [0.5] },
     immovable: { type: "boolean", default: false },
+    avoidWalls: { type: "boolean", default: true },
   },
 
   init() {

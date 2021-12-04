@@ -26,6 +26,7 @@ This makes it possible to grab and use grabbable objects using the following con
 | hideOnGrab   | Hide the glove when grabbing                  | false   |
 | grabDistance | Maximum distance to grab object from          | 1       |
 | attractHand  | Make object attract to your hand when grabbed | true    |
+| avoidWalls   | Keep hands from passing through walls         | true    |
 
 
 ## Methods

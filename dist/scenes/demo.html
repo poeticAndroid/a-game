@@ -26,7 +26,7 @@
   <a-cylinder trigger onstate__triggered="entity:#triggerIndicator; property:color; on:green; off:red;"
     onevent__trigger="entity:a-main; property:script.call; value:inside;" position="-3 1 0" height="2" radius="2"
     material="opacity:0.5">
-    <a-sphere grabbable="physics:false;" id="triggerIndicator" radius="0.125"></a-sphere>
+    <a-sphere grabbable="physics:false;avoidWalls:false;" id="triggerIndicator" radius="0.125"></a-sphere>
   </a-cylinder>
   <a-entity position="0 5 0">
     <a-box src="#granite" material="repeat: 20 1" floor width="20" height="0.1" position="0 -2.5 -8.5"
