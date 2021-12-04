@@ -70,11 +70,11 @@ AFRAME.registerComponent("body", {
     })
 
     if (this.data.autoShape) {
-      if (!this.el.getAttribute("shape")) {
+      if (!this.el.components.shape) {
         if (this.el.firstElementChild) {
           let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
           if (els) els.forEach(el => {
-            if (!el.getAttribute("shape")) el.setAttribute("shape", true)
+            if (!el.components.shape) el.setAttribute("shape", true)
           })
         } else {
           this.el.setAttribute("shape", true)

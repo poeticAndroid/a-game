@@ -13,7 +13,7 @@ AFRAME.registerComponent("grabbable", {
   },
 
   init() {
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
+    if (this.data.physics && !this.el.components.body) this.el.setAttribute("body", "type:dynamic;")
   },
 
   events: {

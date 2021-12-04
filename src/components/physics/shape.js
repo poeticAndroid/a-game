@@ -35,18 +35,18 @@ AFRAME.registerComponent("shape", {
     switch (this.el.tagName.toLowerCase()) {
       case "a-sphere":
         shape.type = "sphere"
-        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
+        shape.size.multiplyScalar(this.el.components.geometry.data.radius * 2)
         break
       case "a-cylinder":
         shape.type = "cylinder"
-        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
+        shape.size.multiplyScalar(this.el.components.geometry.data.radius * 2).y = this.el.components.geometry.data.height
         break
       case "a-box":
         shape.type = "box"
         shape.size.set(
-          parseFloat(this.el.getAttribute("width") || 1),
-          parseFloat(this.el.getAttribute("height") || 1),
-          parseFloat(this.el.getAttribute("depth") || 1)
+          this.el.components.geometry.data.width,
+          this.el.components.geometry.data.height,
+          this.el.components.geometry.data.depth
         )
         break
       // case "a-plane":

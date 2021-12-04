@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.40.0",
+  "version": "0.40.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -12,7 +12,7 @@ module.exports={
     "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -283,7 +283,7 @@ AFRAME.registerComponent("grabbing", {
         if (!this[_hand].grabbed.components.grabbable?.data.immovable) {
           if (this[_hand].grabbed.components.grabbable?.data.avoidWalls) {
             for (let hit of ray.intersections) {
-              if (hit && hit.el.getAttribute("wall") != null && hit.distance < -this[_hand].anchor.object3D.position.z) {
+              if (hit && hit.el.components.wall && hit.distance < -this[_hand].anchor.object3D.position.z) {
                 this[_hand].anchor.object3D.position.multiplyScalar(0.5)
               }
             }
@@ -299,7 +299,7 @@ AFRAME.registerComponent("grabbing", {
           let ray = this[_hand].ray.components.raycaster
           ray.refreshObjects()
           let hit = ray.intersections[0]
-          if (hit && hit.el.getAttribute("grabbable") != null) {
+          if (hit && hit.el.components.grabbable) {
             if (this[_hand]._lastHit !== hit.el) {
               if (this[_hand]._lastHit)
                 this.emit("unreachable", this[_hand].glove, this[_hand]._lastHit)
@@ -325,7 +325,7 @@ AFRAME.registerComponent("grabbing", {
           let ray = this[_hand].buttonRay.components.raycaster
           ray.refreshObjects()
           let hit = ray.intersections[0]
-          if (hit && hit.el.getAttribute("button") != null) {
+          if (hit && hit.el.components.button != null) {
             if (this[_hand]._lastButton !== hit.el) {
               if (this[_hand]._lastButton)
                 this.emit("unhover", this[_hand].glove, this[_hand]._lastButton)
@@ -405,7 +405,7 @@ AFRAME.registerComponent("grabbing", {
     let ray = this[_hand].ray.components.raycaster
     ray.refreshObjects()
     let hit = ray.intersections[0]
-    if (hit && hit.el.getAttribute("grabbable") != null) {
+    if (hit && hit.el.components.grabbable) {
       if (hand === "head" && this.data.attractHand) this[_hand].ray.setAttribute("animation__pos", {
         property: "position",
         to: { x: 0, y: -0.125, z: 0 },
@@ -456,7 +456,7 @@ AFRAME.registerComponent("grabbing", {
       }
       if (this.data.hideOnGrab || this[_hand].grabbed.components.grabbable.data.hideOnGrab)
         this[_hand].glove.setAttribute("visible", false)
-      // if (this[_hand].glove.getAttribute("body"))
+      // if (this[_hand].glove.components.body)
       this[_hand].glove.setAttribute("body", "collidesWith", 0)
       this.emit("grab", this[_hand].glove, this[_hand].grabbed, { intersection: hit })
       this._grabCount = Math.min(2, this._grabCount + 1)
@@ -483,7 +483,7 @@ AFRAME.registerComponent("grabbing", {
     this[_hand].anchor.setAttribute("position", "0 0 0")
     this[_hand].anchor.setAttribute("rotation", "0 0 0")
     setTimeout(() => {
-      // if (this[_hand].glove.getAttribute("body"))
+      // if (this[_hand].glove.components.body)
       this[_hand].glove.setAttribute("body", "collidesWith", 1)
     }, 1024)
     if (this[_hand].grabbed) {
@@ -909,7 +909,7 @@ AFRAME.registerComponent("grabbable", {
   },
 
   init() {
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
+    if (this.data.physics && !this.el.components.body) this.el.setAttribute("body", "type:dynamic;")
   },
 
   events: {
@@ -1763,7 +1763,7 @@ AFRAME.registerComponent("locomotion", {
         ray = this._teleportBeam.components.raycaster
         ray.refreshObjects()
         hit = ray.intersections[0]
-        if (hit && hit.el.getAttribute("floor") != null) {
+        if (hit && hit.el.components.floor) {
           let straight = THREE.Vector3.temp()
           let delta = THREE.Vector3.temp()
           let matrix = THREE.Matrix3.temp()
@@ -2017,7 +2017,7 @@ AFRAME.registerComponent("wall", {
   },
 
   update() {
-    if (this.data.physics && !this.el.getAttribute("body")) this.el.setAttribute("body", "type:static")
+    if (this.data.physics && !this.el.components.body) this.el.setAttribute("body", "type:static")
   }
 })
 
@@ -2296,11 +2296,11 @@ AFRAME.registerComponent("body", {
     })
 
     if (this.data.autoShape) {
-      if (!this.el.getAttribute("shape")) {
+      if (!this.el.components.shape) {
         if (this.el.firstElementChild) {
           let els = this.el.querySelectorAll("a-box, a-sphere, a-cylinder")
           if (els) els.forEach(el => {
-            if (!el.getAttribute("shape")) el.setAttribute("shape", true)
+            if (!el.components.shape) el.setAttribute("shape", true)
           })
         } else {
           this.el.setAttribute("shape", true)
@@ -2571,18 +2571,18 @@ AFRAME.registerComponent("shape", {
     switch (this.el.tagName.toLowerCase()) {
       case "a-sphere":
         shape.type = "sphere"
-        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2)
+        shape.size.multiplyScalar(this.el.components.geometry.data.radius * 2)
         break
       case "a-cylinder":
         shape.type = "cylinder"
-        shape.size.multiplyScalar(parseFloat(this.el.getAttribute("radius") || 1) * 2).y = parseFloat(this.el.getAttribute("height") || 1)
+        shape.size.multiplyScalar(this.el.components.geometry.data.radius * 2).y = this.el.components.geometry.data.height
         break
       case "a-box":
         shape.type = "box"
         shape.size.set(
-          parseFloat(this.el.getAttribute("width") || 1),
-          parseFloat(this.el.getAttribute("height") || 1),
-          parseFloat(this.el.getAttribute("depth") || 1)
+          this.el.components.geometry.data.width,
+          this.el.components.geometry.data.height,
+          this.el.components.geometry.data.depth
         )
         break
       // case "a-plane":
@@ -2706,10 +2706,10 @@ AFRAME.registerComponent("trigger", {
   tick() {
     if (!this.objects) return this.refreshObjects()
     let local = THREE.Vector3.temp()
-    let width = parseFloat(this.el.getAttribute("width") || 1)
-    let height = parseFloat(this.el.getAttribute("height") || 1)
-    let depth = parseFloat(this.el.getAttribute("depth") || 1)
-    let radius = parseFloat(this.el.getAttribute("radius") || 1)
+    let width = this.el.components.geometry.data.width
+    let height = this.el.components.geometry.data.height
+    let depth = this.el.components.geometry.data.depth
+    let radius = this.el.components.geometry.data.radius
     let inside
     for (let obj of this.objects) {
       obj.object3D.localToWorld(local.set(0, 0, 0))
