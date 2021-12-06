@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.41.0",
+  "version": "0.42.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -119,7 +119,7 @@ AFRAME.registerComponent("grabbing", {
 
     this._head.ray = this._head.hand.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray",
-      raycaster: {
+      raycaster: {deep:true,
         objects: "[wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
@@ -127,7 +127,7 @@ AFRAME.registerComponent("grabbing", {
     })
     this._head.buttonRay = this._head.hand.ensure(".button.ray", "a-entity", {
       class: "button ray",
-      raycaster: {
+      raycaster: {deep:true,
         objects: "[wall], [button]",
         far: 1,
         autoRefresh: false,
@@ -592,7 +592,7 @@ AFRAME.registerComponent("grabbing", {
       if (hand === "head") continue
       this[_hand]._occlusionRay = this.el.sceneEl.ensure(".occlusion-ray." + hand, "a-entity", {
         class: "occlusion-ray " + hand,
-        raycaster: {
+        raycaster: {deep:true,
           objects: "[wall]",
           autoRefresh: false
         }
@@ -601,7 +601,7 @@ AFRAME.registerComponent("grabbing", {
       let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
       this[_hand].ray = palm.ensure(".grabbing.ray", "a-entity", {
         class: "grabbing ray", position: hand === "left" ? "-0.0625 0 0.0625" : "0.0625 0 0.0625", rotation: hand === "left" ? "0 -45 0" : "0 45 0",
-        raycaster: {
+        raycaster: {deep:true,
           objects: "[wall], [grabbable]",
           autoRefresh: false,
           // showLine: true,
@@ -609,7 +609,7 @@ AFRAME.registerComponent("grabbing", {
       })
       this[_hand].buttonRay = palm.ensure(".button.ray", "a-entity", {
         class: "button ray", position: "0 0.03125 0",
-        raycaster: {
+        raycaster: {deep:true,
           objects: "[wall], [button]",
           far: 0.5,
           autoRefresh: false,
@@ -1330,6 +1330,7 @@ AFRAME.registerComponent("locomotion", {
     this._legs = this.el.sceneEl.ensure(".legs", "a-entity", {
       class: "legs", position: "0 0.5 0", // radius: 0.125, color: "blue",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[floor]",
         direction: "0 -1 0",
@@ -1340,6 +1341,7 @@ AFRAME.registerComponent("locomotion", {
     this._legBumper = this.el.sceneEl.ensure(".leg-bumper", "a-entity", {
       class: "leg-bumper", position: "0 0.5 0", // radius: 0.125, color: "red",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[wall]",
         // showLine: true
@@ -1348,6 +1350,7 @@ AFRAME.registerComponent("locomotion", {
     this._headBumper = this.el.sceneEl.ensure(".head-bumper", "a-entity", {
       class: "head-bumper", position: "0 0.5 0", // radius: 0.125, color: "green",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[wall]",
         // showLine: true
@@ -1356,6 +1359,7 @@ AFRAME.registerComponent("locomotion", {
     this._teleportBeam = this._camera.ensure(".teleport-ray", "a-entity", {
       class: "teleport-ray",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[wall]",
         // showLine: true
@@ -1878,6 +1882,7 @@ AFRAME.registerComponent("locomotion", {
       this._teleportBeam = this._rightHand.ensure(".teleportBeam", "a-entity", {
         class: "teleportBeam", rotation: "-45 0 0",
         raycaster: {
+          deep: true,
           autoRefresh: false,
           objects: "[wall]",
         }
@@ -2779,19 +2784,24 @@ AFRAME.registerComponent("trigger", {
 
 const _update = AFRAME.components.raycaster.Component.prototype.update
 const _refreshObjects = AFRAME.components.raycaster.Component.prototype.refreshObjects
+AFRAME.components.raycaster.schema.deep = AFRAME.components.raycaster.schema.showLine
 
-AFRAME.components.raycaster.Component.prototype.update = function () {
-  this._matchSelector = this.data.objects
-  this.data.objects = deepMatch(this.data.objects)
+AFRAME.components.raycaster.Component.prototype.update = function (oldData) {
+  if (this.data.deep && oldData.objects !== this.data.objects) {
+    this._matchSelector = this.data.objects
+    this.data.objects = deepMatch(this.data.objects)
+  }
   return _update.apply(this, arguments)
 }
 
 AFRAME.components.raycaster.Component.prototype.refreshObjects = function () {
   let result = _refreshObjects.apply(this, arguments)
-  let hits = this.intersections
-  for (let hit of hits) {
-    hit.el = hit.object.el
-    while (hit.el && !hit.el.matches(this._matchSelector)) hit.el = hit.el.parentNode
+  if (this.data.deep) {
+    let hits = this.intersections
+    for (let hit of hits) {
+      hit.el = hit.object.el
+      while (hit.el && !hit.el.matches(this._matchSelector)) hit.el = hit.el.parentNode
+    }
   }
   return result
 }

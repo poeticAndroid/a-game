@@ -55,6 +55,7 @@ AFRAME.registerComponent("locomotion", {
     this._legs = this.el.sceneEl.ensure(".legs", "a-entity", {
       class: "legs", position: "0 0.5 0", // radius: 0.125, color: "blue",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[floor]",
         direction: "0 -1 0",
@@ -65,6 +66,7 @@ AFRAME.registerComponent("locomotion", {
     this._legBumper = this.el.sceneEl.ensure(".leg-bumper", "a-entity", {
       class: "leg-bumper", position: "0 0.5 0", // radius: 0.125, color: "red",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[wall]",
         // showLine: true
@@ -73,6 +75,7 @@ AFRAME.registerComponent("locomotion", {
     this._headBumper = this.el.sceneEl.ensure(".head-bumper", "a-entity", {
       class: "head-bumper", position: "0 0.5 0", // radius: 0.125, color: "green",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[wall]",
         // showLine: true
@@ -81,6 +84,7 @@ AFRAME.registerComponent("locomotion", {
     this._teleportBeam = this._camera.ensure(".teleport-ray", "a-entity", {
       class: "teleport-ray",
       raycaster: {
+        deep: true,
         autoRefresh: false,
         objects: "[wall]",
         // showLine: true
@@ -603,6 +607,7 @@ AFRAME.registerComponent("locomotion", {
       this._teleportBeam = this._rightHand.ensure(".teleportBeam", "a-entity", {
         class: "teleportBeam", rotation: "-45 0 0",
         raycaster: {
+          deep: true,
           autoRefresh: false,
           objects: "[wall]",
         }
