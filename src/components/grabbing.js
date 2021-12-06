@@ -45,7 +45,7 @@ AFRAME.registerComponent("grabbing", {
 
     this._head.ray = this._head.hand.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray",
-      raycaster: {
+      raycaster: {deep:true,
         objects: "[wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
@@ -53,7 +53,7 @@ AFRAME.registerComponent("grabbing", {
     })
     this._head.buttonRay = this._head.hand.ensure(".button.ray", "a-entity", {
       class: "button ray",
-      raycaster: {
+      raycaster: {deep:true,
         objects: "[wall], [button]",
         far: 1,
         autoRefresh: false,
@@ -518,7 +518,7 @@ AFRAME.registerComponent("grabbing", {
       if (hand === "head") continue
       this[_hand]._occlusionRay = this.el.sceneEl.ensure(".occlusion-ray." + hand, "a-entity", {
         class: "occlusion-ray " + hand,
-        raycaster: {
+        raycaster: {deep:true,
           objects: "[wall]",
           autoRefresh: false
         }
@@ -527,7 +527,7 @@ AFRAME.registerComponent("grabbing", {
       let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
       this[_hand].ray = palm.ensure(".grabbing.ray", "a-entity", {
         class: "grabbing ray", position: hand === "left" ? "-0.0625 0 0.0625" : "0.0625 0 0.0625", rotation: hand === "left" ? "0 -45 0" : "0 45 0",
-        raycaster: {
+        raycaster: {deep:true,
           objects: "[wall], [grabbable]",
           autoRefresh: false,
           // showLine: true,
@@ -535,7 +535,7 @@ AFRAME.registerComponent("grabbing", {
       })
       this[_hand].buttonRay = palm.ensure(".button.ray", "a-entity", {
         class: "button ray", position: "0 0.03125 0",
-        raycaster: {
+        raycaster: {deep:true,
           objects: "[wall], [button]",
           far: 0.5,
           autoRefresh: false,
