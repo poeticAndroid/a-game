@@ -3,7 +3,7 @@
 Change a property when an event happens.
 
 ```html
-<a-box grabbable onevent__usedown="property:color; value:green;" onevent__useup="property:color; value:red;"></a-box>
+<a-box grabbable onevent__use1down="property:color; value:green;" onevent__use1up="property:color; value:red;"></a-box>
 ```
 
 

@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.42.0",
+  "version": "0.42.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -12,7 +12,7 @@ module.exports={
     "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
     "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
     "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -119,7 +119,8 @@ AFRAME.registerComponent("grabbing", {
 
     this._head.ray = this._head.hand.ensure(".grabbing-ray", "a-entity", {
       class: "grabbing-ray",
-      raycaster: {deep:true,
+      raycaster: {
+        deep: true,
         objects: "[wall], [grabbable]",
         autoRefresh: false,
         // showLine: true,
@@ -127,7 +128,8 @@ AFRAME.registerComponent("grabbing", {
     })
     this._head.buttonRay = this._head.hand.ensure(".button.ray", "a-entity", {
       class: "button ray",
-      raycaster: {deep:true,
+      raycaster: {
+        deep: true,
         objects: "[wall], [button]",
         far: 1,
         autoRefresh: false,
@@ -523,6 +525,7 @@ AFRAME.registerComponent("grabbing", {
     if (this[_hand].grabbed) {
       this._flexFinger(hand, Math.max(0, 1 - button), 0.5, true)
       this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
+      this.emit("use" + (button + 1) + "down", this[_hand].glove, this[_hand].grabbed, { button: button })
     } else if (this[_hand]._lastButton) {
       this._flexFinger(hand, 0, 0.5, true)
       this[_hand]._lastClick = this[_hand]._lastButton
@@ -530,6 +533,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand]._lastClick.addState("pressed")
     } else {
       this.emit("usedown", this[_hand].glove, this[_hand].grabbed, { button: button })
+      this.emit("use" + (button + 1) + "down", this[_hand].glove, this[_hand].grabbed, { button: button })
     }
   },
   useUp(hand = "head", button = 0) {
@@ -537,6 +541,7 @@ AFRAME.registerComponent("grabbing", {
     if (this[_hand].grabbed) {
       this._flexFinger(hand, Math.max(0, 1 - button), 0, true)
       this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
+      this.emit("use" + (button + 1) + "up", this[_hand].glove, this[_hand].grabbed, { button: button })
     } else if (this[_hand]._lastClick) {
       this._flexFinger(hand, 0, 0, true)
       this.emit("unpress", this[_hand].glove, this[_hand]._lastClick)
@@ -544,6 +549,7 @@ AFRAME.registerComponent("grabbing", {
       this[_hand]._lastClick = null
     } else {
       this.emit("useup", this[_hand].glove, this[_hand].grabbed, { button: button })
+      this.emit("use" + (button + 1) + "up", this[_hand].glove, this[_hand].grabbed, { button: button })
     }
   },
   moveHeadHand(pz = 0, rx = 0, ry = 0, rz = 0) {
@@ -592,7 +598,8 @@ AFRAME.registerComponent("grabbing", {
       if (hand === "head") continue
       this[_hand]._occlusionRay = this.el.sceneEl.ensure(".occlusion-ray." + hand, "a-entity", {
         class: "occlusion-ray " + hand,
-        raycaster: {deep:true,
+        raycaster: {
+          deep: true,
           objects: "[wall]",
           autoRefresh: false
         }
@@ -601,7 +608,8 @@ AFRAME.registerComponent("grabbing", {
       let palm = this[_hand].glove.querySelector(".palm") || this[_hand].glove
       this[_hand].ray = palm.ensure(".grabbing.ray", "a-entity", {
         class: "grabbing ray", position: hand === "left" ? "-0.0625 0 0.0625" : "0.0625 0 0.0625", rotation: hand === "left" ? "0 -45 0" : "0 45 0",
-        raycaster: {deep:true,
+        raycaster: {
+          deep: true,
           objects: "[wall], [grabbable]",
           autoRefresh: false,
           // showLine: true,
@@ -609,7 +617,8 @@ AFRAME.registerComponent("grabbing", {
       })
       this[_hand].buttonRay = palm.ensure(".button.ray", "a-entity", {
         class: "button ray", position: "0 0.03125 0",
-        raycaster: {deep:true,
+        raycaster: {
+          deep: true,
           objects: "[wall], [button]",
           far: 0.5,
           autoRefresh: false,
