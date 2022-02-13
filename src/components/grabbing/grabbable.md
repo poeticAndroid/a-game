@@ -28,8 +28,14 @@ Add the `grabbable` component to any object you want the player to be able to pi
 | reachable   | grabbable is within reach. |
 | unreachable | grabbable is out of reach. |
 | grab        | grabbing.                  |
-| usedown     | use-button is pressed.     |
-| useup       | use-button is released.    |
+| usedown     | a use-button is pressed.     |
+| use1down    | primary use-button is pressed. |
+| use2down    | secondary use-button is pressed. |
+| use3down    | tertiary use-button is pressed. |
+| useup       | a use-button is released.    |
+| use1up      | primary use-button is released. |
+| use2up      | secondary use-button is released. |
+| use3up      | tertiary use-button is released. |
 | drop        | dropping.                  |
 | fingerflex  | a finger is flexing.       |
 
