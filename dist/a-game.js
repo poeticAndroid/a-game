@@ -2,17 +2,15 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.42.1",
+  "version": "0.44.0",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
   "scripts": {
     "prepare": "npm run build",
-    "clean": "rm dist/*.js || del dist\\*.js",
-    "build": "npm run clean && foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\" && npm run minify",
-    "watch": "npm run clean && foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
-    "minify": "foreach -g dist/*.js -C -x \"minify #{path} > dist/#{name}.min.js\"",
-    "bump": "npm version patch --no-git-tag-version",
+    "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\"",
+    "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
+    "bump": "npm version minor --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -32,7 +30,6 @@ module.exports={
   "devDependencies": {
     "browserify": "^17.0.0",
     "foreach-cli": "^1.8.1",
-    "minify": "^7.0.2",
     "pre-commit": "^1.2.2",
     "watchify": "^4.0.0"
   }
