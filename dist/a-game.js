@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.44.0",
+  "version": "0.44.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -10,7 +10,7 @@ module.exports={
     "prepare": "npm run build",
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\"",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -915,7 +915,7 @@ AFRAME.registerComponent("grabbable", {
   },
 
   init() {
-    if (this.data.physics && !this.el.components.body) this.el.setAttribute("body", "type:dynamic;")
+    if (this.data.physics && !this.el.hasAttribute("body")) this.el.setAttribute("body", "type:dynamic;")
   },
 
   events: {
@@ -1125,8 +1125,7 @@ AFRAME.registerComponent("include", {
       let response = await fetch(this.data)
       if (response.status >= 200 && response.status < 300) {
         this.el.outerHTML = await (await (response).text()).replace(">", " >").replace(" ", " " + attrs + " ")
-      }
-      else {
+      } else {
         this.el.removeAttribute("include")
       }
       this.el.sceneEl._including_ = false
@@ -2028,7 +2027,7 @@ AFRAME.registerComponent("wall", {
   },
 
   update() {
-    if (this.data.physics && !this.el.components.body) this.el.setAttribute("body", "type:static")
+    if (this.data.physics && !this.el.hasAttribute("body")) this.el.setAttribute("body", "type:static")
   }
 })
 
