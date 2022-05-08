@@ -19,8 +19,7 @@ AFRAME.registerComponent("include", {
       let response = await fetch(this.data)
       if (response.status >= 200 && response.status < 300) {
         this.el.outerHTML = await (await (response).text()).replace(">", " >").replace(" ", " " + attrs + " ")
-      }
-      else {
+      } else {
         this.el.removeAttribute("include")
       }
       this.el.sceneEl._including_ = false
