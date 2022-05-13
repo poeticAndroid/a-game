@@ -8,6 +8,7 @@ global.CANNON = require("./libs/cannon")
 global.world = new CANNON.World()
 global.bodies = []
 global.movingBodies = []
+global.replacedBodies = []
 global.joints = []
 
 let vec = new CANNON.Vec3()
@@ -48,6 +49,11 @@ function onMessage(e) {
       }
     }
     world.step(Math.min(now - lastStep, 20) / 1000)
+    while (replacedBodies.length) {
+      let body = replacedBodies.pop()
+      body.velocity.set(0, 0, 0)
+      body.angularVelocity.set(0, 0, 0)
+    }
     for (let mid = 0; mid < movingBodies.length; mid++) {
       let body = movingBodies[mid]
       let p = mid * 8
@@ -124,6 +130,7 @@ function bodyCommand(params) {
       break
     case "position":
       body.position.copy(params[0])
+      replacedBodies.push(body)
       break
     case "quaternion":
       body.quaternion.copy(params[0])
