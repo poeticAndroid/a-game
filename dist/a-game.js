@@ -2,7 +2,7 @@
 module.exports={
   "name": "a-game",
   "title": "A-Game",
-  "version": "0.47.0",
+  "version": "0.47.1",
   "description": "game components for A-Frame",
   "homepage": "https://github.com/poeticAndroid/a-game/blob/master/README.md",
   "main": "index.js",
@@ -10,7 +10,7 @@ module.exports={
     "prepare": "npm run build",
     "build": "foreach -g src/*.js -x \"browserify #{path} -o dist/#{name}.js\"",
     "watch": "foreach -g src/*.js -C -x \"watchify #{path} -d -o dist/#{name}.js\"",
-    "bump": "npm version minor --no-git-tag-version",
+    "bump": "npm version patch --no-git-tag-version",
     "gitadd": "git add package*.json dist/*.js"
   },
   "pre-commit": [
@@ -290,7 +290,8 @@ AFRAME.registerComponent("grabbing", {
           let delta = THREE.Vector3.temp().copy(this[_hand].grabbed.object3D.position)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
           delta.sub(this[_hand].grabbed.object3D.position)
-          if (delta.length() > 1) this.drop(hand)
+          if (delta.length() > 1 && !this.ironGrip) this.drop(hand)
+          this.ironGrip=false
         }
         if (this[_hand].reticle) this._setReticle(null)
       } else {
@@ -1517,6 +1518,8 @@ AFRAME.registerComponent("locomotion", {
       this._legBumper.object3D.position.copy(this._legs.object3D.position)
       this._headBumper.object3D.position.copy(this._legs.object3D.position)
     }
+    if (this.el.components?.grabbing)
+      this.el.components.grabbing.ironGrip = true
   },
 
   jump() {

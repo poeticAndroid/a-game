@@ -219,7 +219,8 @@ AFRAME.registerComponent("grabbing", {
           let delta = THREE.Vector3.temp().copy(this[_hand].grabbed.object3D.position)
           this[_hand].grabbed.copyWorldPosRot(this[_hand].anchor)
           delta.sub(this[_hand].grabbed.object3D.position)
-          if (delta.length() > 1) this.drop(hand)
+          if (delta.length() > 1 && !this.ironGrip) this.drop(hand)
+          this.ironGrip=false
         }
         if (this[_hand].reticle) this._setReticle(null)
       } else {
