@@ -237,6 +237,8 @@ AFRAME.registerComponent("locomotion", {
       this._legBumper.object3D.position.copy(this._legs.object3D.position)
       this._headBumper.object3D.position.copy(this._legs.object3D.position)
     }
+    if (this.el.components?.grabbing)
+      this.el.components.grabbing.ironGrip = true
   },
 
   jump() {
